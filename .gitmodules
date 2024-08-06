@@ -1,0 +1,6 @@
+[submodule "lib/tt"]
+	path = lib/tt
+	url = https://github.com/Astral-C/tt.git
+[submodule "lib/bStream"]
+	path = lib/bStream
+	url = https://github.com/Astral-C/bStream.git
