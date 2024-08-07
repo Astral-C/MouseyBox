@@ -82,10 +82,11 @@ namespace mb::Scripting {
         bool Declaration(mb::TreeNode<AstNode>*);
         bool Expression(mb::TreeNode<AstNode>*);
 
-        bool Term(Token, Token, mb::TreeNode<AstNode>*);
+        bool Term(mb::TreeNode<AstNode>*);
         bool Factor(mb::TreeNode<AstNode>*); //Token, Token, ?
-        bool Comparison(Token, Token, mb::TreeNode<AstNode>*);
+        bool Comparison(mb::TreeNode<AstNode>*);
 
+        bool Group(mb::TreeNode<AstNode>* root);
         bool Statement(mb::TreeNode<AstNode>*);
         bool IfStatement(mb::TreeNode<AstNode>*);
         bool AssignStatement(mb::TreeNode<AstNode>*);

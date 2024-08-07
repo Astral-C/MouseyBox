@@ -295,8 +295,14 @@ bool Parser::AssignStatement(mb::TreeNode<AstNode>* root){
 
     mb::Log::Error("Last Token in Assign {}: {}", DebugTokenNames[PrevToken().token], PrevToken().line, PrevToken().lexeme);
 
-    if(!Expression(node)){
-        return false;
+    if (PeekToken().token == TokenType::LPAREN) {
+        if(!Group(node)){
+            return false;
+        }
+    } else {
+        if(!Expression(node)){
+            return false;
+        }
     }
 
     return true;
@@ -312,23 +318,62 @@ bool Parser::Factor(mb::TreeNode<AstNode>* root){
     return true;
 }
 
-bool Parser::Term(Token right, Token op, mb::TreeNode<AstNode>* root){
-
-    mb::Log::Error("Hanlding Term...");
+bool Parser::Term(mb::TreeNode<AstNode>* root){
     AstNode nodeData = {.mType = NodeType::Term};
+    mb::TreeNode<AstNode>* node = root->AddChild(nodeData);
 
-    Token lhs = ConsumeToken();
+    Token lhs, op, rhs;
+    if(PeekToken().token == TokenType::TERM){
+        // nth Term
+        Token op = ConsumeToken();
+        Token rhs = PeekToken();
+    } else {
+        // First term
+        Token lhs = ConsumeToken();
+        Token op = ConsumeToken();
+        Token rhs = PeekToken();
+    }
 
+    mb::Log::Error("==Term==");
+    mb::Log::Error(" {} | {} |{} ", DebugTokenNames[lhs.token], DebugTokenNames[op.token], DebugTokenNames[rhs.token]);
+    if(rhs.token == TokenType::LPAREN){
+        if(!Group(node)){
+            return false;
+        }
+    } else {
+        ConsumeToken();
+    }
+
+    return true;
+}
+
+bool Parser::Comparison(mb::TreeNode<AstNode>* root){
+    AstNode nodeData = {.mType = NodeType::Comparison};
+
+    ConsumeToken();
+    ConsumeToken();
+    ConsumeToken();
+    
     mb::TreeNode<AstNode>* node = root->AddChild(nodeData);
     return true;
 }
 
-bool Parser::Comparison(Token right, Token op, mb::TreeNode<AstNode>* root){
-    AstNode nodeData = {.mType = NodeType::Comparison};
-
-    ConsumeToken();
+bool Parser::Group(mb::TreeNode<AstNode>* root){
+    // Consume Left Paren
+    if(ConsumeToken().token != TokenType::LPAREN){
+        mb::Log::Error("Group somehow called without LParen :< : line {}", PrevToken().line);
+        return false;
+    }
     
-    mb::TreeNode<AstNode>* node = root->AddChild(nodeData);
+    if(!Expression(root)){
+        return false;
+    }
+
+    if(ConsumeToken().token != TokenType::RPAREN){
+        mb::Log::Error("Expected Closing Parenthesis: line {}", PrevToken().line);
+        return false;
+    }
+
     return true;
 }
 
@@ -337,7 +382,21 @@ bool Parser::Expression(mb::TreeNode<AstNode>* root){
 
     mb::TreeNode<AstNode>* node = root->AddChild({.mType = NodeType::Exp});
 
+    Token left = PeekToken();
+    Token op = PeekToken(1);
+    Token right = PeekToken(2);
     
+    while(OpTokens.contains(PeekToken(1).token)){
+        if(op.token == TokenType::TERM || op.token == TokenType::FACTOR){
+            if(!Term(node)){
+                return false;
+            }
+        } else {
+            break;
+        }
+        mb::Log::Error(" {} | {} |{} ", DebugTokenNames[PeekToken().token], DebugTokenNames[PeekToken(1).token], DebugTokenNames[PeekToken(2).token]);
+
+    }
 
     return true;
 }

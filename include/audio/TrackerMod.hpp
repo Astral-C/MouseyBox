@@ -8,7 +8,7 @@
 #include <filesystem>
 #include <vector>
 #include <array>
-#include <tt/tracker.h>
+#include <tt/include/tracker.h>
 
 namespace mb::Audio::Mod {
     
