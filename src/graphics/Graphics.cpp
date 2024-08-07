@@ -15,7 +15,7 @@ namespace mb {
 namespace Graphics {
 
 Window::Window(std::string name){
-    mb::Log::Info("MouseyBox", "Creating Window");
+    mb::Log::InfoFrom("MouseyBox", "Creating Window");
     mWindowTitle = name;
 #ifdef __SWITCH__
     mWindow = SDL_CreateWindow(mWindowTitle.data(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1280, 720, 0);
@@ -45,7 +45,7 @@ Renderer::Renderer(){}
 Renderer::~Renderer(){}
 
 void Renderer::Initialize(Window* win){
-    mb::Log::Info("MouseyBox", "Initing Renderer");
+    mb::Log::InfoFrom("MouseyBox", "Initing Renderer");
     if(!win && !win->mWindow){
         Log::Error("No Window on Renderer Init!");
         return;
@@ -80,12 +80,12 @@ void Renderer::Initialize(Window* win){
 #endif
 
     if(mInternalRender == nullptr){
-        Log::Info(std::format("Error Creating SDL Rendererer: {}", SDL_GetError()));
+        Log::InfoFrom("MouseyBox", std::format("Error Creating SDL Rendererer: {}", SDL_GetError()));
         SDL_Quit();
     }
-    mb::Log::Info("MouseyBox", "Initing Camera");
+    mb::Log::InfoFrom("MouseyBox", "Initing Camera");
     mCamera.Init(mInternalRender);
-    mb::Log::Info("MouseyBox", "Renderer Initizlized");
+    mb::Log::InfoFrom("MouseyBox", "Renderer Initizlized");
 }
 
 SDL_Rect Renderer::GetSize(){
