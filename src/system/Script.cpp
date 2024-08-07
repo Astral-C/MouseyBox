@@ -72,8 +72,7 @@ std::map<NodeType, std::string> DebugNodeNames {
     {NodeType::Exp, "NodeType::Exp"},
     {NodeType::Group, "NodeType::Group"},
     {NodeType::Comparison, "NodeType::Comparison"},
-    {NodeType::Term, "NodeType::Term"},
-    {NodeType::Factor, "NodeType::Factor"},
+    {NodeType::Variable, "NodeType::Variable"},
     {NodeType::Literal, "NodeType::Literal"},
     {NodeType::Err, "NodeType::Err"}
 };
@@ -293,8 +292,6 @@ bool Parser::AssignStatement(mb::TreeNode<AstNode>* root){
         return false;
     }
 
-    mb::Log::Error("Last Token in Assign {}: {}", DebugTokenNames[PrevToken().token], PrevToken().line, PrevToken().lexeme);
-
     if(!Expression(node)){
         return false;
     }
@@ -302,42 +299,51 @@ bool Parser::AssignStatement(mb::TreeNode<AstNode>* root){
     return true;
 }
 
-bool Parser::Factor(mb::TreeNode<AstNode>* root){
-    AstNode nodeData = {.mType = NodeType::Factor};
-
-    ConsumeToken();
-
-    mb::TreeNode<AstNode>* node = root->AddChild(nodeData);
-
-    return true;
-}
-
-bool Parser::Term(Token right, Token op, mb::TreeNode<AstNode>* root){
-
-    mb::Log::Error("Hanlding Term...");
-    AstNode nodeData = {.mType = NodeType::Term};
-
-    Token lhs = ConsumeToken();
-
-    mb::TreeNode<AstNode>* node = root->AddChild(nodeData);
-    return true;
-}
-
-bool Parser::Comparison(Token right, Token op, mb::TreeNode<AstNode>* root){
-    AstNode nodeData = {.mType = NodeType::Comparison};
-
-    ConsumeToken();
-    
-    mb::TreeNode<AstNode>* node = root->AddChild(nodeData);
+bool Parser::Group(mb::TreeNode<AstNode>* root){
+    ConsumeToken(); // consume LParen
+    mb::Log::Error("Entering Group!");
+    if(!Expression(root)){
+        return false;
+    }
+    if(ConsumeToken().token != TokenType::RPAREN){
+        mb::Log::Error("Group missing closing parenthesis!");
+        return false;
+    }
     return true;
 }
 
 bool Parser::Expression(mb::TreeNode<AstNode>* root){
     std::set<TokenType> OpTokens = {TokenType::IS_EQ, TokenType::IS_NEQ, TokenType::LT, TokenType::LT_EQ, TokenType::GT, TokenType::GT_EQ, TokenType::TERM, TokenType::FACTOR};
 
-    mb::TreeNode<AstNode>* node = root->AddChild({.mType = NodeType::Exp});
+    // LHS
+    TokenType lhs = PeekToken().token;
+    if(lhs == TokenType::LPAREN){
+        if(!Group(root)){
+            return false;
+        }
+    } else if (lhs == TokenType::ICONST || lhs == TokenType::SCONST || lhs == TokenType::TRUE || lhs == TokenType::FALSE){
+        mb::TreeNode<AstNode>* node = root->AddChild({.mType = NodeType::Literal});
+        ConsumeToken();
+    } else if (lhs == TokenType::IDENT){
+        mb::TreeNode<AstNode>* node = root->AddChild({.mType = NodeType::Variable});
+        ConsumeToken();
+    }
 
+    TokenType op = PeekToken().token;
+    mb::Log::Info("Op token is {}", DebugTokenNames[op]);
     
+    if(!OpTokens.contains(op)){
+        return true;
+    } else {
+        ConsumeToken();
+    }
+
+
+    // RHS
+    mb::TreeNode<AstNode>* node = root->AddChild({.mType = NodeType::Exp});
+    if(!Expression(node)){
+        return false;
+    }
 
     return true;
 }

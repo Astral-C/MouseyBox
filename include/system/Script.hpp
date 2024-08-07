@@ -44,9 +44,8 @@ namespace mb::Scripting {
         Block,
         Exp,
         Group,
+        Variable,
         Comparison,
-        Term,
-        Factor,
         Literal,
         Err,
     };
@@ -82,10 +81,9 @@ namespace mb::Scripting {
         bool Declaration(mb::TreeNode<AstNode>*);
         bool Expression(mb::TreeNode<AstNode>*);
 
-        bool Term(Token, Token, mb::TreeNode<AstNode>*);
-        bool Factor(mb::TreeNode<AstNode>*); //Token, Token, ?
-        bool Comparison(Token, Token, mb::TreeNode<AstNode>*);
+        bool Comparison(mb::TreeNode<AstNode>*);
 
+        bool Group(mb::TreeNode<AstNode>*);
         bool Statement(mb::TreeNode<AstNode>*);
         bool IfStatement(mb::TreeNode<AstNode>*);
         bool AssignStatement(mb::TreeNode<AstNode>*);
@@ -99,6 +97,10 @@ namespace mb::Scripting {
             return mTokens[mCurTokenIdx++];
         }
 
+        void StepBack(){
+            mCurTokenIdx--;
+        }
+
         Token PrevToken(){
             return mTokens[mCurTokenIdx-1];
         }
@@ -108,7 +110,7 @@ namespace mb::Scripting {
         }
 
         bool AtEnd(){
-            return mCurTokenIdx == mTokens.size();
+            return mCurTokenIdx+1 == mTokens.size();
         }
 
         Parser();
