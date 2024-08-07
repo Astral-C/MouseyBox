@@ -1,0 +1,11 @@
+build/*
+!build/assets
+!build/*.ttf
+mb_switch
+mb_gamecube
+.vscode
+
+*.dol
+*.elf
+*.nro
+*.nacp

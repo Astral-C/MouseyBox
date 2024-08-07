@@ -41,7 +41,7 @@ namespace mb::Audio {
     }
 
     Mixer::Mixer(){
-        mb::Log::Info("MouseyBox", "Creating Mixer");
+        mb::Log::InfoFrom("MouseyBox", "Creating Mixer");
         mTargetSpec = {
             .freq = 44100,
             .format = AUDIO_S16,

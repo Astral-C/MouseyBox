@@ -35,16 +35,16 @@ namespace mb {
         chdir("romfs:/");
         consoleDebugInit(debugDevice_SVC);
 #endif
-        mb::Log::Info("MouseyBox", "Creating Application");
+        mb::Log::InfoFrom("MouseyBox", "Creating Application");
 
         if(SDL_Init(SDL_INIT_EVENTS | SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_JOYSTICK) < 0){
-            mb::Log::Warn("MouseyBox", "SDL Init failed!");
+            mb::Log::WarnFrom("MouseyBox", "SDL Init failed!");
             SDL_Quit();
             return false;
         }
 
 
-        mb::Log::Info("MouseyBox", "SDL Ready");
+        mb::Log::InfoFrom("MouseyBox", "SDL Ready");
 
 
         mSDLReady = true;
@@ -54,7 +54,7 @@ namespace mb {
         mAudio = std::make_unique<Audio::Mixer>();
 
         mRenderer->Initialize(mWindow.get());
-        mb::Log::Info("MouseyBox", "Initialized Base Application");
+        mb::Log::InfoFrom("MouseyBox", "Initialized Base Application");
         return true;
     }
     
@@ -106,7 +106,7 @@ namespace mb {
     }
 
     Application::~Application(){
-        mb::Log::Warn("MouseyBox", "Cleaning up application");
+        mb::Log::WarnFrom("MouseyBox", "Cleaning up application");
         mRenderer->Cleanup();
         mWindow->Cleanup();
         SDL_Quit();

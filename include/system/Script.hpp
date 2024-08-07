@@ -81,8 +81,6 @@ namespace mb::Scripting {
         bool Declaration(mb::TreeNode<AstNode>*);
         bool Expression(mb::TreeNode<AstNode>*);
 
-        bool Comparison(mb::TreeNode<AstNode>*);
-
         bool Group(mb::TreeNode<AstNode>*);
         bool Statement(mb::TreeNode<AstNode>*);
         bool IfStatement(mb::TreeNode<AstNode>*);
