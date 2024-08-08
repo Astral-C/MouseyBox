@@ -37,7 +37,9 @@ std::map<std::string, TokenType> ReservedTokens {
     {"bool", TokenType::BOOL},
     {"string", TokenType::STRING},
     {"true", TokenType::TRUE},
-    {"false", TokenType::FALSE}
+    {"false", TokenType::FALSE},
+    {"or", TokenType::OR},
+    {"and", TokenType::AND}
 };
 
 std::map<TokenType, std::string> DebugTokenNames {
@@ -60,7 +62,9 @@ std::map<TokenType, std::string> DebugTokenNames {
     {TokenType::TRUE, "TokenType::TRUE"},
     {TokenType::FALSE, "TokenType::FALSE"},
     {TokenType::ICONST, "TokenType::ICONST"},
-    {TokenType::SCONST, "TokenType::SCONST"}
+    {TokenType::SCONST, "TokenType::SCONST"},
+    {TokenType::OR, "TokenType::OR"},
+    {TokenType::AND, "TokenType::AND"}
 };
 
 std::map<NodeType, std::string> DebugNodeNames {
@@ -71,7 +75,11 @@ std::map<NodeType, std::string> DebugNodeNames {
     {NodeType::Block, "NodeType::Block"},
     {NodeType::Exp, "NodeType::Exp"},
     {NodeType::Group, "NodeType::Group"},
+    {NodeType::Term, "NodeType::Term"},
+    {NodeType::Factor, "NodeType::Factor"},
     {NodeType::Comparison, "NodeType::Comparison"},
+    {NodeType::And, "NodeType::And"},
+    {NodeType::Or, "NodeType::Or"},
     {NodeType::Variable, "NodeType::Variable"},
     {NodeType::Literal, "NodeType::Literal"},
     {NodeType::Err, "NodeType::Err"}
@@ -212,23 +220,19 @@ std::vector<Token> LexString(std::string stream){
 Parser::Parser(){}
 Parser::~Parser(){}
 
-bool Parser::Declaration(mb::TreeNode<AstNode>* root){
+std::shared_ptr<mb::TreeNode<AstNode>> Parser::Declaration(){
+    std::shared_ptr<mb::TreeNode<AstNode>> node = nullptr;
     Token peek = PeekToken();
     switch (peek.token)
     {
     case TokenType::IF:
         // Parse If
-        if(!IfStatement(root)){
-            return false;
-        }
-
+        node = IfStatement();
         break;
     
     case TokenType::IDENT:
         //Consume the ident then check whats next?
-        if(!AssignStatement(root)){
-            return false;
-        }
+        node = AssignStatement();
         break;
 
     case TokenType::FOR:
@@ -236,126 +240,218 @@ bool Parser::Declaration(mb::TreeNode<AstNode>* root){
         break;
 
     default:
-        return false;
-        mb::Log::Error(std::format("Unexpected Token {} on line {}: {}", DebugTokenNames[peek.token], peek.line, peek.lexeme));
         break;
     }
 
-    return true;
+    return node;
 
 }
 
-bool Parser::Declarations(mb::TreeNode<AstNode>* root){
-    mb::TreeNode<AstNode>* node = root->AddChild({.mType = NodeType::Block});
+std::shared_ptr<mb::TreeNode<AstNode>> Parser::Declarations(){
+    std::shared_ptr<mb::TreeNode<AstNode>> node = std::make_shared<mb::TreeNode<AstNode>>((AstNode)(AstNode){.mType = NodeType::Block});
 
     while(!AtEnd()){
         Token peek = PeekToken(); 
         mb::Log::Error(std::format("Peeked Token {} on line {}: {}", DebugTokenNames[peek.token], peek.line, peek.lexeme));
         if(peek.token == TokenType::END || peek.token == TokenType::ELSE){
             ConsumeToken();
-            return true;
-        } else if (!Declaration(node)){
-            return false;
+            break;
+        } else {
+            std::shared_ptr<mb::TreeNode<AstNode>> decl = Declaration(); 
+            
+            if (decl == nullptr){
+                return nullptr;
+            }
+
+            node->AddNode(decl);
         }
     }
-    return true;
+
+    return node;
+
 }
 
-bool Parser::IfStatement(mb::TreeNode<AstNode>* root){
-    mb::TreeNode<AstNode>* node = root->AddChild({.mType = NodeType::If });
+std::shared_ptr<mb::TreeNode<AstNode>> Parser::IfStatement(){
+   std::shared_ptr<mb::TreeNode<AstNode>> node = std::make_shared<mb::TreeNode<AstNode>>((AstNode){.mType = NodeType::If });
 
     ConsumeToken(); // Consume 'if' token
 
-    if(!Expression(node)){
-        return false;
+    std::shared_ptr<mb::TreeNode<AstNode>> exp = Expression();
+    if(exp == nullptr){
+        return nullptr;
     }
 
-    if(!Declarations(node)){
-        return false;
+    node->AddNode(exp);
+
+    std::shared_ptr<mb::TreeNode<AstNode>> decls = Declarations();
+    
+    if(decls == nullptr){
+        return nullptr;
     }
+
+    node->AddNode(decls);
 
     if(PrevToken().token == TokenType::ELSE){
-        if(!Declarations(node)){
-            return false;
+        std::shared_ptr<mb::TreeNode<AstNode>> decls = Declarations();
+        if(decls == nullptr){
+            return nullptr;
         }
+        node->AddNode(decls);
     }
 
-    return true;
+    return node;
 }
 
-bool Parser::AssignStatement(mb::TreeNode<AstNode>* root){
-    mb::TreeNode<AstNode>* node = root->AddChild({.mType = NodeType::AssigNode});
+std::shared_ptr<TreeNode<AstNode>> Parser::AssignStatement(){
+    std::shared_ptr<mb::TreeNode<AstNode>> node = std::make_shared<mb::TreeNode<AstNode>>((AstNode){.mType = NodeType::AssigNode});
 
     ConsumeToken(); // Consume Ident
     if(ConsumeToken().token != TokenType::EQ){
         mb::Log::Error("Unexpected Token {} on line {}: {}", DebugTokenNames[PrevToken().token], PrevToken().line, PrevToken().lexeme);
-        return false;
+        return nullptr;
     }
 
-    if(!Expression(node)){
-        return false;
+    std::shared_ptr<mb::TreeNode<AstNode>> exp = Expression();
+    if(exp != nullptr){
+        node->AddNode(exp);
     }
 
-    return true;
+    
+    return node;
 }
 
-bool Parser::Group(mb::TreeNode<AstNode>* root){
+std::shared_ptr<TreeNode<AstNode>> Parser::Group(){
     ConsumeToken(); // consume LParen
     mb::Log::Error("Entering Group!");
-    if(!Expression(root)){
-        return false;
+    
+    std::shared_ptr<mb::TreeNode<AstNode>> exp = Expression();
+    
+    if(exp == nullptr){
+        return nullptr;
     }
+    
     if(ConsumeToken().token != TokenType::RPAREN){
         mb::Log::Error("Group missing closing parenthesis!");
-        return false;
+        return nullptr;
     }
-    return true;
+
+    return exp;
 }
 
-bool Parser::Expression(mb::TreeNode<AstNode>* root){
+std::shared_ptr<mb::TreeNode<AstNode>> Parser::Literal(){
+    Token t = ConsumeToken();
+    return std::make_shared<mb::TreeNode<AstNode>>((AstNode){.mType = NodeType::Literal, .mToken = t});
+}
+
+std::shared_ptr<mb::TreeNode<AstNode>> Parser::Term(){
+    std::shared_ptr<mb::TreeNode<AstNode>> trm = std::make_shared<mb::TreeNode<AstNode>>((AstNode){.mType = NodeType::Term});
+    
+    std::shared_ptr<mb::TreeNode<AstNode>> lfct = Factor();
+
+    if(PeekToken().token == TokenType::TERM){
+        trm->AddNode(lfct);
+
+        while(PeekToken().token == TokenType::TERM){
+            ConsumeToken();
+            std::shared_ptr<mb::TreeNode<AstNode>> rfct = Factor();
+            trm->AddNode(rfct);
+        }
+    } else {
+        return lfct;
+    }
+
+    return trm;
+
+}
+
+std::shared_ptr<mb::TreeNode<AstNode>> Parser::Factor(){
+    std::shared_ptr<mb::TreeNode<AstNode>> fctr = nullptr;
+    
+    std::shared_ptr<mb::TreeNode<AstNode>> llit = Literal();
+
+    if(PeekToken().token == TokenType::FACTOR){
+
+        while(PeekToken().token == TokenType::FACTOR){
+            fctr = std::make_shared<mb::TreeNode<AstNode>>((AstNode){.mType = NodeType::Factor});
+            ConsumeToken();
+
+            std::shared_ptr<mb::TreeNode<AstNode>> rlit = Literal();
+
+            fctr->AddNode(llit);
+            fctr->AddNode(rlit);
+            llit = fctr;
+        }
+    } else {
+        return llit;
+    }
+
+    return fctr;
+}
+
+std::shared_ptr<mb::TreeNode<AstNode>> Parser::Comparison(){
+    std::set<TokenType> cmpTypes = { TokenType::IS_EQ, TokenType::IS_NEQ, TokenType::LT, TokenType::LT_EQ, TokenType::GT, TokenType::GT_EQ };
+    std::shared_ptr<mb::TreeNode<AstNode>> cmp = std::make_shared<mb::TreeNode<AstNode>>((AstNode){.mType = NodeType::Comparison});
+
+    std::shared_ptr<mb::TreeNode<AstNode>> ltrm = Term();
+
+    if(cmpTypes.contains(PeekToken().token)){
+        cmp->AddNode(ltrm);
+        while(cmpTypes.contains(PeekToken().token)){
+            ConsumeToken();
+            std::shared_ptr<mb::TreeNode<AstNode>> rtrm = Term();
+            cmp->AddNode(rtrm);
+        }
+    } else {
+        return ltrm;
+    }
+
+    return cmp;
+}
+
+std::shared_ptr<mb::TreeNode<AstNode>> Parser::And(){  
+    std::shared_ptr<mb::TreeNode<AstNode>> andn = std::make_shared<mb::TreeNode<AstNode>>((AstNode){.mType = NodeType::And});
+
+    std::shared_ptr<mb::TreeNode<AstNode>> land = Comparison();
+
+    if(PeekToken().token == TokenType::AND){
+        andn->AddNode(land);
+
+        while(PeekToken().token == TokenType::AND){
+            ConsumeToken();
+            std::shared_ptr<mb::TreeNode<AstNode>> rand = Comparison();
+            andn->AddNode(rand);
+        }
+    } else {
+        return land;
+    }
+
+    return andn;
+}
+
+std::shared_ptr<TreeNode<AstNode>> Parser::Expression(){
     std::set<TokenType> OpTokens = {TokenType::IS_EQ, TokenType::IS_NEQ, TokenType::LT, TokenType::LT_EQ, TokenType::GT, TokenType::GT_EQ, TokenType::TERM, TokenType::FACTOR};
 
-    // LHS
-    TokenType lhs = PeekToken().token;
-    if(lhs == TokenType::LPAREN){
-        if(!Group(root)){
-            return false;
+    std::shared_ptr<mb::TreeNode<AstNode>> exp = std::make_shared<mb::TreeNode<AstNode>>((AstNode){.mType = NodeType::Exp});
+
+    std::shared_ptr<mb::TreeNode<AstNode>> lor = And();
+
+    if(PeekToken().token == TokenType::OR){
+        std::shared_ptr<mb::TreeNode<AstNode>> orn = std::make_shared<mb::TreeNode<AstNode>>((AstNode){.mType = NodeType::Or});
+        orn->AddNode(lor);
+
+        while(PeekToken().token == TokenType::OR){
+            ConsumeToken();
+            std::shared_ptr<mb::TreeNode<AstNode>> ror = And();
+            orn->AddNode(ror);
         }
-    } else if (lhs == TokenType::ICONST || lhs == TokenType::SCONST || lhs == TokenType::TRUE || lhs == TokenType::FALSE){
-        mb::TreeNode<AstNode>* node = root->AddChild({.mType = NodeType::Literal});
-        ConsumeToken();
-    } else if (lhs == TokenType::IDENT){
-        mb::TreeNode<AstNode>* node = root->AddChild({.mType = NodeType::Variable});
-        ConsumeToken();
-    }
-
-    TokenType op = PeekToken().token;
-    mb::Log::Info("Op token is {}", DebugTokenNames[op]);
-    
-    if(!OpTokens.contains(op)){
-        return true;
+        
+        exp->AddNode(orn);
     } else {
-        ConsumeToken();
+        exp->AddNode(lor);
     }
 
-
-    // RHS
-    mb::TreeNode<AstNode>* node = root->AddChild({.mType = NodeType::Exp});
-    if(!Expression(node)){
-        return false;
-    }
-
-    return true;
+    return exp;
 }
-
-bool Parser::Statement(mb::TreeNode<AstNode>* root){
-    return true;
-}
-
-bool Parser::Literal(mb::TreeNode<AstNode>* root){
-    return true;
-}
-
 
 mb::Tree<AstNode> Parser::Parse(){
     mb::Tree<AstNode> tree;
@@ -367,7 +463,10 @@ mb::Tree<AstNode> Parser::Parse(){
         mb::Log::Error("{}: Program Missing Begin Token, got \"{}\"", temp.line, temp.lexeme);
     }
 
-    if(!Declarations(tree.GetRoot())){
+    std::shared_ptr<TreeNode<AstNode>> decls = Declarations();
+    tree.GetRoot()->AddNode(decls);
+
+    if(decls == nullptr){
         mb::Log::Error(std::format("{}: Parse Error Token", temp.line));
     }
 
@@ -376,14 +475,17 @@ mb::Tree<AstNode> Parser::Parse(){
     }
 
     return tree;
-
 }
 
 
-void PrintParseTree(mb::TreeNode<AstNode>* root, std::string tabs){
-    mb::Log::Debug(std::format("{}[Node Type is {}]", tabs, DebugNodeNames[root->data()->mType]));
+void PrintParseTree(std::shared_ptr<mb::TreeNode<AstNode>> root, std::string tabs){
+    if(root->data()->mToken.lexeme != ""){
+        mb::Log::Debug(std::format("{}[Node Type is {} : {}]", tabs, DebugNodeNames[root->data()->mType], root->data()->mToken.lexeme));
+    } else {
+        mb::Log::Debug(std::format("{}[Node Type is {}]", tabs, DebugNodeNames[root->data()->mType]));
+    }
     for(auto node : *root->GetChildren()){
-        PrintParseTree(&node, tabs + "  ");
+        PrintParseTree(node, tabs + "  ");
     }
 }
 

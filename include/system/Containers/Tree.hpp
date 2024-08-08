@@ -5,27 +5,27 @@
 #include <tuple>
 #include <string>
 #include <vector>
+#include <memory>
 
 namespace mb {
     
     template<typename T>
-    class TreeNode {
+    class TreeNode : public std::enable_shared_from_this<TreeNode<T>> {
         T mData;
-        std::vector<TreeNode<T>> mChildren;
+        std::weak_ptr<TreeNode<T>> mParent;
+        std::vector<std::shared_ptr<TreeNode<T>>> mChildren;
     public:
         T* data() { return &mData; }
 
-        T GetChild(int idx) { return mChildren[idx]; }
-        std::vector<TreeNode<T>>* GetChildren() { return &mChildren; }
-        TreeNode<T>* AddChild(T item){
-            TreeNode<T> node;
-            node.mData = item;
-            mChildren.push_back(node);
-            return &mChildren.back();
-        }
+        void SetParent(std::shared_ptr<TreeNode<T>> parent) { mParent = parent; }
+        std::shared_ptr<TreeNode<T>> GetChild(int idx) { return mChildren[idx]; }
+        std::vector<std::shared_ptr<TreeNode<T>>>* GetChildren() { return &mChildren; }
 
-        T* begin() { return mChildren.begin(); }
-        T* end() { return mChildren.end(); }
+        std::shared_ptr<TreeNode<T>> AddNode(std::shared_ptr<TreeNode<T>> subroot){
+            subroot->SetParent(std::enable_shared_from_this<TreeNode<T>>::shared_from_this());
+            mChildren.push_back(subroot);
+            return mChildren.back();
+        }
 
         TreeNode(T item){ mData = item; }
         TreeNode(){}
@@ -34,11 +34,11 @@ namespace mb {
 
     template<typename T>
     class Tree {
-        TreeNode<T> mRoot;
+        std::shared_ptr<TreeNode<T>> mRoot;
     public:
 
-        void SetRoot(T item) { mRoot = TreeNode<T>(item); }
-        TreeNode<T>* GetRoot() { return &mRoot; }
+        void SetRoot(T item) { mRoot = std::make_shared<TreeNode<T>>(item); }
+        std::shared_ptr<TreeNode<T>> GetRoot() { return mRoot; }
 
         Tree() {}
         ~Tree() {}

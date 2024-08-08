@@ -33,6 +33,8 @@ namespace mb::Scripting {
         LT,
         LT_EQ,
         EQ,
+        OR,
+        AND,
         NONE
     };
 
@@ -45,8 +47,12 @@ namespace mb::Scripting {
         Exp,
         Group,
         Variable,
+        Term,
+        Factor,
         Comparison,
         Literal,
+        Or,
+        And,
         Err,
     };
 
@@ -77,15 +83,22 @@ namespace mb::Scripting {
 
         mb::Tree<AstNode> Parse();
 
-        bool Declarations(mb::TreeNode<AstNode>*);
-        bool Declaration(mb::TreeNode<AstNode>*);
-        bool Expression(mb::TreeNode<AstNode>*);
+        std::shared_ptr<mb::TreeNode<AstNode>> Declarations();
+        std::shared_ptr<mb::TreeNode<AstNode>> Declaration();
+        std::shared_ptr<mb::TreeNode<AstNode>> Expression();
 
-        bool Group(mb::TreeNode<AstNode>*);
-        bool Statement(mb::TreeNode<AstNode>*);
-        bool IfStatement(mb::TreeNode<AstNode>*);
-        bool AssignStatement(mb::TreeNode<AstNode>*);
-        bool Literal(mb::TreeNode<AstNode>*);
+
+        std::shared_ptr<mb::TreeNode<AstNode>> Literal();
+        std::shared_ptr<mb::TreeNode<AstNode>> Term();
+        std::shared_ptr<mb::TreeNode<AstNode>> Factor();
+        std::shared_ptr<mb::TreeNode<AstNode>> Comparison();
+        std::shared_ptr<mb::TreeNode<AstNode>> And();
+        std::shared_ptr<mb::TreeNode<AstNode>> Or();
+
+        std::shared_ptr<mb::TreeNode<AstNode>> Group();
+        std::shared_ptr<mb::TreeNode<AstNode>> Statement();
+        std::shared_ptr<mb::TreeNode<AstNode>> IfStatement();
+        std::shared_ptr<mb::TreeNode<AstNode>> AssignStatement();
 
         Token PeekToken(int offset=0){
             return mTokens[mCurTokenIdx+offset];
