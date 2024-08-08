@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 #include <system/Containers/Tree.hpp>
+#include <type_traits>
 
 namespace mb::Scripting {
     enum class TokenType {
@@ -32,6 +33,8 @@ namespace mb::Scripting {
         EQ,
         OR,
         AND,
+        PRINT,
+        COMMA,
         NONE
     };
 
@@ -50,7 +53,8 @@ namespace mb::Scripting {
         Literal,
         Or,
         And,
-        Err,
+        Print,
+        Err
     };
 
     extern std::map<std::string, TokenType> ReservedTokens;
@@ -58,6 +62,7 @@ namespace mb::Scripting {
     extern std::map<TokenType, std::string> DebugTokenNames;
 
     enum class SkitterType {
+        None,
         Number,
         Bool,
         String
@@ -65,7 +70,35 @@ namespace mb::Scripting {
 
     struct SkitterValue {
         SkitterType mType;
-        std::tuple<std::string, double, bool> mValue;
+        
+        std::string mStrValue;
+        double mNumValue;
+        bool mBoolValue;
+    
+        template<typename T>
+        T& value(){
+            //static_assert(std::is_base_of<std::string, , T>::value, "T must be string, double, or bool");
+            return T(); // this isnt good but it cant happen, template error if not one of the specialized templates
+        }
+
+        SkitterValue& operator=(std::string s){
+            mType = SkitterType::String;
+            mStrValue = s;
+            return *this;
+        }
+
+        SkitterValue& operator=(bool b){
+            mType = SkitterType::Bool;
+            mBoolValue = b;
+            return *this;
+        }
+
+        SkitterValue& operator=(double n){
+            mType = SkitterType::Number;
+            mNumValue = n;
+            return *this;
+        }
+    
     };
 
     struct Token {
@@ -89,22 +122,22 @@ namespace mb::Scripting {
 
         mb::Tree<AstNode> Parse();
 
-        std::shared_ptr<mb::TreeNode<AstNode>> Declarations();
-        std::shared_ptr<mb::TreeNode<AstNode>> Declaration();
-        std::shared_ptr<mb::TreeNode<AstNode>> Expression();
+        std::shared_ptr<TreeNode<AstNode>> Declarations();
+        std::shared_ptr<TreeNode<AstNode>> Declaration();
+        std::shared_ptr<TreeNode<AstNode>> Expression();
 
+        std::shared_ptr<TreeNode<AstNode>> Literal();
+        std::shared_ptr<TreeNode<AstNode>> Term();
+        std::shared_ptr<TreeNode<AstNode>> Factor();
+        std::shared_ptr<TreeNode<AstNode>> Comparison();
+        std::shared_ptr<TreeNode<AstNode>> And();
+        std::shared_ptr<TreeNode<AstNode>> Or();
 
-        std::shared_ptr<mb::TreeNode<AstNode>> Literal();
-        std::shared_ptr<mb::TreeNode<AstNode>> Term();
-        std::shared_ptr<mb::TreeNode<AstNode>> Factor();
-        std::shared_ptr<mb::TreeNode<AstNode>> Comparison();
-        std::shared_ptr<mb::TreeNode<AstNode>> And();
-        std::shared_ptr<mb::TreeNode<AstNode>> Or();
-
-        std::shared_ptr<mb::TreeNode<AstNode>> Group();
-        std::shared_ptr<mb::TreeNode<AstNode>> Statement();
-        std::shared_ptr<mb::TreeNode<AstNode>> IfStatement();
-        std::shared_ptr<mb::TreeNode<AstNode>> AssignStatement();
+        std::shared_ptr<TreeNode<AstNode>> Group();
+        std::shared_ptr<TreeNode<AstNode>> Statement();
+        std::shared_ptr<TreeNode<AstNode>> IfStatement();
+        std::shared_ptr<TreeNode<AstNode>> PrintStatement();
+        std::shared_ptr<TreeNode<AstNode>> AssignStatement();
 
         Token PeekToken(int offset=0){
             return mTokens[mCurTokenIdx+offset];
@@ -142,8 +175,14 @@ namespace mb::Scripting {
 
     public:
 
+        void DumpVars();
+        void DumpTree();
         void Execute();
 
+        SkitterValue& operator[](std::string name) {
+            return mVars[name];
+        }
+        
         Script();
         Script(std::string);
         ~Script();
