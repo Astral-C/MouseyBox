@@ -21,9 +21,6 @@ namespace mb::Scripting {
         IF,
         ELSE,
         FOR,
-        INT,
-        STRING,
-        BOOL,
         TRUE,
         FALSE,
         IS_EQ,
@@ -60,7 +57,16 @@ namespace mb::Scripting {
 
     extern std::map<TokenType, std::string> DebugTokenNames;
 
-    typedef std::tuple<std::string, int, float, bool> SkitterValue;
+    enum class SkitterType {
+        Number,
+        Bool,
+        String
+    };
+
+    struct SkitterValue {
+        SkitterType mType;
+        std::tuple<std::string, double, bool> mValue;
+    };
 
     struct Token {
         int line { -1 };
@@ -131,7 +137,13 @@ namespace mb::Scripting {
     class Script {
         std::map<std::string, SkitterValue> mVars;
         mb::Tree<AstNode> mTree;
+
+        SkitterValue ExecNode(std::shared_ptr<mb::TreeNode<AstNode>>);
+
     public:
+
+        void Execute();
+
         Script();
         Script(std::string);
         ~Script();

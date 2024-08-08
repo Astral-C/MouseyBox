@@ -4,7 +4,7 @@
 #include <map>
 #include <tuple>
 #include <string>
-#include <vector>
+#include <deque>
 #include <memory>
 
 namespace mb {
@@ -13,13 +13,13 @@ namespace mb {
     class TreeNode : public std::enable_shared_from_this<TreeNode<T>> {
         T mData;
         std::weak_ptr<TreeNode<T>> mParent;
-        std::vector<std::shared_ptr<TreeNode<T>>> mChildren;
+        std::deque<std::shared_ptr<TreeNode<T>>> mChildren;
     public:
         T* data() { return &mData; }
 
         void SetParent(std::shared_ptr<TreeNode<T>> parent) { mParent = parent; }
         std::shared_ptr<TreeNode<T>> GetChild(int idx) { return mChildren[idx]; }
-        std::vector<std::shared_ptr<TreeNode<T>>>* GetChildren() { return &mChildren; }
+        std::deque<std::shared_ptr<TreeNode<T>>>* GetChildren() { return &mChildren; }
 
         std::shared_ptr<TreeNode<T>> AddNode(std::shared_ptr<TreeNode<T>> subroot){
             subroot->SetParent(std::enable_shared_from_this<TreeNode<T>>::shared_from_this());

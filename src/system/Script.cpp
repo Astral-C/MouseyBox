@@ -33,9 +33,6 @@ std::map<std::string, TokenType> ReservedTokens {
     {"if", TokenType::IF},
     {"else", TokenType::ELSE},
     {"for", TokenType::FOR},
-    {"int", TokenType::INT},
-    {"bool", TokenType::BOOL},
-    {"string", TokenType::STRING},
     {"true", TokenType::TRUE},
     {"false", TokenType::FALSE},
     {"or", TokenType::OR},
@@ -56,9 +53,6 @@ std::map<TokenType, std::string> DebugTokenNames {
     {TokenType::IF, "TokenType::IF"},
     {TokenType::ELSE, "TokenType::ELSE"},
     {TokenType::FOR, "TokenType::FOR"},
-    {TokenType::INT, "TokenType::INT"},
-    {TokenType::BOOL, "TokenType::BOOL"},
-    {TokenType::STRING, "TokenType::STRING"},
     {TokenType::TRUE, "TokenType::TRUE"},
     {TokenType::FALSE, "TokenType::FALSE"},
     {TokenType::ICONST, "TokenType::ICONST"},
@@ -303,9 +297,10 @@ std::shared_ptr<mb::TreeNode<AstNode>> Parser::IfStatement(){
 }
 
 std::shared_ptr<TreeNode<AstNode>> Parser::AssignStatement(){
-    std::shared_ptr<mb::TreeNode<AstNode>> node = std::make_shared<mb::TreeNode<AstNode>>((AstNode){.mType = NodeType::AssigNode});
+    Token t = ConsumeToken(); // Consume Ident
+    
+    std::shared_ptr<mb::TreeNode<AstNode>> node = std::make_shared<mb::TreeNode<AstNode>>((AstNode){.mType = NodeType::AssigNode, .mToken = t});
 
-    ConsumeToken(); // Consume Ident
     if(ConsumeToken().token != TokenType::EQ){
         mb::Log::Error("Unexpected Token {} on line {}: {}", DebugTokenNames[PrevToken().token], PrevToken().line, PrevToken().lexeme);
         return nullptr;
@@ -353,17 +348,18 @@ std::shared_ptr<mb::TreeNode<AstNode>> Parser::Literal(){
 }
 
 std::shared_ptr<mb::TreeNode<AstNode>> Parser::Term(){
-    std::shared_ptr<mb::TreeNode<AstNode>> trm = std::make_shared<mb::TreeNode<AstNode>>((AstNode){.mType = NodeType::Term});
-    
+    std::shared_ptr<mb::TreeNode<AstNode>> trm = nullptr;
     std::shared_ptr<mb::TreeNode<AstNode>> lfct = Factor();
 
     if(PeekToken().token == TokenType::TERM){
-        trm->AddNode(lfct);
 
         while(PeekToken().token == TokenType::TERM){
-            ConsumeToken();
+            trm = std::make_shared<mb::TreeNode<AstNode>>((AstNode){.mType = NodeType::Term, .mToken = ConsumeToken()});
             std::shared_ptr<mb::TreeNode<AstNode>> rfct = Factor();
+            
+            trm->AddNode(lfct);
             trm->AddNode(rfct);
+            lfct = trm;
         }
     } else {
         return lfct;
@@ -381,8 +377,7 @@ std::shared_ptr<mb::TreeNode<AstNode>> Parser::Factor(){
     if(PeekToken().token == TokenType::FACTOR){
 
         while(PeekToken().token == TokenType::FACTOR){
-            fctr = std::make_shared<mb::TreeNode<AstNode>>((AstNode){.mType = NodeType::Factor});
-            ConsumeToken();
+            fctr = std::make_shared<mb::TreeNode<AstNode>>((AstNode){.mType = NodeType::Factor, .mToken = ConsumeToken()});
 
             std::shared_ptr<mb::TreeNode<AstNode>> rlit = Literal();
 
@@ -498,6 +493,140 @@ void PrintParseTree(std::shared_ptr<mb::TreeNode<AstNode>> root, std::string tab
     }
 }
 
+SkitterValue Script::ExecNode(std::shared_ptr<mb::TreeNode<AstNode>> root){
+    switch (root->data()->mType)
+    {
+    case NodeType::Literal: {
+        mb::Log::Debug("returning literal...");
+        SkitterValue val;
+        switch(root->data()->mToken.token){
+            case TokenType::SCONST:
+                val.mType = SkitterType::String;
+                std::get<std::string>(val.mValue) = root->data()->mToken.lexeme;
+                return val;
+
+            case TokenType::ICONST:
+                val.mType = SkitterType::Number;
+                std::get<double>(val.mValue) = std::stoi(root->data()->mToken.lexeme);
+                return val;
+
+            case TokenType::TRUE:
+            case TokenType::FALSE:
+                val.mType = SkitterType::Bool;
+                std::get<bool>(val.mValue) = root->data()->mToken.lexeme == "true";
+                return val;
+
+            case TokenType::IDENT:
+                return mVars[root->data()->mToken.lexeme];
+        }
+        break;
+    }
+
+    case NodeType::Term: {
+        mb::Log::Debug("Execing term...");
+        SkitterValue val { .mType = SkitterType::Number };
+
+        if(root->data()->mToken.lexeme == "+"){
+            std::get<double>(val.mValue) = std::get<double>(ExecNode(root->GetChild(0)).mValue) + std::get<double>(ExecNode(root->GetChild(1)).mValue);
+        } else {
+            std::get<double>(val.mValue) = std::get<double>(ExecNode(root->GetChild(0)).mValue) - std::get<double>(ExecNode(root->GetChild(1)).mValue);
+        }
+        return val;
+    }
+    
+    case NodeType::Factor: {
+        mb::Log::Debug("Execing factor...");
+        SkitterValue val { .mType = SkitterType::Number };
+
+        if(root->data()->mToken.lexeme == "*"){
+            std::get<double>(val.mValue) = std::get<double>(ExecNode(root->GetChild(0)).mValue) * std::get<double>(ExecNode(root->GetChild(1)).mValue);
+        } else {
+            std::get<double>(val.mValue) = std::get<double>(ExecNode(root->GetChild(0)).mValue) / std::get<double>(ExecNode(root->GetChild(1)).mValue);
+        }
+        return val;
+    }
+
+    case NodeType::AssigNode: {
+        mb::Log::Debug("Execing assignment...");
+        SkitterValue val = ExecNode(root->GetChild(0));
+        mVars[root->data()->mToken.lexeme] = val;
+        return val;
+    }
+
+    case NodeType::Comparison: {
+        mb::Log::Debug("Execing comparison...");
+        SkitterValue ret = ExecNode(root->GetChild(0));
+        return ret;
+
+        /*
+        std::vector<std::shared_ptr<AstNode>> children = *root->GetChildren();
+        children.pop_front();
+
+        for(auto node : children){
+            ret = ExecNode(node);
+            if(v.mType == SkitterType::Number){
+                v.mValue.get<bool>() = v.mValue.get<bool>() == (ret.mValue.get<double> > 0.0);
+            }  else {
+                v.mValue.get<bool>() = v.mValue.get<bool>() == ret.mValue.get<bool>();
+            }
+        }
+        return v;
+        */
+    }
+
+    case NodeType::And: {
+        mb::Log::Debug("Execing and...");
+        SkitterValue ret = ExecNode(root->GetChild(0));
+        return ret;
+        /*
+        for(auto node : *root->GetChildren()){
+            SkitterValue ret = ExecNode(node);
+            if(v.mType == SkitterType::Number){
+                v.mValue.get<bool>() = v.mValue.get<bool>() && (ret.mValue.get<double> > 0.0);
+            }  else {
+                v.mValue.get<bool>() = v.mValue.get<bool>() && ret.mValue.get<bool>();
+            }
+        }
+        return v;
+        */
+    }
+
+    case NodeType::Exp: {
+        mb::Log::Debug("Execing expression...");
+        return ExecNode(root->GetChild(0));
+    }
+
+    case NodeType::If: {
+        mb::Log::Debug("Execing if stmt...");
+        SkitterValue v = ExecNode(root->GetChild(0));
+        if((v.mType == SkitterType::Number && std::get<double>(v.mValue) > 0.0) || std::get<bool>(v.mValue)){
+            ExecNode(root->GetChild(1));
+        } else{ 
+            if(root->GetChildren()->size() > 2){
+                ExecNode(root->GetChild(2));
+            }
+        }
+        return v;
+    }
+
+    case NodeType::Block: {
+        for(auto node : *root->GetChildren()){
+            ExecNode(node);
+        }
+        break;
+    }
+
+    default:
+        break;
+    }
+
+    return (SkitterValue){ .mType = SkitterType::Bool, .mValue = std::tuple<std::string, double, bool>("", 0.0, true)};
+}
+
+void Script::Execute(){
+    SkitterValue value = ExecNode(mTree.GetRoot()->GetChild(0));
+}
+
 Script::Script(){
 
 }
@@ -510,6 +639,28 @@ Script::Script(std::string script){
     mTree = p.Parse();
 
     PrintParseTree(mTree.GetRoot(), "");
+
+    Execute();
+
+    for(auto [key, val] : mVars){
+        switch (val.mType)
+        {
+        case SkitterType::Number:{
+            mb::Log::Info("{} = {}", key, std::get<double>(val.mValue));
+            break;
+        }
+        case SkitterType::Bool:{
+            mb::Log::Info("{} = {}", key, (std::get<bool>(val.mValue) ? "true" : "false"));
+            break;
+        }
+        case SkitterType::String:{
+            mb::Log::Info("{} = {}", key, std::get<std::string>(val.mValue));
+            break;
+        }
+        default:
+            break;
+        }
+    }
 
 }
 
