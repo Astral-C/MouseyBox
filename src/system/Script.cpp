@@ -339,8 +339,17 @@ std::shared_ptr<TreeNode<AstNode>> Parser::Group(){
 }
 
 std::shared_ptr<mb::TreeNode<AstNode>> Parser::Literal(){
-    Token t = ConsumeToken();
-    return std::make_shared<mb::TreeNode<AstNode>>((AstNode){.mType = NodeType::Literal, .mToken = t});
+
+    Token t = PeekToken();
+    if(t.token == TokenType::LPAREN){
+        return Group();
+    } else if(t.token == TokenType::IDENT) {
+        ConsumeToken();
+        return std::make_shared<mb::TreeNode<AstNode>>((AstNode){.mType = NodeType::Variable, .mToken = t});
+    } else {
+        ConsumeToken();
+        return std::make_shared<mb::TreeNode<AstNode>>((AstNode){.mType = NodeType::Literal, .mToken = t});
+    }
 }
 
 std::shared_ptr<mb::TreeNode<AstNode>> Parser::Term(){
