@@ -45,7 +45,7 @@ namespace mb {
         std::function<void(Entity*)> mReady {};
         std::function<void(Entity*)> mFree {};
 
-        char mData[32] {0}; // user data buffer
+        char mData[128] {0}; // user data buffer
 
         void SetRenderable(std::shared_ptr<Graphics::Renderable> s) { mRenderable = s; }
         std::shared_ptr<Graphics::Renderable> GetRenderable() { return mRenderable.lock(); }

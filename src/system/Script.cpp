@@ -53,7 +53,8 @@ std::map<std::string, TokenType> ReservedTokens {
     {"false", TokenType::FALSE},
     {"or", TokenType::OR},
     {"print", TokenType::PRINT},
-    {"and", TokenType::AND}
+    {"and", TokenType::AND},
+    {"call", TokenType::CALL}
 };
 
 std::map<TokenType, std::string> DebugTokenNames {
@@ -75,7 +76,8 @@ std::map<TokenType, std::string> DebugTokenNames {
     {TokenType::ICONST, "TokenType::ICONST"},
     {TokenType::SCONST, "TokenType::SCONST"},
     {TokenType::OR, "TokenType::OR"},
-    {TokenType::AND, "TokenType::AND"}
+    {TokenType::AND, "TokenType::AND"},
+    {TokenType::CALL, "TokenType::CALL"},
 };
 
 std::map<NodeType, std::string> DebugNodeNames {
@@ -93,6 +95,7 @@ std::map<NodeType, std::string> DebugNodeNames {
     {NodeType::Or, "NodeType::Or"},
     {NodeType::Variable, "NodeType::Variable"},
     {NodeType::Literal, "NodeType::Literal"},
+    {NodeType::Call, "NodeType::Call"},
     {NodeType::Err, "NodeType::Err"}
 };
 
@@ -246,6 +249,10 @@ std::shared_ptr<TreeNode<AstNode>> Parser::Declaration(){
         node = AssignStatement();
         break;
     
+    case TokenType::CALL:
+        node = CallStatement();
+        break;
+
     case TokenType::PRINT:
         node = PrintStatement();
         break;
@@ -326,9 +333,33 @@ std::shared_ptr<TreeNode<AstNode>> Parser::AssignStatement(){
         return nullptr;
     }
 
-    std::shared_ptr<TreeNode<AstNode>> exp = Expression();
-    if(exp != nullptr){
-        node->AddNode(exp);
+    if(PeekToken().token == TokenType::CALL){
+        std::shared_ptr<TreeNode<AstNode>> exp = CallStatement();
+        if(exp != nullptr){
+            node->AddNode(exp);
+        }
+    } else {
+        std::shared_ptr<TreeNode<AstNode>> exp = Expression();
+        if(exp != nullptr){
+            node->AddNode(exp);
+        }
+    }
+
+    
+    return node;
+}
+
+std::shared_ptr<TreeNode<AstNode>> Parser::CallStatement(){
+    Token t = ConsumeToken(); // Consume Call
+    
+    std::shared_ptr<TreeNode<AstNode>> node = std::make_shared<TreeNode<AstNode>>((AstNode){.mType = NodeType::Call, .mToken = t});
+
+    node->AddNode(Literal());
+    node->AddNode(Expression());
+    
+    while(PeekToken().token == TokenType::COMMA){
+        ConsumeToken(); // Consume Comma
+        node->AddNode(Expression());
     }
 
     
@@ -517,7 +548,7 @@ Tree<AstNode> Parser::Parse(){
         mb::Log::Error(std::format("{}: Parse Error Token", temp.line));
     }
 
-    if((temp = PrevToken()).token != TokenType::END){
+    if((temp = ConsumeToken()).token != TokenType::END){
         mb::Log::Error(std::format("{}: Program Missing End Token", temp.line));
     }
 
@@ -548,7 +579,7 @@ SkitterValue Script::ExecNode(std::shared_ptr<TreeNode<AstNode>> root){
         SkitterValue val;
         switch(root->data()->mToken.token){
             case TokenType::SCONST:
-                val = root->data()->mToken.lexeme;
+                val = std::string(root->data()->mToken.lexeme);
                 return val;
 
             case TokenType::ICONST:
@@ -566,8 +597,22 @@ SkitterValue Script::ExecNode(std::shared_ptr<TreeNode<AstNode>> root){
     case NodeType::Term: {
         SkitterValue val;
 
+        SkitterValue lhs = ExecNode(root->GetChild(0));
+        SkitterValue rhs = ExecNode(root->GetChild(1));
+
         if(root->data()->mToken.lexeme == "+"){
-            val = ExecNode(root->GetChild(0)).value<double>() + ExecNode(root->GetChild(1)).value<double>();
+            if(lhs.mType == SkitterType::String){
+                if(rhs.mType == SkitterType::Number){
+                    val = lhs.value<std::string>() + std::to_string(rhs.value<double>());
+                } else if(rhs.mType == SkitterType::Number){
+                    val = lhs.value<std::string>() + (rhs.value<bool>() ? std::string("true") : std::string("false"));
+                } else {
+                    val = lhs.value<std::string>() + rhs.value<std::string>();
+                }
+                val.mType = SkitterType::String;
+            } else {
+                val = lhs.value<double>() + rhs.value<double>();
+            }
         } else {
             val = ExecNode(root->GetChild(0)).value<double>() - ExecNode(root->GetChild(1)).value<double>();
         }
@@ -656,7 +701,7 @@ SkitterValue Script::ExecNode(std::shared_ptr<TreeNode<AstNode>> root){
         
         ret.mType = SkitterType::Bool;
 
-        int childCount = root->GetChildren()->size() - 1;
+        int childCount = root->GetChildren()->size();
 
         for(int i = 1; i < childCount; i++){
             SkitterValue v = ExecNode(root->GetChild(i));
@@ -693,6 +738,24 @@ SkitterValue Script::ExecNode(std::shared_ptr<TreeNode<AstNode>> root){
             ExecNode(node);
         }
         break;
+    }
+
+    case NodeType::Call: {
+        if(!mCallables.contains(root->GetChild(0)->data()->mToken.lexeme)){
+            return SkitterValue();
+        }
+
+        std::vector<SkitterValue> args = {};
+
+        int childCount = root->GetChildren()->size();
+
+        for(int i = 1; i < childCount; i++){
+            SkitterValue v = ExecNode(root->GetChild(i));
+            args.push_back(v);
+        }
+
+        SkitterValue v = mCallables[root->GetChild(0)->data()->mToken.lexeme](args);
+        return v;
     }
 
     case NodeType::Print: {

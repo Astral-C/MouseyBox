@@ -7,6 +7,7 @@
 #include <vector>
 #include <system/Containers/Tree.hpp>
 #include <type_traits>
+#include <functional>
 
 namespace mb::Scripting {
     enum class TokenType {
@@ -35,6 +36,7 @@ namespace mb::Scripting {
         AND,
         PRINT,
         COMMA,
+        CALL,
         NONE
     };
 
@@ -54,6 +56,7 @@ namespace mb::Scripting {
         Or,
         And,
         Print,
+        Call,
         Err
     };
 
@@ -136,6 +139,7 @@ namespace mb::Scripting {
         std::shared_ptr<TreeNode<AstNode>> Group();
         std::shared_ptr<TreeNode<AstNode>> Statement();
         std::shared_ptr<TreeNode<AstNode>> IfStatement();
+        std::shared_ptr<TreeNode<AstNode>> CallStatement();
         std::shared_ptr<TreeNode<AstNode>> PrintStatement();
         std::shared_ptr<TreeNode<AstNode>> AssignStatement();
 
@@ -168,7 +172,9 @@ namespace mb::Scripting {
     };
 
     class Script {
+
         std::map<std::string, SkitterValue> mVars;
+        std::map<std::string, std::function<SkitterValue(std::vector<SkitterValue>)>> mCallables;
         mb::Tree<AstNode> mTree;
 
         SkitterValue ExecNode(std::shared_ptr<mb::TreeNode<AstNode>>);
@@ -183,6 +189,10 @@ namespace mb::Scripting {
             return mVars[name];
         }
         
+        std::function<SkitterValue(std::vector<SkitterValue>)>& operator()(std::string name) {
+            return mCallables[name];
+        }
+
         Script();
         Script(std::string);
         ~Script();
