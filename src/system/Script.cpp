@@ -6,26 +6,16 @@
 
 namespace mb::Scripting {
 
-template<>
-std::string& SkitterValue::value<std::string>(){
-    return mStrValue;
-}
-
-template<>
-double& SkitterValue::value<double>(){
-    return mNumValue;
-}
-
-template<>
-bool& SkitterValue::value<bool>(){
-    return mBoolValue;
-}
+template<> std::string& SkitterValue::value(){ return mStrValue; }
+template<> bool& SkitterValue::value(){ return mBoolValue; }
+template<> double& SkitterValue::value(){ return mNumValue; }
 
 enum class LexerState {
     BEGIN,
     IDENT,
     INT,
     STRING,
+    COMMENT,
     ERR
 };
 
@@ -119,6 +109,10 @@ std::vector<Token> LexString(std::string stream){
 
         switch(state) {
             case LexerState::BEGIN:
+                if(cur == '#') {
+                    state = LexerState::COMMENT;
+                }
+                
                 if(isalpha(cur)){
                     state = LexerState::IDENT;
                     currentToken.lexeme += cur;
@@ -160,8 +154,16 @@ std::vector<Token> LexString(std::string stream){
 
                 break;
 
+            case LexerState::COMMENT:
+                if(cur == '\n'){
+                    curline++;
+                    state = LexerState::BEGIN;  
+                }
+
+                break;
+
             case LexerState::IDENT:
-                if(isalnum(cur) || cur == '_'){
+                if(isalnum(cur) || cur == '_' || cur == '-'){
                     currentToken.lexeme += cur;
                 } else { // whitespace
                     currentToken.line = curline;
@@ -182,6 +184,11 @@ std::vector<Token> LexString(std::string stream){
                     sp--;
                     
                     state = LexerState::BEGIN;
+                    
+                    if(cur == '#') {
+                        state = LexerState::COMMENT;
+                    }
+                
                 }
                 break;
 
@@ -195,6 +202,9 @@ std::vector<Token> LexString(std::string stream){
                     currentToken.lexeme = "";
                     sp--;
                     state = LexerState::BEGIN;
+                    if(cur == '#') {
+                        state = LexerState::COMMENT;
+                    }
                 }
                 break;
 
@@ -346,7 +356,6 @@ std::shared_ptr<TreeNode<AstNode>> Parser::PrintStatement(){
         ConsumeToken(); // Consume Comma
         node->AddNode(Expression());
     }
-
     
     return node;
 }
@@ -517,7 +526,7 @@ Tree<AstNode> Parser::Parse(){
         mb::Log::Error(std::format("{}: Parse Error Token", temp.line));
     }
 
-    if((temp = PrevToken()).token != TokenType::END){
+    if((temp = ConsumeToken()).token != TokenType::END){
         mb::Log::Error(std::format("{}: Program Missing End Token", temp.line));
     }
 
@@ -700,7 +709,6 @@ SkitterValue Script::ExecNode(std::shared_ptr<TreeNode<AstNode>> root){
 
         for(auto node : *root->GetChildren()){
             SkitterValue v = ExecNode(node);
-
             if(v.mType == SkitterType::Bool){
                 str += v.value<bool>() ? "true" : "false";
             } else if(v.mType == SkitterType::String){

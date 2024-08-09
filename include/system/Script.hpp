@@ -1,3 +1,4 @@
+#pragma once
 #ifndef __MB_SCRIPT_H__
 #define __MB_SCRIPT_H__
 #include <cstdint>
@@ -76,10 +77,7 @@ namespace mb::Scripting {
         bool mBoolValue;
     
         template<typename T>
-        T& value(){
-            //static_assert(std::is_base_of<std::string, , T>::value, "T must be string, double, or bool");
-            return T(); // this isnt good but it cant happen, template error if not one of the specialized templates
-        }
+        T& value(){}
 
         SkitterValue& operator=(std::string s){
             mType = SkitterType::String;
@@ -183,6 +181,10 @@ namespace mb::Scripting {
             return mVars[name];
         }
         
+        const SkitterValue& operator[](std::string name) const {
+            return mVars.at(name);
+        }
+
         Script();
         Script(std::string);
         ~Script();
