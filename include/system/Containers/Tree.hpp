@@ -18,6 +18,7 @@ namespace mb {
         T* data() { return &mData; }
 
         void SetParent(std::shared_ptr<TreeNode<T>> parent) { mParent = parent; }
+        std::shared_ptr<TreeNode<T>> GetParent(){ return mParent.lock(); }
         std::shared_ptr<TreeNode<T>> GetChild(int idx) { return mChildren[idx]; }
         std::deque<std::shared_ptr<TreeNode<T>>>* GetChildren() { return &mChildren; }
 

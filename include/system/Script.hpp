@@ -37,6 +37,7 @@ namespace mb::Scripting {
         PRINT,
         COMMA,
         CALL,
+        GLOBAL,
         NONE
     };
 
@@ -57,11 +58,11 @@ namespace mb::Scripting {
         And,
         Print,
         Call,
+        Global,
         Err
     };
 
     extern std::map<std::string, TokenType> ReservedTokens;
-
     extern std::map<TokenType, std::string> DebugTokenNames;
 
     enum class SkitterType {
@@ -116,6 +117,11 @@ namespace mb::Scripting {
         SkitterValue mValue;
     };
 
+    bool HasGlobalVar(std::string);
+    bool HasGlobalFunc(std::string);
+    SkitterValue& Variable(std::string);
+    std::function<SkitterValue(std::vector<SkitterValue>)>& Function(std::string);
+
     class Parser {
         int mCurTokenIdx { 0 };
         std::vector<Token> mTokens;
@@ -142,6 +148,7 @@ namespace mb::Scripting {
         std::shared_ptr<TreeNode<AstNode>> CallStatement();
         std::shared_ptr<TreeNode<AstNode>> PrintStatement();
         std::shared_ptr<TreeNode<AstNode>> AssignStatement();
+        std::shared_ptr<TreeNode<AstNode>> GlobalAssignStatement();
 
         Token PeekToken(int offset=0){
             return mTokens[mCurTokenIdx+offset];
@@ -186,11 +193,19 @@ namespace mb::Scripting {
         void Execute();
 
         SkitterValue& operator[](std::string name) {
-            return mVars[name];
+            if(HasGlobalVar(name)){
+                return Variable(name);
+            } else {
+                return mVars[name];
+            }
         }
         
         std::function<SkitterValue(std::vector<SkitterValue>)>& operator()(std::string name) {
-            return mCallables[name];
+            if(HasGlobalVar(name)){
+                return Function(name);
+            } else {
+                return mCallables[name];
+            }
         }
 
         Script();

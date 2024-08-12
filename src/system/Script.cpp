@@ -6,6 +6,27 @@
 
 namespace mb::Scripting {
 
+namespace Globals {
+    std::map<std::string, SkitterValue> mVars;
+    std::map<std::string, std::function<SkitterValue(std::vector<SkitterValue>)>> mCallables;
+}
+
+SkitterValue& Variable(std::string name) {
+    return Globals::mVars[name];
+}
+
+std::function<SkitterValue(std::vector<SkitterValue>)>& Function(std::string name) {
+    return Globals::mCallables[name];
+}
+
+bool HasGlobalVar(std::string name){
+    return Globals::mVars.contains(name);
+}
+
+bool HasGlobalFunc(std::string name){
+    return Globals::mCallables.contains(name);
+}
+
 template<>
 std::string& SkitterValue::value<std::string>(){
     return mStrValue;
@@ -54,7 +75,9 @@ std::map<std::string, TokenType> ReservedTokens {
     {"or", TokenType::OR},
     {"print", TokenType::PRINT},
     {"and", TokenType::AND},
-    {"call", TokenType::CALL}
+    {"call", TokenType::CALL},
+    {"global", TokenType::GLOBAL}
+
 };
 
 std::map<TokenType, std::string> DebugTokenNames {
@@ -78,6 +101,7 @@ std::map<TokenType, std::string> DebugTokenNames {
     {TokenType::OR, "TokenType::OR"},
     {TokenType::AND, "TokenType::AND"},
     {TokenType::CALL, "TokenType::CALL"},
+    {TokenType::GLOBAL, "TokenType::GLOBAL"},
 };
 
 std::map<NodeType, std::string> DebugNodeNames {
@@ -96,6 +120,7 @@ std::map<NodeType, std::string> DebugNodeNames {
     {NodeType::Variable, "NodeType::Variable"},
     {NodeType::Literal, "NodeType::Literal"},
     {NodeType::Call, "NodeType::Call"},
+    {NodeType::Global, "NodeType::Global"},
     {NodeType::Err, "NodeType::Err"}
 };
 
@@ -249,6 +274,10 @@ std::shared_ptr<TreeNode<AstNode>> Parser::Declaration(){
         node = AssignStatement();
         break;
     
+    case TokenType::GLOBAL:
+        node = GlobalAssignStatement();
+        break;
+
     case TokenType::CALL:
         node = CallStatement();
         break;
@@ -345,6 +374,36 @@ std::shared_ptr<TreeNode<AstNode>> Parser::AssignStatement(){
         }
     }
 
+    
+    return node;
+}
+
+std::shared_ptr<TreeNode<AstNode>> Parser::GlobalAssignStatement(){
+    Token t = ConsumeToken(); // Consume Global
+    
+    std::shared_ptr<TreeNode<AstNode>> node = std::make_shared<TreeNode<AstNode>>((AstNode){.mType = NodeType::Global, .mToken = t});
+
+    t = ConsumeToken(); // Consume Ident
+    std::shared_ptr<TreeNode<AstNode>> anode = std::make_shared<TreeNode<AstNode>>((AstNode){.mType = NodeType::AssigNode, .mToken = t});
+
+    if(ConsumeToken().token != TokenType::EQ){
+        mb::Log::Error("Unexpected Token {} on line {}: {}", DebugTokenNames[PrevToken().token], PrevToken().line, PrevToken().lexeme);
+        return nullptr;
+    }
+
+    if(PeekToken().token == TokenType::CALL){
+        std::shared_ptr<TreeNode<AstNode>> exp = CallStatement();
+        if(exp != nullptr){
+            anode->AddNode(exp);
+        }
+    } else {
+        std::shared_ptr<TreeNode<AstNode>> exp = Expression();
+        if(exp != nullptr){
+            anode->AddNode(exp);
+        }
+    }
+
+    node->AddNode(anode);
     
     return node;
 }
@@ -572,7 +631,11 @@ SkitterValue Script::ExecNode(std::shared_ptr<TreeNode<AstNode>> root){
     {
     
     case NodeType::Variable: {
-        return mVars[root->data()->mToken.lexeme];
+        if(Globals::mVars.contains(root->data()->mToken.lexeme)){
+            return Globals::mVars[root->data()->mToken.lexeme];
+        } else {
+            return mVars[root->data()->mToken.lexeme];
+        }
     }
 
     case NodeType::Literal: {
@@ -631,8 +694,16 @@ SkitterValue Script::ExecNode(std::shared_ptr<TreeNode<AstNode>> root){
 
     case NodeType::AssigNode: {
         SkitterValue val = ExecNode(root->GetChild(0));
-        mVars[root->data()->mToken.lexeme] = val;
+        if(root->GetParent()->data()->mType != NodeType::Global){
+            mVars[root->data()->mToken.lexeme] = val;
+        } else {
+            Globals::mVars[root->data()->mToken.lexeme] = val;
+        }
         return val;
+    }
+
+    case NodeType::Global: {
+        return ExecNode(root->GetChild(0));
     }
 
     case NodeType::Comparison: {
@@ -741,7 +812,7 @@ SkitterValue Script::ExecNode(std::shared_ptr<TreeNode<AstNode>> root){
     }
 
     case NodeType::Call: {
-        if(!mCallables.contains(root->GetChild(0)->data()->mToken.lexeme)){
+        if(!mCallables.contains(root->GetChild(0)->data()->mToken.lexeme) && !Globals::mCallables.contains(root->GetChild(0)->data()->mToken.lexeme)){
             return SkitterValue();
         }
 
@@ -754,7 +825,14 @@ SkitterValue Script::ExecNode(std::shared_ptr<TreeNode<AstNode>> root){
             args.push_back(v);
         }
 
-        SkitterValue v = mCallables[root->GetChild(0)->data()->mToken.lexeme](args);
+        SkitterValue v;
+        
+        if(Globals::mCallables.contains(root->GetChild(0)->data()->mToken.lexeme)){
+            v = Globals::mCallables[root->GetChild(0)->data()->mToken.lexeme](args);
+        } else {
+            v = mCallables[root->GetChild(0)->data()->mToken.lexeme](args);
+        }
+
         return v;
     }
 
@@ -791,6 +869,27 @@ void Script::Execute(){
 }
 
 void Script::DumpVars(){
+    mb::Log::Debug("===Global===");
+    for(auto [key, val] : Globals::mVars){
+        switch (val.mType)
+        {
+        case SkitterType::Number:{
+            mb::Log::Info("{} = {}", key, val.value<double>());
+            break;
+        }
+        case SkitterType::Bool:{
+            mb::Log::Info("{} = {}", key, (val.value<bool>() ? "true" : "false"));
+            break;
+        }
+        case SkitterType::String:{
+            mb::Log::Info("{} = {}", key, val.value<std::string>());
+            break;
+        }
+        default:
+            break;
+        }
+    }
+    mb::Log::Debug("===Local===");
     for(auto [key, val] : mVars){
         switch (val.mType)
         {
@@ -810,6 +909,7 @@ void Script::DumpVars(){
             break;
         }
     }
+    mb::Log::Debug("=========");
 }
 
 void Script::DumpTree(){
