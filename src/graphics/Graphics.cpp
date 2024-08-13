@@ -259,6 +259,10 @@ void Renderer::DeleteTilemap(std::string name){
     mTileMaps.erase(name);
 }
 
+void Renderer::DeleteSprite(std::string name){
+    mSprites.erase(name);
+}
+
 std::shared_ptr<TileMap> Renderer::LoadTilemap(std::filesystem::path path){
     std::shared_ptr<TileMap> map = std::make_shared<TileMap>(this, path);
     mTileMaps.insert({map->mName, map});

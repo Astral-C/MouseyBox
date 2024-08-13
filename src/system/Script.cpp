@@ -182,6 +182,11 @@ std::vector<Token> LexString(std::string stream){
                     currentToken.lexeme = "";
                 }
 
+                if(cur == '#'){
+                    while(stream[sp] != '\n') sp++;
+                    curline++;
+                }
+
                 if(cur == '\n'){
                     curline++;
                 }
