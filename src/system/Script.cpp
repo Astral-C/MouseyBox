@@ -27,6 +27,10 @@ bool HasGlobalFunc(std::string name){
     return Globals::mCallables.contains(name);
 }
 
+std::map<std::string, SkitterValue> GetGlobalVars(){
+    return Globals::mVars;
+}
+
 template<>
 std::string& SkitterValue::value<std::string>(){
     return mStrValue;

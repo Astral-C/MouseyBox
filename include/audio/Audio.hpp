@@ -30,13 +30,14 @@ namespace mb::Audio {
     public:
 
         template<typename T>
-        std::shared_ptr<T> Load(std::filesystem::path path){
+        std::shared_ptr<T> Load(std::string name, std::filesystem::path path){
             static_assert(std::is_base_of_v<Playable, T>);
             std::shared_ptr<T> playable = std::make_shared<T>();
             
             playable->Load(path);
+            playable->SetTargetSpec(&mTargetSpec);
             
-            mLoaded.insert({path.stem().string(), playable});
+            mLoaded.insert({name, playable});
             return playable;
         }
 
@@ -47,6 +48,7 @@ namespace mb::Audio {
             
             playable->mName = name;
             playable->Load(data, size);
+            playable->SetTargetSpec(&mTargetSpec);
             
             mLoaded.insert({name, playable});
             return playable;

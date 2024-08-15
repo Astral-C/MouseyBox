@@ -8,26 +8,28 @@
 #include <filesystem>
 #include <vector>
 #include <array>
-#include <tt/include/tracker.h>
+#include <SDL.h>
 
 namespace mb::Audio {
-    
 
-    class MODTracker : public Playable {
+    class Wav : public Playable {
     private:
-        ModTracker mModTracker;
-
+        SDL_AudioSpec mWavSpec;
+        uint8_t* mData;
+        uint32_t mDataLen;
+        int mSampleOffset { 0 };
     public:
 
-        void Loop() {  }
-        bool AtEnd() { return false; }
+        void Loop();
+        bool AtEnd();
+        void Reset();
         
         void Mix(uint8_t*, int);
         void Load(std::filesystem::path);
         void Load(uint8_t*, size_t);
 
-        MODTracker();
-        ~MODTracker();
+        Wav();
+        ~Wav();
     };
 }
 

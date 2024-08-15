@@ -10,17 +10,17 @@ namespace mb::Audio {
         for(auto playable : mixer->mPlaying){
             playable->Mix(stream, len);
             
-            /*
             if(playable->AtEnd() && !playable->ShouldLoop()){
-                std::remove(mixer->mPlaying.begin(), mixer->mPlaying.end(), playable);
+                std::erase(mixer->mPlaying, playable);
             } else if(playable->AtEnd() && playable->ShouldLoop()){
                 playable->Loop();
-            }*/
+            }
         }
     }
 
     void Mixer::Play(std::string name){
         if(mLoaded.contains(name)){
+            mLoaded[name]->Reset();
             mPlaying.push_back(mLoaded[name]);
         }
     }
@@ -41,7 +41,7 @@ namespace mb::Audio {
     }
 
     Mixer::Mixer(){
-        mb::Log::InfoFrom("MouseyBox", "Creating Mixer");
+        mb::Log::InfoFrom("MouseyBoxAudio", "Creating Mixer");
         mTargetSpec = {
             .freq = 44100,
             .format = AUDIO_S16,

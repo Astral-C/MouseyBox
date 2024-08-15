@@ -82,6 +82,7 @@ namespace mb {
         static void Update();
 
         static void ForEach(std::function<void(Entity*)>);
+        static void ForAll(std::function<void(Entity*)>);
     };
 
 }

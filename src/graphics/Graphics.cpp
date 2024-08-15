@@ -26,7 +26,7 @@ Window::Window(std::string name){
 #endif
 
     if(mWindow == nullptr){
-        Log::Error(std::format("Error creating SDL Window {}", SDL_GetError()));
+        Log::Error("Error creating SDL Window {}", SDL_GetError());
         SDL_Quit();
     }
 }
@@ -80,7 +80,7 @@ void Renderer::Initialize(Window* win){
 #endif
 
     if(mInternalRender == nullptr){
-        Log::InfoFrom("MouseyBox", std::format("Error Creating SDL Rendererer: {}", SDL_GetError()));
+        Log::InfoFrom("MouseyBox", "Error Creating SDL Rendererer: {}", SDL_GetError());
         SDL_Quit();
     }
     mb::Log::InfoFrom("MouseyBox", "Initing Camera");
@@ -100,7 +100,7 @@ bool Renderer::LoadSprite(std::filesystem::path path){
     if(mSprites.contains(spriteConfig["name"])) return true;
 
     std::shared_ptr<Sprite> newSprite = std::make_shared<Sprite>(mInternalRender, spriteConfig);
-    Log::Debug(std::format("Loading Sprite {}", spriteConfig["name"].get<std::string>()));
+    Log::Debug("Loading Sprite {}", spriteConfig["name"].get<std::string>());
     mSprites.insert({spriteConfig["name"], newSprite});
 
     return true;
@@ -110,7 +110,7 @@ bool Renderer::LoadSpriteFromMemory(nlohmann::json spriteConfig, uint8_t* data, 
     if(mSprites.contains(spriteConfig["name"])) return true;
 
     std::shared_ptr<Sprite> newSprite = std::make_shared<Sprite>(mInternalRender, spriteConfig, data, size);
-    Log::Debug(std::format("Loading Sprite {}", spriteConfig["name"].get<std::string>()));
+    Log::Debug("Loading Sprite {}", spriteConfig["name"].get<std::string>());
     mSprites.insert({spriteConfig["name"], newSprite});
 
     return true;
@@ -260,6 +260,7 @@ void Renderer::DeleteTilemap(std::string name){
 }
 
 void Renderer::DeleteSprite(std::string name){
+    Log::Debug("Deleting Sprite {}", name);
     mSprites.erase(name);
 }
 

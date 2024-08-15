@@ -174,4 +174,10 @@ namespace mb {
         }
     }
 
+    void Entity::ForAll(std::function<void(Entity*)> func){
+        for(int i = 0; i < mEntityCount; i++){
+            func(&mEntities[i]);
+        }   
+    }
+
 }

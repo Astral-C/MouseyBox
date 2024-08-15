@@ -121,6 +121,7 @@ namespace mb::Scripting {
     bool HasGlobalFunc(std::string);
     SkitterValue& Variable(std::string);
     std::function<SkitterValue(std::vector<SkitterValue>)>& Function(std::string);
+    std::map<std::string, SkitterValue> GetGlobalVars();
 
     class Parser {
         int mCurTokenIdx { 0 };
