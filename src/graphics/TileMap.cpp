@@ -96,7 +96,7 @@ TileMap::~TileMap(){
 }
 
 TileMap::TileMap(Renderer* r, std::filesystem::path json){
-    std::fstream jsonStream(json.string());
+    std::ifstream jsonStream(json.string());
     nlohmann::json tilemapJson = nlohmann::json::parse(jsonStream);
 
     mName = tilemapJson["name"];

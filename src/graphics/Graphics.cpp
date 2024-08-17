@@ -95,7 +95,8 @@ SDL_Rect Renderer::GetSize(){
 }
 
 bool Renderer::LoadSprite(std::filesystem::path path){
-    nlohmann::json spriteConfig = nlohmann::json::parse(std::fstream(path.string()));
+    nlohmann::json spriteConfig = nlohmann::json::parse(std::ifstream(path.string()));
+    mb::Log::Debug("Parsed sprite config!");
     
     if(mSprites.contains(spriteConfig["name"])) return true;
 

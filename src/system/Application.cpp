@@ -32,7 +32,7 @@ namespace mb {
 
 #ifdef __SWITCH__
         romfsInit();
-        chdir("romfs:/");
+        std::filesystem::current_path("romfs:/");
         consoleDebugInit(debugDevice_SVC);
 #endif
         mb::Log::InfoFrom("MouseyBox", "Creating Application");
