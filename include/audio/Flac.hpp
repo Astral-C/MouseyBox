@@ -9,15 +9,16 @@
 #include <vector>
 #include <array>
 #include <SDL.h>
-#define STB_VORBIS_HEADER_ONLY
-#include <audio/formats/stb_vorbis.h>
+#include <audio/formats/dr_flac.h>
 
 namespace mb::Audio {
 
-    class Ogg : public Playable {
+    class Flac : public Playable {
     private:
-        stb_vorbis* mVorbisHandle;
+        drflac* mFlacHandle { nullptr };
     public:
+
+        float mVolume { 1.0 };
 
         void Loop();
         bool AtEnd();
@@ -27,8 +28,8 @@ namespace mb::Audio {
         void Load(std::filesystem::path);
         void Load(uint8_t*, size_t);
 
-        Ogg();
-        ~Ogg();
+        Flac();
+        ~Flac();
     };
 }
 

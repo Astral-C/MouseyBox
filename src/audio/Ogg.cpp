@@ -5,7 +5,7 @@
 #ifdef STB_VORBIS_HEADER_ONLY
 #undef STB_VORBIS_HEADER_ONLY
 #endif
-#include <audio/stb_vorbis.h>
+#include <audio/formats/stb_vorbis.h>
 
 namespace mb::Audio {
 
