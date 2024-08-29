@@ -26,14 +26,14 @@ namespace MOD {
         uint16_t mRepeatOffset; //in u16s
         uint16_t mRepeatLength; //in u16s
         
-        std::vector<int16_t> mData;
+        std::vector<int8_t> mData;
 
-        int16_t& operator[](int idx){ return mData.at(idx); }
+        int16_t operator[](int idx){ return mData.at(idx); }
 
     };
 
     struct Channel {
-        int8_t mVolume;
+        int8_t mVolume { 0x40 };
         uint8_t mPrevInstrument;
         uint8_t mInstrument;
         uint8_t mEffect;
@@ -42,6 +42,8 @@ namespace MOD {
 
         uint32_t mNote;
         uint32_t mPeriod;
+
+        uint32_t mPortaSpeed;
         uint32_t mPortaPeriod;
 
         double mSampleOffset;
@@ -90,7 +92,7 @@ namespace MOD {
     public:
 
         void Loop() {  }
-        bool AtEnd() { return false; }
+        bool AtEnd() { return mCurrentPattern == mSongLength; }
         
         void Mix(uint8_t*, int);
         void Load(std::filesystem::path);

@@ -18,8 +18,6 @@ namespace mb::Audio {
         drflac* mFlacHandle { nullptr };
     public:
 
-        float mVolume { 1.0 };
-
         void Loop();
         bool AtEnd();
         void Reset();
