@@ -3,7 +3,20 @@
 #include <system/Log.hpp>
 #include <audio/TrackerMod.hpp>
 
+//
+// This format is so spaghetti lmao
+// it sucks
+//
+
 namespace mb::Audio {
+    // for implementing shitty vibrato
+    static int16_t sine_table[] = {
+        0, 24, 49, 74, 97,120,141,161,
+	    180,197,212,224,235,244,250,253,
+	    255,253,250,244,235,224,212,197,
+	    180,161,141,120, 97, 74, 49, 24
+    };
+
     static uint16_t finetune_table[16][36] = {
         {
             856,808,762,720,678,640,604,570,538,508,480,453, // C-1 to B-1 Finetune 0
@@ -225,19 +238,118 @@ namespace mb::Audio {
                     }
                     // Per Tick Effects, first tick events
                     switch (mChannels[i].mEffect){
-                        case 0x3:
-                            trigger = false;
+                        case 0x1:
+                        case 0x2:
                             if(period == 0) break;
+                            trigger = false;
+                            mChannels[i].mPortaSpeed = mChannels[i].mEffectArgs;
+                            break;
+                        case 0x3:
+                            if(period == 0) break;
+                            trigger = false;
                             mChannels[i].mPortaPeriod = period;
                             mChannels[i].mPortaSpeed = (mChannels[i].mEffectArgs & 0x0F);
-                            mb::Log::Debug("Starting Tone Porta from {} to {} with speed {}", mChannels[i].mPeriod, mChannels[i].mPortaPeriod, mChannels[i].mPortaSpeed);
+                            break;
+                        case 0x4:
+                            if(((mChannels[i].mEffectArgs & 0xF0) >> 4) != 0){
+                                mChannels[i].mVibratoSpeed = ((mChannels[i].mEffectArgs & 0xF0) >> 4);
+                            } else {
+                                mChannels[i].mVibratoSpeed = 1;
+                            }
+                            if((mChannels[i].mEffectArgs & 0x0F) != 0){
+                                mChannels[i].mVibratoDepth = mChannels[i].mEffectArgs & 0x0F;
+                            } else {
+                                mChannels[i].mVibratoDepth = 1;
+                            }
+                            break;
+                        case 0x5:
+                        case 0x6:
+                        case 0xA:
+                            if((mChannels[i].mEffectArgs & 0x0F) != 0) {
+                                mChannels[i].mVolSlideDir = 0;
+                                mChannels[i].mVolSlideSpeed = mChannels[i].mEffectArgs & 0x0F;
+                            }
+                            else if(((mChannels[i].mEffectArgs & 0xF0) >> 4) != 0) {
+                                mChannels[i].mVolSlideDir = 1;
+                                mChannels[i].mVolSlideSpeed = (mChannels[i].mEffectArgs & 0xF0) >> 4;
+                            }
+                            break;
+                        case 0x9:
+                            mChannels[i].mSampleOffset = mChannels[i].mEffectArgs * 0x100;
+                            mChannels[i].mEffect = 0;
+                            mChannels[i].mEffectArgs = 0;
+                            break;
+                        case 0xC:
+                            mChannels[i].mVolume = mChannels[i].mEffectArgs;
+                            break;
+                        case 0xD: // Execs on next row
+                            break;
+                        case 0x7:
+                            if(mChannels[i].mTremoloBase == -1) mChannels[i].mTremoloBase = mChannels[i].mVolume;
+                            if(((mChannels[i].mEffectArgs & 0xF0) >> 4) != 0) {
+                                mChannels[i].mTremoloSpeed = (mChannels[i].mEffectArgs & 0xF0) >> 4;
+                            } else {
+                                mChannels[i].mTremoloSpeed = 1;
+                            }
+
+                            if((mChannels[i].mEffectArgs & 0x0F) != 0) {
+                                mChannels[i].mTremoloDepth = mChannels[i].mEffectArgs & 0x0F;
+                            } else {
+                                mChannels[i].mTremoloDepth = 1;
+                            }
+                            break;
+                        case 0xE:
+                            switch((mChannels[i].mEffectArgs & 0xF0) >> 4){
+                                case 0x1:
+                                    mChannels[i].mPeriod -= mChannels[i].mEffectArgs & 0x0F;
+                                    mChannels[i].mPeriod = mChannels[i].mPeriod < 856 ? 113 : mChannels[i].mPeriod;
+                                    break;
+                                case 0x2:
+                                    mChannels[i].mPeriod += mChannels[i].mEffectArgs & 0x0F;
+                                    mChannels[i].mPeriod = mChannels[i].mPeriod > 856 ? 856 : mChannels[i].mPeriod;
+                                    break;
+                                case 0x5:
+                                    mChannels[i].mFineTune = mChannels[i].mEffectArgs & 0x0F;
+                                    break;
+                                case 0x9:
+                                    mChannels[i].mRetriggerCounter = 0;
+                                    mChannels[i].mRetriggerTicks = mChannels[i].mEffectArgs & 0x0F;
+                                    break;
+                                case 0xC:
+                                    mChannels[i].mNoteCutTicks = mChannels[i].mEffectArgs & 0x0F;
+                                    break;
+                                case 0xA:
+                                    mChannels[i].mVolume += mChannels[i].mEffectArgs & 0x0F;
+
+                                    if (mChannels[i].mVolume > 64){
+                                        mChannels[i].mVolume = 64;
+                                    }
+                                    break;
+                                case 0xB:
+                                    mChannels[i].mVolume -= mChannels[i].mEffectArgs & 0x0F;
+
+                                    if (mChannels[i].mVolume < 0){
+                                        mChannels[i].mVolume = 0;
+                                    }
+                                    break;
+                                default:
+                                    mb::Log::Debug("Unimplemented EX Effect {:x}", (mChannels[i].mEffectArgs & 0xF0) >> 4);
+                                    break;
+                            }
+                            break;
+                        case 0xF:
                             break;
                         default:
+                            if(mChannels[i].mEffect > 0) mb::Log::Debug("Unimplemented Effect {:x}", mChannels[i].mEffect);
                             break;
                     }
 
+                    // Reset a few things if these effects arent in use
+                    if(mChannels[i].mEffect != 0x7){
+                        mChannels[i].mTremoloBase = -1;
+                    }
+
                     if(period > 0 && trigger){
-                        mb::Log::Debug("Triggering Note w/ period {}", period);
                         mChannels[i].mNote = period;
                         mChannels[i].mPeriod = period;
                         mChannels[i].mSampleOffset = 0;
@@ -256,13 +368,56 @@ namespace mb::Audio {
             // Inter tick effects
             for(int i = 0; i < mChannels.size(); i++){
                 switch (mChannels[i].mEffect){
+                case 0x0:
+                    switch((mCurrentTicks - mSpeed) % 3){
+                        case 0:
+                            mChannels[i].mPeriod = mChannels[i].mNote;
+                            break;
+                        case 1:
+                            mChannels[i].mPeriod = mChannels[i].mNote + (((mChannels[i].mEffectArgs & 0xF0) >> 4) * 16);
+                            break;
+                        case 2:
+                            mChannels[i].mPeriod = mChannels[i].mNote + ((mChannels[i].mEffectArgs & 0x0F) * 16);
+                            break;
+                    }
+                    break;
+                case 0x1:
+                    if(mCurrentTicks == 0) 
+                        break;
+                    if(mChannels[i].mPeriod < 856){
+                        mChannels[i].mPeriod += mChannels[i].mPortaSpeed;
+                    } else {
+                        mChannels[i].mPeriod = 856;
+                    }
+                    break;
+                case 0x2:
+                    if(mCurrentTicks == 0) 
+                        break;
+                    if(mChannels[i].mPeriod > 113){
+                        mChannels[i].mPeriod -= mChannels[i].mPortaSpeed;
+                    } else {
+                        mChannels[i].mPeriod = 113;
+                    }
+                    break;
+                case 0x5:
+                    if(mChannels[i].mVolSlideSpeed != 0) {
+                        if(mChannels[i].mVolSlideDir != 0){
+                            mChannels[i].mVolume = std::min(mChannels[i].mVolume + mChannels[i].mVolSlideSpeed, 64);
+                        } else {
+                            mChannels[i].mVolume = std::max(0, mChannels[i].mVolume - mChannels[i].mVolSlideSpeed);
+                        }
+                    }
                 case 0x3:
+                    if(mCurrentTicks == 0)
+                        break;
                     if(mChannels[i].mPeriod < mChannels[i].mPortaPeriod){
 
                         mChannels[i].mPeriod += mChannels[i].mPortaSpeed;
 
                         if(mChannels[i].mPeriod >= mChannels[i].mPortaPeriod){
                             mChannels[i].mPeriod = mChannels[i].mPortaPeriod;
+                        } else if(mChannels[i].mPeriod >= 856){
+                            mChannels[i].mPeriod = 856;
                         }
                     } else if(mChannels[i].mPeriod > mChannels[i].mPortaPeriod){
 
@@ -270,19 +425,97 @@ namespace mb::Audio {
 
                         if(mChannels[i].mPeriod <= mChannels[i].mPortaPeriod){
                             mChannels[i].mPeriod = mChannels[i].mPortaPeriod;
+                        } else if(mChannels[i].mPeriod <= 113){
+                            mChannels[i].mPeriod = 113;
                         }
                     }
-                    mb::Log::Debug("Processing Porta from {} -> {}", mChannels[i].mPeriod, mChannels[i].mPortaPeriod);
                     break;
+                case 0xD:
+                    if(mCurrentTicks == 0){
+                        mCurrentPattern++;
+                        mCurrentRow = 0;
+                        if(mCurrentPattern > mSongLength){
+                            mCurrentPattern = 0;
+                        }                        
+
+                        mCurrentRow = (((mChannels[i].mEffectArgs & 0xF0) >> 4) * 10) + (mChannels[i].mEffectArgs & 0x0F) - 1;
+                        if(mCurrentRow >= 64){
+                            mCurrentRow = 0;
+                        }
+                    }
+                    break;
+                case 0xB:
+                    mCurrentPattern = mChannels[i].mEffectArgs;
+                    mCurrentRow = 0;
+                    if(mCurrentPattern > mSongLength){
+                        mCurrentPattern = mSongLength;
+                    }
+                    break;
+                case 0x6:
+                    if(mChannels[i].mVolSlideSpeed != 0) {
+                        if(mChannels[i].mVolSlideDir != 0){
+                            mChannels[i].mVolume = std::min(mChannels[i].mVolume + mChannels[i].mVolSlideSpeed, 64);
+                        } else {
+                            mChannels[i].mVolume = std::max(0, mChannels[i].mVolume - mChannels[i].mVolSlideSpeed);
+                        }
+                    }
+                case 0x4:
+                    if(mChannels[i].mVibratoPos > 32){
+                        mChannels[i].mPeriod = mChannels[i].mNote - (sine_table[mChannels[i].mVibratoPos % 32] * mChannels[i].mVibratoDepth) >> 7;
+                    } else {
+                        mChannels[i].mPeriod = mChannels[i].mNote + (sine_table[mChannels[i].mVibratoPos % 32] * mChannels[i].mVibratoDepth) >> 7;
+                    }
+                    mChannels[i].mVibratoPos = (mChannels[i].mVibratoPos + mChannels[i].mVibratoSpeed) % 64;
+                    break;
+                case 0x7:
+                    if(mChannels[i].mTremoloPos > 32){
+                        mChannels[i].mVolume -= (sine_table[mChannels[i].mTremoloPos % 32] * mChannels[i].mTremoloDepth) / 64;
+                    } else {
+                        mChannels[i].mVolume += (sine_table[mChannels[i].mTremoloPos % 32] * mChannels[i].mTremoloDepth) / 64;
+                    }
+                    mChannels[i].mTremoloPos = (mChannels[i].mTremoloPos + mChannels[i].mTremoloSpeed) % 64;
+                    break;
+                    
                 case 0xA:
-                    if((mChannels[i].mEffectArgs & 0xF0) >> 4 == 0) {
-                        mChannels[i].mVolume -= mChannels[i].mEffectArgs & 0x0F;
-                    }
-                    else if((mChannels[i].mEffectArgs & 0x0F) == 0) {
-                        mChannels[i].mVolume += (mChannels[i].mEffectArgs & 0xF0) >> 4;
+                    if(mChannels[i].mVolSlideSpeed != 0) {
+                        if(mChannels[i].mVolSlideDir != 0){
+                            mChannels[i].mVolume = std::min(mChannels[i].mVolume + mChannels[i].mVolSlideSpeed, 64);
+                        } else {
+                            mChannels[i].mVolume = std::max(0, mChannels[i].mVolume - mChannels[i].mVolSlideSpeed);
+                        }
                     }
                     break;
-                
+
+                case 0x8:
+                    mChannels[i].mPan = mChannels[i].mEffectArgs;
+                    break;
+
+                case 0xE:
+                    switch((mChannels[i].mEffectArgs & 0xF0) >> 4){
+                        case 0x9:
+                            mChannels[i].mRetriggerCounter++;
+                            if(mChannels[i].mRetriggerCounter % mChannels[i].mRetriggerTicks == 0){
+                                mChannels[i].mSampleOffset = 0;  
+                            }
+                            break;
+                        case 0xA:
+                        case 0xB:
+                            break;
+                        case 0xC:
+                            if(mChannels[i].mNoteCutTicks > 0 && mChannels[i].mNoteCutTicks != 0xFF){
+                                mChannels[i].mNoteCutTicks--;
+                            } else if (mChannels[i].mNoteCutTicks == 0){
+                                mChannels[i].mPeriod = 0;
+                                mChannels[i].mSampleOffset = 0;
+                                mChannels[i].mNoteCutTicks = 0xFF;   
+                            }
+                            break;
+                    }
+                    break;
+
+                case 0xF:
+                    mSpeed = mChannels[i].mEffectArgs;
+                    break;
                 default:
                     break;
                 }
@@ -326,11 +559,11 @@ namespace mb::Audio {
 
             for(int c = 0; c < mChannels.size(); c++){
                 auto channel = mChannels[c];
-                if(channel.mVolume == 0 || channel.mPeriod == 0) continue;
+                if(channel.mVolume == 0 || channel.mPeriod == 0 || channel.mInstrument == 0) continue;
 
-                MOD::Sample instrument = mSamples[channel.mInstrument];
+                MOD::Sample instrument = mSamples[channel.mInstrument-1];
                 // 3546895?
-                double freq = (((8363.0 * 428.0) / GetTruePeriod(channel.mPeriod, instrument.mFineTune + 8)) / mSampleRate);
+                double freq = (((8363.0 * 428.0) / channel.mPeriod) / mSampleRate);
 
                 int16_t sampleSlice = instrument.mData[static_cast<uint32_t>(channel.mSampleOffset)];
 
@@ -338,7 +571,7 @@ namespace mb::Audio {
                 sampleRight += (sampleSlice * channel.mVolume * channel.mPan) / 0xFF;
 
                 mChannels[c].mSampleOffset += freq;
-                if(instrument.mRepeatLength >= 2 && mChannels[c].mSampleOffset >= instrument.mRepeatOffset + instrument.mRepeatLength){
+                if(instrument.mRepeatLength >= 2 && (mChannels[c].mSampleOffset >= instrument.mRepeatOffset + instrument.mRepeatLength || channel.mSampleOffset >= instrument.mSampleLength)){
                     mChannels[c].mSampleOffset = instrument.mRepeatOffset + std::fmod(mChannels[c].mSampleOffset, instrument.mRepeatLength);
                 } else if(instrument.mRepeatLength < 2 && channel.mSampleOffset >= instrument.mSampleLength){
                     mChannels[c].mPeriod = 0;

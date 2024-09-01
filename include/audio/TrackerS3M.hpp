@@ -11,9 +11,11 @@
 
 namespace mb::Audio {
 
-    class XMTracker : public Playable {
+    class S3MTracker : public Playable {
     private:
-        std::vector<Channel> mChannels;
+        std::string mName;
+        uint8_t mType;
+        std::Array<Channel, 32> mChannels;
 
     public:
 
@@ -24,8 +26,8 @@ namespace mb::Audio {
         void Load(std::filesystem::path);
         void Load(uint8_t*, size_t);
 
-        XMTracker();
-        ~XMTracker();
+        S3MTracker();
+        ~S3MTracker();
     };
 }
 

@@ -40,23 +40,40 @@ namespace MOD {
         uint8_t mEffectArgs;
         uint8_t mPan;
 
-        uint32_t mNote;
-        uint32_t mPeriod;
+        int8_t mFineTune { -1 };
 
-        uint32_t mPortaSpeed;
-        uint32_t mPortaPeriod;
+        uint32_t mNote { 0 };
+        uint32_t mPeriod { 0 };
 
-        double mSampleOffset;
+        uint32_t mPortaSpeed { 0 };
+        uint32_t mPortaPeriod { 0 };
 
-        uint32_t mDelayTimer;
-        uint32_t mDelayedNote;
+        double mSampleOffset { 0.0 };
 
-        uint32_t mArpeggioNote1;
-        uint32_t mArpeggioNote2;
+        // Check which of these can be made u16s - I wanna smush this!
 
-        uint32_t mVibratoDepth;
-        uint32_t mVibratoPos;
+        uint32_t mDelayTimer { 0 };
+        uint32_t mDelayedNote { 0 };
 
+        uint32_t mArpeggioNote1 { 0 };
+        uint32_t mArpeggioNote2 { 0 };
+
+        uint32_t mVibratoPos { 0 };
+        uint32_t mVibratoSpeed { 0 };
+        uint32_t mVibratoDepth { 0 };
+
+        int32_t mTremoloBase { -1 };
+        uint32_t mTremoloPos { 0 };
+        uint32_t mTremoloSpeed { 0 };
+        uint32_t mTremoloDepth { 0 };
+
+        uint16_t mRetriggerTicks { 0 };
+        uint16_t mRetriggerCounter { 0 };
+
+        uint8_t mVolSlideDir { 0 };
+        uint8_t mVolSlideSpeed { 0 };
+
+        uint8_t mNoteCutTicks { 0 };
 
     };
 
@@ -91,8 +108,8 @@ namespace MOD {
 
     public:
 
-        void Loop() {  }
-        bool AtEnd() { return mCurrentPattern == mSongLength; }
+        void Loop() { mCurrentPattern = 0; mCurrentRow = 0; mCurrentTicks = 0; }
+        bool AtEnd() { return mCurrentPattern == mSongLength && mCurrentRow == 64 && mCurrentTicks == mSpeed; }
         
         void Mix(uint8_t*, int);
         void Load(std::filesystem::path);
