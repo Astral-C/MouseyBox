@@ -11,11 +11,25 @@
 
 namespace mb::Audio {
 
+    class S3MChannel {};
+
     class S3MTracker : public Playable {
     private:
         std::string mName;
         uint8_t mType;
-        std::Array<Channel, 32> mChannels;
+        std::array<S3MChannel, 32> mChannels;
+
+        uint8_t mOrderNum { 0 };
+        uint8_t mInstrumentCount { 0 };
+        uint8_t mPatternCount { 0 };
+        uint8_t mFlags { 0 };
+        uint8_t mCWT { 0 };
+        uint8_t mFormatVersion { 0 };
+        uint8_t mGlobalVolume { 0 };
+        uint8_t mSpeed { 0 };
+        uint8_t mTempo { 0 };
+        uint8_t mMasterVolume { 0 };
+        uint8_t mSpecial { 0 };
 
     public:
 

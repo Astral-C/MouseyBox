@@ -1,7 +1,7 @@
 #include <math.h>
 #include <algorithm>
 #include <system/Log.hpp>
-#include <audio/TrackerMod.hpp>
+#include <audio/TrackerS3M.hpp>
 
 namespace mb::Audio {
 
@@ -17,7 +17,7 @@ namespace mb::Audio {
         stream.readUInt8(); // 1A
         stream.readUInt8(); // Type
 
-        stream.readUInt16() // 0x0000
+        stream.readUInt16(); // 0x0000
 
         mOrderNum = stream.readUInt8();
         mInstrumentCount = stream.readUInt8();
