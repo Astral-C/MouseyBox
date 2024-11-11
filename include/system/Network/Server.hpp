@@ -2,6 +2,7 @@
 #define ASIO_HEADER_ONLY
 
 #include <set>
+#include <map>
 #include <memory>
 #include <iostream>
 #include <asio.hpp>
@@ -12,12 +13,17 @@ namespace mb {
 template<typename T>
 class Connection : public std::enable_shared_from_this<Connection<T>> {
 private:
-    asio::mutable_buffer mBuffer{1024};
-    asio::ip::udp::endpoint mEndpoint;
-    asio::ip::udp::socket mSocket;
+    asio::ip::udp::endpoint& mEndpoint;
 
 public:
-    void Send(T message);
+    void Send(std::shared_ptr<asio::ip::udp::socket> socket){//T message){
+        mb::Log::DebugFrom("MouseyBoxNetworking", "Sending response...");
+        socket->send_to(asio::buffer("Response!"), mEndpoint);
+    }
+
+    Connection(asio::io_context& ctx, asio::ip::udp::endpoint& endpoint) : mEndpoint(endpoint) {}
+    ~Connection(){}
+
 };
 
 template <typename T>
@@ -29,7 +35,7 @@ private:
     asio::ip::udp::endpoint mEndpoint, mSenderEndpoint;
     std::shared_ptr<asio::ip::udp::socket> mSocket;
     
-    std::set<Connection<T>> mClients;
+    std::map<std::string, std::shared_ptr<Connection<T>>> mClients;
 
     std::thread mServeThread;
 
@@ -38,14 +44,20 @@ private:
     void Listen(){
         mSocket->async_receive_from(asio::buffer(mBuffer), mSenderEndpoint, [&](const asio::error_code& error, std::size_t bytes_transferred){
             mb::Log::DebugFrom("MouseyBoxNetworking", "Got Connection Request from {}", mSenderEndpoint.address().to_string());
+
+            if(!mClients.contains(mSenderEndpoint.address().to_string())){
+                mClients[mSenderEndpoint.address().to_string()] = std::make_shared<Connection<T>>(mContext, mSenderEndpoint);
+            } else {
+                mClients[mSenderEndpoint.address().to_string()]->Send(mSocket);
+            }
+
             Listen();
         });
     }
 
+
 public:
 
-    void Broadcast(){}
-    
     void Start(){
         mb::Log::Debug("Starting Server ASIO Context...");
         mServeThread = std::thread([&](){ mContext.run(); });
