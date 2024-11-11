@@ -4,3 +4,6 @@
 [submodule "lib/bStream"]
 	path = lib/bStream
 	url = https://github.com/Astral-C/bStream.git
+[submodule "lib/asio"]
+	path = lib/asio
+	url = https://github.com/chriskohlhoff/asio.git

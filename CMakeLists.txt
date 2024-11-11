@@ -10,6 +10,7 @@ find_package(SDL2_ttf CONFIG REQUIRED)
 
 include_directories(lib)
 include_directories(include)
+include_directories(lib/asio/asio/include)
 include_directories(mouseybox ${SDL2_INCLUDE_DIRS})
 
 file(GLOB_RECURSE MOUSEY_SRC
