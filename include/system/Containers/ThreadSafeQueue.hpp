@@ -12,14 +12,17 @@ private:
     std::queue<T> mElements;
 
 public:
-    T pop(T e){
+    bool empty() { return mElements.empty(); }
+
+    void pop(T& to){
         std::scoped_lock(mLock);
-        return mElements.pop();
+        to = mElements.front();
+        mElements.pop();
     }
 
     void push(T e){
         std::scoped_lock(mLock);
-        mElements.push(e);
+        mElements.push(std::move(e));
     }
 
     TSQ(){}

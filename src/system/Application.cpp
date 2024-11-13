@@ -25,7 +25,7 @@ namespace mb {
     Application::Application(){}
     Application::Application(std::string name){ mApplicationName = name; }
 
-    bool Application::Initialize(){
+    bool Application::Initialize(bool commandline){
 #ifdef __GAMECUBE__
         SYS_STDIO_Report(true);
 #endif
@@ -36,6 +36,7 @@ namespace mb {
         consoleDebugInit(debugDevice_SVC);
 #endif
         mb::Log::InfoFrom("MouseyBox", "Creating Application");
+
 
         if(SDL_Init(SDL_INIT_EVENTS | SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_JOYSTICK) < 0){
             mb::Log::WarnFrom("MouseyBox", "SDL Init failed!");
@@ -49,6 +50,11 @@ namespace mb {
 
         mSDLReady = true;
 
+        if(commandline){
+            mb::Log::InfoFrom("MouseyBox", "Done Creating Commandline Application");
+            return true;
+        }
+        
         mWindow = std::make_unique<Graphics::Window>(mApplicationName);
         mRenderer = std::make_unique<Graphics::Renderer>();
         mAudio = std::make_unique<Audio::Mixer>();
@@ -85,7 +91,7 @@ namespace mb {
 #endif
 
             Update(mDelta);
-            mRenderer->Update();
+            if(mRenderer != nullptr) mRenderer->Update();
 
 #ifdef __GAMECUBE__
 #else
