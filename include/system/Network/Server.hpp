@@ -6,6 +6,7 @@
 #include <set>
 #include <map>
 #include <memory>
+#include <chrono>
 #include <iostream>
 #include <asio.hpp>
 #include <system/Network/Packet.hpp>
@@ -19,9 +20,12 @@ private:
     asio::ip::udp::endpoint mEndpoint;
 
 public:
+    uint32_t mTimeout;
     asio::ip::udp::endpoint& GetEndpoint() { return mEndpoint; }
 
-    Connection(asio::io_context& ctx, asio::ip::udp::endpoint endpoint) : mEndpoint(endpoint) {}
+    uint32_t LastPing(uint32_t now) { return now - mTimeout; }
+
+    Connection(asio::io_context& ctx, asio::ip::udp::endpoint endpoint) : mEndpoint(endpoint), mTimeout(std::chrono::system_clock::to_time_t(std::chrono::system_clock::now())) {}
     ~Connection(){}
 
 };
@@ -55,25 +59,26 @@ private:
                 if(!mClients.contains(mSenderEndpoint.address().to_string())){
                     mClients[mSenderEndpoint.address().to_string()] = std::make_shared<Connection<T>>(mContext, mSenderEndpoint);
                 } else {
-                    // set timeout
-                    //mClients[mSenderEndpoint.address().to_string()].timeout = 
+                    mClients[mSenderEndpoint.address().to_string()]->mTimeout = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
                 }
+
 
                 bStream::CMemoryStream packetStream(packetData, packetSize, bStream::Endianess::Little, bStream::OpenMode::In);
 
                 Packet<T> packet = {};
                 packet.mType = static_cast<T>(packetStream.readUInt32());
                 packet.mSize = packetStream.readUInt32();
+                
+                if(static_cast<uint32_t>(packet.mType) != 0xFFFFFFFF) {
+                    if(packet.mSize > 0){
+                        packet.mData.resize(packet.mSize);
+                        packetStream.readBytesTo(packet.mData.data(), packet.mSize);
+                    }
 
-                if(packet.mSize > 0){
-                    packet.mData.resize(packet.mSize);
-                    packetStream.readBytesTo(packet.mData.data(), packet.mSize);
+                    packet.mSender = mSenderEndpoint;
+
+                    mMessageQueue.push(packet);
                 }
-
-                packet.mSender = mSenderEndpoint;
-
-                mMessageQueue.push(packet);
-
             }
 
             Listen();
@@ -82,6 +87,10 @@ private:
 
 
 public:
+
+    asio::ip::udp::endpoint GetEndpoint(){
+        return mEndpoint;
+    }
 
     bool HasMessages(){
         return !mMessageQueue.empty();
@@ -115,6 +124,18 @@ public:
                 mSocket->send_to(asio::buffer(packetData, sizeof(msg.mType) + sizeof(msg.mSize) + msg.mSize), client->GetEndpoint());
             }
         }
+    }
+
+    std::vector<std::string> UpdateAliveClients(){
+        std::vector<std::string> clients;
+        uint32_t now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+        for (auto [addr, client] : mClients){
+            if(client->LastPing(now) >= 60){
+                clients.push_back(addr);
+                mClients.erase(addr);
+            }
+        }
+        return clients;
     }
 
     void Start(){

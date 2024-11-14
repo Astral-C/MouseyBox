@@ -84,6 +84,11 @@ public:
         if(mClientThread.joinable()) mClientThread.join();
     }
 
+    void _UpdateLocal(std::string localaddr, int port){
+        mEndpoint = asio::ip::udp::endpoint(asio::ip::make_address(localaddr), port);
+        mSocket = std::make_shared<asio::ip::udp::socket>(mContext, mEndpoint);
+    }
+
     Client(std::string addr, std::string localaddr, int port) : mEndpoint(asio::ip::udp::endpoint(asio::ip::make_address(localaddr), port)), mServerEndpoint(asio::ip::udp::endpoint(asio::ip::make_address(addr), port)), mSocket(std::make_shared<asio::ip::udp::socket>(mContext, mEndpoint)){
         Listen();
     }
