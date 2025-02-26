@@ -2,12 +2,12 @@
 #define __MB_CAMERA_H__
 
 #include <system/Entity.hpp>
-#include <SDL2/SDL.h>
+#include <SDL3/SDL.h>
 
 namespace mb::Graphics {
 
 class Camera {
-    SDL_Rect mBounds;
+    SDL_FRect mBounds;
     SDL_Rect mViewportRect {};
     Entity* mFocus { nullptr };
 
@@ -18,7 +18,7 @@ public:
     void Init(SDL_Renderer*);
     void GetFocusedPosition(float* x, float* y);
     void SetFocused(Entity* e){ mFocus = e; }
-    void SetBounds(SDL_Rect r) { mBounds = r; }
+    void SetBounds(SDL_FRect r) { mBounds = r; }
     void Update(SDL_Renderer*);
 
     Camera();

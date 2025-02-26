@@ -12,14 +12,14 @@ void Polygon::Draw(SDL_Renderer* r, Camera* cam) {
     uint8_t tr, tg, tb, ta;
     SDL_GetRenderDrawColor(r, &tr, &tg, &tb, &ta);
     SDL_SetRenderDrawColor(r, mOverlayColor.r, mOverlayColor.g, mOverlayColor.b, mOverlayColor.a);
-    SDL_RenderGetScale(r, &scalex, &scaley);
-    SDL_RenderSetScale(r, mScale, mScale);
+    SDL_GetRenderScale(r, &scalex, &scaley);
+    SDL_SetRenderScale(r, mScale, mScale);
     for(int p = 1; p < mPoints.size(); p++){
-        SDL_RenderDrawLine(r, (mPoints[p-1].x + mDrawRect.x) - cam->mRect.x, (mPoints[p-1].y + mDrawRect.y) - cam->mRect.y, (mPoints[p].x + mDrawRect.x) - cam->mRect.x, (mPoints[p].y + mDrawRect.y) - cam->mRect.y);
+        SDL_RenderLine(r, (mPoints[p-1].x + mDrawRect.x) - cam->mRect.x, (mPoints[p-1].y + mDrawRect.y) - cam->mRect.y, (mPoints[p].x + mDrawRect.x) - cam->mRect.x, (mPoints[p].y + mDrawRect.y) - cam->mRect.y);
     }
-    SDL_RenderDrawLine(r, (mPoints.front().x + mDrawRect.x) - cam->mRect.x, (mPoints.front().y + mDrawRect.y) - cam->mRect.y, (mPoints.back().x + mDrawRect.x) - cam->mRect.x, (mPoints.back().y + mDrawRect.y) - cam->mRect.y);
+    SDL_RenderLine(r, (mPoints.front().x + mDrawRect.x) - cam->mRect.x, (mPoints.front().y + mDrawRect.y) - cam->mRect.y, (mPoints.back().x + mDrawRect.x) - cam->mRect.x, (mPoints.back().y + mDrawRect.y) - cam->mRect.y);
     SDL_SetRenderDrawColor(r, tr, tg, tb, ta);
-    SDL_RenderSetScale(r, scalex, scaley);
+    SDL_SetRenderScale(r, scalex, scaley);
 }
 
 bool Polygon::IsColliding(Polygon& other){

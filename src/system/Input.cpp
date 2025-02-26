@@ -8,37 +8,37 @@ namespace mb::Input {
         int mKeyCount { 0 };
         int mJoystickIndex { 0 };
         SDL_Joystick* mJoysticks[4] { nullptr, nullptr, nullptr, nullptr };
-        const uint8_t* mKeyboardState { nullptr };
-        uint8_t* mKeyboardStatePrevious { nullptr };
+        const bool* mKeyboardState { nullptr };
+        bool* mKeyboardStatePrevious { nullptr };
     }
 
     namespace Mouse {
         uint32_t mPrevState;
         uint32_t mCurrentState;
-        mb::Math::Vec2<int> mPosition;
+        mb::Math::Vec2<float> mPosition;
 
         bool Released(uint32_t mask){
-            return (mPrevState & SDL_BUTTON(mask)) && !(mCurrentState & SDL_BUTTON(mask));
+            return (mPrevState & SDL_BUTTON_MASK(mask)) && !(mCurrentState & SDL_BUTTON_MASK(mask));
         }
 
         bool Pressed(uint32_t mask){
-            return !(mPrevState & SDL_BUTTON(mask)) && (mCurrentState & SDL_BUTTON(mask));
+            return !(mPrevState & SDL_BUTTON_MASK(mask)) && (mCurrentState & SDL_BUTTON_MASK(mask));
         }
 
-        mb::Math::Vec2<int> GetPosition() {
+        mb::Math::Vec2<float> GetPosition() {
             return mPosition;
         }
     };
 
     void Initialize(){
-        mKeyboardState = static_cast<const uint8_t*>(SDL_GetKeyboardState(&mKeyCount));
-        mKeyboardStatePrevious = new uint8_t[mKeyCount];
+        mKeyboardState = SDL_GetKeyboardState(&mKeyCount);
+        mKeyboardStatePrevious = new bool[mKeyCount];
         Mouse::mCurrentState = 0;
         Mouse::mPrevState = 0;
     } 
 
     void OpenPrimaryJoystick(){
-        mJoysticks[0] = SDL_JoystickOpen(0);
+        mJoysticks[0] = SDL_OpenJoystick(0);
     }
 
     bool OpenJoysticks(int numJoysticks){
@@ -46,7 +46,7 @@ namespace mb::Input {
             return false;
         }
         for(int j = 0; j < numJoysticks; j++){
-            mJoysticks[j] = SDL_JoystickOpen(j);
+            mJoysticks[j] = SDL_OpenJoystick(j);
             if(mJoysticks[j] == nullptr){
                 Log::Debug(std::format("Error Opening Joystick {}", SDL_GetError()));
                 return false;
@@ -57,16 +57,16 @@ namespace mb::Input {
 
     int16_t JoystickAxis(int axis, int idx){
         if(mJoysticks[idx] == nullptr) return 0;
-        return SDL_JoystickGetAxis(mJoysticks[idx], axis);
+        return SDL_GetJoystickAxis(mJoysticks[idx], axis);
     }
 
     bool JoystickButton(int button, int idx){
         if(mJoysticks[idx] == nullptr) return false;
-        return SDL_JoystickGetButton(mJoysticks[idx], button);
+        return SDL_GetJoystickButton(mJoysticks[idx], button);
     }
 
     void Cleanup(){
-        SDL_JoystickClose(mJoysticks[0]);
+        SDL_CloseJoystick(mJoysticks[0]);
         if(mKeyboardStatePrevious != nullptr) delete[] mKeyboardStatePrevious;
     }
 
@@ -77,49 +77,49 @@ namespace mb::Input {
     void RegisterCommand(std::string){
     }
 
-    void SetCommandKey(std::string, SDL_KeyCode){
+    void SetCommandKey(std::string, SDL_Keycode){
 
     }
     
-    void SetCommandButton(std::string, SDL_GameControllerButton){
+    void SetCommandButton(std::string, SDL_GamepadButton){
 
     }
     
-    void SetCommandAxis(std::string SDL_GameControllerAxis){
+    void SetCommandAxis(std::string SDL_GamepadAxis){
 
     }
 
     void Update(){
         if(mKeyboardStatePrevious != nullptr) memcpy(mKeyboardStatePrevious, mKeyboardState, mKeyCount*sizeof(uint8_t));
         SDL_PumpEvents();
-        mKeyboardState = static_cast<const uint8_t*>(SDL_GetKeyboardState(&mKeyCount));
+        mKeyboardState = SDL_GetKeyboardState(&mKeyCount);
         Mouse::mPrevState = Mouse::mCurrentState;
         Mouse::mCurrentState = SDL_GetMouseState(&Mouse::mPosition.x, &Mouse::mPosition.y);
     }
 
-    bool GetKeyPressed(SDL_KeyCode key){
-        if(SDL_GetScancodeFromKey(key) < mKeyCount){
-            return !mKeyboardStatePrevious[SDL_GetScancodeFromKey(key)] && mKeyboardState[SDL_GetScancodeFromKey(key)];
+    bool GetKeyPressed(SDL_Keycode key){
+        if(SDL_GetScancodeFromKey(key, nullptr) < mKeyCount){
+            return !mKeyboardStatePrevious[SDL_GetScancodeFromKey(key, nullptr)] && mKeyboardState[SDL_GetScancodeFromKey(key, nullptr)];
         }
         return false;
     }
 
-    bool GetKeyHeld(SDL_KeyCode key){
-        if(SDL_GetScancodeFromKey(key) < mKeyCount){
-            return mKeyboardStatePrevious[SDL_GetScancodeFromKey(key)] && mKeyboardState[SDL_GetScancodeFromKey(key)];
+    bool GetKeyHeld(SDL_Keycode key){
+        if(SDL_GetScancodeFromKey(key, nullptr) < mKeyCount){
+            return mKeyboardStatePrevious[SDL_GetScancodeFromKey(key, nullptr)] && mKeyboardState[SDL_GetScancodeFromKey(key, nullptr)];
         }
         return false;
     }
 
-    bool GetKeyReleased(SDL_KeyCode key){
-        if(SDL_GetScancodeFromKey(key) < mKeyCount){
-            return mKeyboardStatePrevious[SDL_GetScancodeFromKey(key)] && !mKeyboardState[SDL_GetScancodeFromKey(key)];
+    bool GetKeyReleased(SDL_Keycode key){
+        if(SDL_GetScancodeFromKey(key, nullptr) < mKeyCount){
+            return mKeyboardStatePrevious[SDL_GetScancodeFromKey(key, nullptr)] && !mKeyboardState[SDL_GetScancodeFromKey(key, nullptr)];
         }
         return false;
     }
 
-    bool GetKey(SDL_KeyCode key){
-        if(SDL_GetScancodeFromKey(key) < mKeyCount) return mKeyboardState[SDL_GetScancodeFromKey(key)];
+    bool GetKey(SDL_Keycode key){
+        if(SDL_GetScancodeFromKey(key, nullptr) < mKeyCount) return mKeyboardState[SDL_GetScancodeFromKey(key, nullptr)];
         return false;
     }
 

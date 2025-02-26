@@ -1,6 +1,6 @@
 #ifndef __MB_SPRITE_H__
 #define __MB_SPRITE_H__
-#include <SDL2/SDL.h>
+#include <SDL3/SDL.h>
 #include <map>
 #include <string>
 #include <memory>
@@ -36,7 +36,7 @@ public:
     std::shared_ptr<SpriteAnimation> GetAnimation(std::string name) { if(mAnimations.count(name) != 0) { return mAnimations.at(name); } else { return nullptr; }}
 
     Sprite(SDL_Renderer*, nlohmann::json&);
-    Sprite(SDL_Renderer*, nlohmann::json&, uint8_t*, size_t);
+    Sprite(SDL_Renderer*, nlohmann::json&, uint8_t*, std::size_t);
     Sprite();
     ~Sprite();
 };
@@ -48,7 +48,7 @@ class SpriteAnimation {
     bool mLoop { true };
     float mSpeed { 0.0f };
     uint32_t mFrameCount { 1 };
-    std::vector<SDL_Rect> mFrames;
+    std::vector<SDL_FRect> mFrames;
     
 
 public:
@@ -94,13 +94,13 @@ public:
         mFrame = 0;
     }
 
-    SDL_Rect* GetCurrentFrame();
+    SDL_FRect* GetCurrentFrame();
     SpriteAnimationInstance(std::shared_ptr<SpriteAnimation>);
     ~SpriteAnimationInstance(){}
 };
 
 class SpriteInstance : public Renderable {
-    SDL_Rect mSpriteSrc;
+    SDL_FRect mSpriteSrc;
 
     std::weak_ptr<Sprite> mSprite;
     std::shared_ptr<SpriteAnimationInstance> mCurrentAnimation { nullptr };
@@ -108,7 +108,7 @@ class SpriteInstance : public Renderable {
 public:
     int mOffsetX { 0 }, mOffsetY { 0 };
     float mAngle { 0.0f };
-    SDL_RendererFlip mFlip { SDL_FLIP_NONE };
+    SDL_FlipMode mFlip { SDL_FLIP_NONE };
     void Draw(SDL_Renderer*, Camera*) override;
 
     float* GetAngle() { return &mAngle; }

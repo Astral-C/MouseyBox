@@ -5,10 +5,9 @@
 
 namespace mb::Audio {
 
-    void Wav::Load(uint8_t* data, size_t size){
-        SDL_RWops* rwwav = SDL_RWFromMem(data, size);
-        SDL_AudioSpec* spec = SDL_LoadWAV_RW(rwwav, 0, &mWavSpec, static_cast<Uint8**>(&mData), &mDataLen);
-        SDL_RWclose(rwwav);
+    void Wav::Load(uint8_t* data, std::size_t size){
+        SDL_IOStream* wav = SDL_IOFromMem(data, size);
+        SDL_LoadWAV_IO(wav, true, &mWavSpec, static_cast<Uint8**>(&mData), &mDataLen);
 
         //TODO: Error Check
     }
@@ -18,11 +17,11 @@ namespace mb::Audio {
     }
 
     void Wav::Load(std::filesystem::path path){
-        SDL_AudioSpec* spec = SDL_LoadWAV(path.string().c_str(), &mWavSpec, static_cast<Uint8**>(&mData), &mDataLen);
+        SDL_LoadWAV(path.string().c_str(), &mWavSpec, static_cast<Uint8**>(&mData), &mDataLen);
         
-        if(mWavSpec.format == AUDIO_F32){
+        if(mWavSpec.format == SDL_AUDIO_F32){
             mDataLen /= 4;
-        } else if(mWavSpec.format == AUDIO_S16){
+        } else if(mWavSpec.format == SDL_AUDIO_S16){
             mDataLen /= 2;
         }
         //TODO: Error Check
@@ -37,12 +36,12 @@ namespace mb::Audio {
                 if(mSampleOffset >= mDataLen) break;
 
                 switch (mWavSpec.format) {
-                case AUDIO_F32:
+                case SDL_AUDIO_F32:
                     sampleBuffer[sample] += (int16_t)((reinterpret_cast<float*>(mData)[mSampleOffset] * INT16_MAX) * mVolume);
                     sampleBuffer[sample+1] += (int16_t)((reinterpret_cast<float*>(mData)[mSampleOffset+1] * INT16_MAX) * mVolume);
                     break;
                 
-                case AUDIO_S16:
+                case SDL_AUDIO_S16:
                     sampleBuffer[sample] += (int16_t)(reinterpret_cast<int16_t*>(mData)[mSampleOffset] * mVolume);
                     sampleBuffer[sample+1] += (int16_t)(reinterpret_cast<int16_t*>(mData)[mSampleOffset+1] * mVolume);
                     break;
@@ -68,6 +67,6 @@ namespace mb::Audio {
     Wav::Wav(){}
 
     Wav::~Wav(){
-        SDL_FreeWAV(mData);
+        SDL_free(mData);
     }
 } 

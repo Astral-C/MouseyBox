@@ -8,7 +8,7 @@
 #include <filesystem>
 #include <vector>
 #include <array>
-#include <SDL.h>
+#include <SDL3/SDL.h>
 #include <audio/formats/dr_flac.h>
 
 namespace mb::Audio {

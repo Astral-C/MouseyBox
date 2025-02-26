@@ -8,7 +8,7 @@
 #include <filesystem>
 #include <vector>
 #include <array>
-#include <SDL.h>
+#include <SDL3/SDL.h>
 #define STB_VORBIS_HEADER_ONLY
 #include <audio/formats/stb_vorbis.h>
 

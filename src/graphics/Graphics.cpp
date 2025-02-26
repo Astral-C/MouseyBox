@@ -2,7 +2,7 @@
 #include <graphics/Graphics.hpp>
 #include <graphics/Sprite.hpp>
 #include <graphics/stb_image.h>
-#include <SDL2/SDL_ttf.h>
+#include <SDL3_ttf/SDL_ttf.h>
 #include <filesystem>
 #include <format>
 #include <fstream>
@@ -18,11 +18,11 @@ Window::Window(std::string name){
     mb::Log::InfoFrom("MouseyBox", "Creating Window");
     mWindowTitle = name;
 #ifdef __SWITCH__
-    mWindow = SDL_CreateWindow(mWindowTitle.data(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1280, 720, 0);
+    mWindow = SDL_CreateWindow(mWindowTitle.data(), 1280, 720, 0);
 #elif __GAMECUBE__
-    mWindow = SDL_CreateWindow(mWindowTitle.data(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 640, 480, 0);
+    mWindow = SDL_CreateWindow(mWindowTitle.data(), 640, 480, 0);
 #else
-    mWindow = SDL_CreateWindow(mWindowTitle.data(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1280, 720, SDL_WINDOW_RESIZABLE);
+    mWindow = SDL_CreateWindow(mWindowTitle.data(), 1280, 720, SDL_WINDOW_RESIZABLE);
 #endif
 
     if(mWindow == nullptr){
@@ -55,29 +55,27 @@ void Renderer::Initialize(Window* win){
         Log::Error("Unable to init SDL_ttf! Text rendering won't work");
     }
 
-#ifdef __SWITCH__
-    int driverNum = SDL_GetNumRenderDrivers();
-    if(driverNum < 1){
-        mb::Log::Debug("MouseyBox", "No Render Drivers Found");
+    const char* driver = nullptr;
+    for(int i = 0; i < SDL_GetNumRenderDrivers(); i++){
+        if(driver == nullptr && strcmp(SDL_GetRenderDriver(i), "opengl") == 0){
+            driver = "opengl";
+        }
+        if(driver == nullptr && strcmp(SDL_GetRenderDriver(i), "opengles") == 0){
+            driver = "opengles";
+        }
+        //if(strcmp(SDL_GetRenderDriver(i), "vulkan") == 0){
+        //    driver = "vulkan"; // prefer vulkan
+        //    break;
+        //}
+    }
+    if(driver == nullptr){
+        mb::Log::DebugFrom("MouseyBox", "No Render Drivers Found");
         SDL_Quit();
     }
 
-    int renderDriver = -1;
+    mb::Log::DebugFrom("MouseyBox", "Using driver {}", driver);
 
-    for (int i = 0; i < driverNum; i++){
-        SDL_RendererInfo renderer;
-        SDL_GetRenderDriverInfo(i, &renderer);
-        if(strncmp(renderer.name, "opengles", strlen("opengles")) == 0){
-            mb::Log::Debug("MouseyBox", "Found GLES Driver");
-            renderDriver = i;
-            break;
-        }
-    }
-
-    mInternalRender = SDL_CreateRenderer(win->mWindow, renderDriver, SDL_RENDERER_ACCELERATED | SDL_RENDERER_TARGETTEXTURE);
-#else
-    mInternalRender = SDL_CreateRenderer(win->mWindow, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_TARGETTEXTURE);
-#endif
+    mInternalRender = SDL_CreateRenderer(win->mWindow, driver);
 
     if(mInternalRender == nullptr){
         Log::InfoFrom("MouseyBox", "Error Creating SDL Rendererer: {}", SDL_GetError());
@@ -88,9 +86,10 @@ void Renderer::Initialize(Window* win){
     mb::Log::InfoFrom("MouseyBox", "Renderer Initizlized");
 }
 
-SDL_Rect Renderer::GetSize(){
-    SDL_Rect rendererRect {0, 0, 0, 0};
-    SDL_GetRendererOutputSize(mInternalRender, &rendererRect.w, &rendererRect.h);
+SDL_FRect Renderer::GetSize(){
+    int w, h;
+    SDL_GetCurrentRenderOutputSize(mInternalRender, &w, &h);
+    SDL_FRect rendererRect {0, 0, static_cast<float>(w), static_cast<float>(h)};
     return rendererRect;
 }
 
@@ -117,7 +116,7 @@ bool Renderer::LoadSpriteFromMemory(nlohmann::json spriteConfig, uint8_t* data, 
     return true;
 }
 
-std::shared_ptr<Rect> Renderer::CreateRect(int x, int y, int w, int h){
+std::shared_ptr<Rect> Renderer::CreateRect(float x, float y, float w, float h){
     std::shared_ptr<Rect> rect = std::make_shared<Rect>();
 
     (*rect->GetRect()) = { x, y, w, h };
@@ -126,7 +125,7 @@ std::shared_ptr<Rect> Renderer::CreateRect(int x, int y, int w, int h){
     return rect;
 }
 
-std::shared_ptr<Circle> Renderer::CreateCircle(int x, int y, int r){
+std::shared_ptr<Circle> Renderer::CreateCircle(float x, float y, float r){
     std::shared_ptr<Circle> c = std::make_shared<Circle>();
 
     (*c->GetRect()) = { x, y, r, r };
@@ -197,8 +196,8 @@ bool Renderer::LoadFont(std::filesystem::path path, int ptSize, std::string name
 }
 
 bool Renderer::LoadFontFromMemory(std::string name, uint8_t* data, size_t size, int ptSize){
-    SDL_RWops* mem = SDL_RWFromMem(data, size);
-    TTF_Font* ttf = TTF_OpenFontRW(mem, 1, ptSize);
+    SDL_IOStream* mem = SDL_IOFromMem(data, size);
+    TTF_Font* ttf = TTF_OpenFontIO(mem, 1, ptSize);
     
     if(ttf == nullptr) return false;
 
@@ -220,7 +219,7 @@ std::shared_ptr<Text> Renderer::CreateText(std::string font, std::string text){
     }
 }
 
-bool Renderer::SetText(std::shared_ptr<Text> t, std::string font, std::string text, int wrap, int align){
+bool Renderer::SetText(std::shared_ptr<Text> t, std::string font, std::string text, int wrap, TTF_HorizontalAlignment align){
     if(mFonts.count(font) != 0){
         t->SetText(mInternalRender, mFonts.at(font)->font, text, wrap, align);
         return true;

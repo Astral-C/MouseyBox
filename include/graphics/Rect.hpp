@@ -2,7 +2,7 @@
 #define __MB_RECT_H__
 #include <tuple>
 #include <vector>
-#include <SDL2/SDL.h>
+#include <SDL3/SDL.h>
 #include <system/Math.hpp>
 #include <graphics/Renderable.hpp>
 

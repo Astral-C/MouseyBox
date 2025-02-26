@@ -1,4 +1,5 @@
 #include <system/json.hpp>
+#include <system/Log.hpp>
 #include <graphics/Sprite.hpp>
 #include <graphics/Graphics.hpp>
 #define STB_IMAGE_IMPLEMENTATION
@@ -23,11 +24,12 @@ Sprite::Sprite(SDL_Renderer* r, nlohmann::json& config){
     unsigned char* imgData = stbi_load(config["imgPath"].get<std::string>().c_str(), &mWidth, &mHeight, &comp, 4);
     
 #ifdef __GAMECUBE__
-    SDL_Surface* surface = SDL_CreateRGBSurfaceFrom(imgData, mWidth, mHeight, 32, mWidth*4, 0xFF000000, 0x00FF0000, 0x0000FF00, 0x000000FF);
+    SDL_Surface* surface = SDL_CreateSurfaceFrom(mWidth, mHeight, SDL_GetPixelFormatForMasks(32, 0xFF000000, 0x00FF0000, 0x0000FF00, 0x000000FF), imgData, mWidth*4);
 #else
-    SDL_Surface* surface = SDL_CreateRGBSurfaceFrom(imgData, mWidth, mHeight, 32, mWidth*4, 0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000);
+    SDL_Surface* surface = SDL_CreateSurfaceFrom(mWidth, mHeight, SDL_GetPixelFormatForMasks(32, 0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000), imgData, mWidth*4);
 #endif
     mTexture = SDL_CreateTextureFromSurface(r, surface);
+    SDL_SetTextureScaleMode(mTexture, SDL_SCALEMODE_NEAREST);
 
     mTextureWidth = mWidth;
     mTextureHeight = mHeight;
@@ -49,19 +51,20 @@ Sprite::Sprite(SDL_Renderer* r, nlohmann::json& config){
         mAnimations.insert({animation["name"].get<std::string>(), anim});
     }
 
-    SDL_FreeSurface(surface);
+    SDL_DestroySurface(surface);
 }
 
-Sprite::Sprite(SDL_Renderer* r, nlohmann::json& config, uint8_t* data, size_t size){
+Sprite::Sprite(SDL_Renderer* r, nlohmann::json& config, uint8_t* data, std::size_t size){
     int comp;
     unsigned char* imgData = stbi_load_from_memory(data, size, &mWidth, &mHeight, &comp, 4);
 #ifdef __GAMECUBE__
     stbi__vertical_flip(imgData, mWidth, mHeight, 4);
-    SDL_Surface* surface = SDL_CreateRGBSurfaceFrom(imgData, mWidth, mHeight, 32, mWidth*4, 0xFF000000, 0x00FF0000, 0x0000FF00, 0x000000FF);
+    SDL_Surface* surface = SDL_CreateSurfaceFrom(mWidth, mHeight, SDL_GetPixelFormatForMasks(32, 0xFF000000, 0x00FF0000, 0x0000FF00, 0x000000FF), imgData, mWidth*4);
 #else
-    SDL_Surface* surface = SDL_CreateRGBSurfaceFrom(imgData, mWidth, mHeight, 32, mWidth*4, 0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000);
+    SDL_Surface* surface = SDL_CreateSurfaceFrom(mWidth, mHeight, SDL_GetPixelFormatForMasks(32, 0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000), imgData, mWidth*4);
 #endif
     mTexture = SDL_CreateTextureFromSurface(r, surface);
+    SDL_SetTextureScaleMode(mTexture, SDL_SCALEMODE_NEAREST);
 
     mTextureWidth = mWidth;
     mTextureHeight = mHeight;
@@ -83,7 +86,7 @@ Sprite::Sprite(SDL_Renderer* r, nlohmann::json& config, uint8_t* data, size_t si
         mAnimations.insert({animation["name"].get<std::string>(), anim});
     }
 
-    SDL_FreeSurface(surface);
+    SDL_DestroySurface(surface);
 }
 
 Sprite::~Sprite(){
@@ -95,8 +98,8 @@ Sprite::~Sprite(){
 SpriteInstance::SpriteInstance(std::shared_ptr<Sprite> sprite){
     mType = RenderableType::Sprite;
     mSprite = sprite;
-    mSpriteSrc = {0, 0, sprite->GetWidth(), sprite->GetHeight()};
-    mDrawRect = {0, 0, sprite->GetWidth(), sprite->GetHeight()};
+    mSpriteSrc = {0, 0, static_cast<float>(sprite->GetWidth()), static_cast<float>(sprite->GetHeight())};
+    mDrawRect = {0, 0, static_cast<float>(sprite->GetWidth()), static_cast<float>(sprite->GetHeight())};
     mOverlayColor = {255,255,255,255};
 }
 
@@ -108,13 +111,13 @@ SpriteInstance::~SpriteInstance(){}
 void SpriteInstance::Draw(SDL_Renderer* r, Camera* cam) {
     std::shared_ptr<Sprite> sprite = mSprite.lock();
     if(sprite != nullptr){
-        SDL_Rect* curSrcRect = &mSpriteSrc;
+        SDL_FRect* curSrcRect = &mSpriteSrc;
         if(mCurrentAnimation != nullptr){
             curSrcRect = mCurrentAnimation->GetCurrentFrame();
             mCurrentAnimation->Step();
         }
 
-        SDL_Rect draw = mDrawRect;
+        SDL_FRect draw = mDrawRect;
 
         if(!mStatic){
             draw.x = mDrawRect.x - cam->mRect.x + mOffsetX;
@@ -124,10 +127,16 @@ void SpriteInstance::Draw(SDL_Renderer* r, Camera* cam) {
         draw.w *= mScale;
         draw.h *= mScale;
 
+        // draw rect _MUST_ always be whole number! This prevents sheet bleeding.
+        draw.x = round(draw.x);
+        draw.y = round(draw.y);
+        draw.w = round(draw.w);
+        draw.h = round(draw.h);
+
         SDL_SetTextureAlphaMod(sprite->GetTexture(), mOverlayColor.a);
         SDL_SetTextureColorMod(sprite->GetTexture(), mOverlayColor.r, mOverlayColor.g, mOverlayColor.b);
-        SDL_RenderCopyEx(r, sprite->GetTexture(), curSrcRect, &draw, mAngle, NULL, mFlip);
-        //SDL_RenderDrawRectF(r, &draw);
+        SDL_RenderTextureRotated(r, sprite->GetTexture(), curSrcRect, &draw, mAngle, NULL, mFlip);
+        //SDL_RenderRectF(r, &draw);
     }
 }
 
@@ -162,8 +171,8 @@ SpriteAnimationInstance::SpriteAnimationInstance(std::shared_ptr<SpriteAnimation
     mFrame = 0;
 }
 
-SDL_Rect* SpriteAnimationInstance::GetCurrentFrame(){
-     return &mAnimation->mFrames.at(static_cast<uint32_t>(floor(mFrame)) % mAnimation->mFrameCount);
+SDL_FRect* SpriteAnimationInstance::GetCurrentFrame(){
+    return &mAnimation->mFrames.at(static_cast<uint32_t>(floor(mFrame)) % mAnimation->mFrameCount);
 }
 
 

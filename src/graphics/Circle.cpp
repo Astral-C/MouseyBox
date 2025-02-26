@@ -15,8 +15,8 @@ void Circle::Draw(SDL_Renderer* r, Camera* cam) {
     SDL_SetRenderDrawBlendMode(r, SDL_BLENDMODE_BLEND);
     SDL_GetRenderDrawColor(r, &tr, &tg, &tb, &ta);
     SDL_SetRenderDrawColor(r, mOverlayColor.r, mOverlayColor.g, mOverlayColor.b, mOverlayColor.a);
-    SDL_RenderGetScale(r, &scalex, &scaley);
-    SDL_RenderSetScale(r, 1, 1); 
+    SDL_GetRenderScale(r, &scalex, &scaley);
+    SDL_SetRenderScale(r, 1, 1); 
 
     //if(!mStatic){
     //    curX -= cam->mRect.x;
@@ -27,11 +27,11 @@ void Circle::Draw(SDL_Renderer* r, Camera* cam) {
         for(int curY = -mRadius; curY < mRadius; curY++){
             //if(mDrawFilled){
                 if(mb::Math::Vec2<int>::Dist(mb::Math::Vec2<int>(curX, curY), mb::Math::Vec2<int>(0,0)) < mRadius){
-                    SDL_RenderDrawPoint(r, curX + mDrawRect.x, curY + mDrawRect.y);
+                    SDL_RenderPoint(r, curX + mDrawRect.x, curY + mDrawRect.y);
                 }
             //} else {
             //    if((abs(mDrawRect.x - curX) < mRadius  && abs(mDrawRect.x - curX) > mRadius - mThickness) && (abs(mDrawRect.y - curY) < mRadius  && abs(mDrawRect.y - curY) > mRadius - mThickness)){
-            //        SDL_RenderDrawPoint(r, curX, curY);
+            //        SDL_RenderPoint(r, curX, curY);
             //    }
             //}
         }   
@@ -39,7 +39,7 @@ void Circle::Draw(SDL_Renderer* r, Camera* cam) {
 
 
     SDL_SetRenderDrawColor(r, tr, tg, tb, ta);
-    SDL_RenderSetScale(r, scalex, scaley);
+    SDL_SetRenderScale(r, scalex, scaley);
 }
 
 Circle::~Circle(){}

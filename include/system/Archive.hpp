@@ -14,22 +14,24 @@ namespace mb {
     class File : public std::enable_shared_from_this<File> {
             friend Archive;
             uint8_t* mData { nullptr };
-            size_t mSize { 0 };
+            std::size_t mSize { 0 };
             uint32_t mFileId { 0 };
             std::string mName { "" };
             bool mCompressed { false };
         public:
-            std::shared_ptr<File> CreateFile();
+            static std::shared_ptr<File> CreateFile(){
+                return std::make_shared<File>();
+            }
 
             void SetCompressed(bool c) { mCompressed = c; }
 
             std::string GetName() { return mName; }
             void SetName(std::string);
 
-            size_t GetSize() { return mSize; }
+            std::size_t GetSize() { return mSize; }
 
             uint8_t* GetData() { return mData; }
-            void SetData(uint8_t*, size_t);
+            void SetData(uint8_t*, std::size_t);
 
             File(){}
             ~File(){
@@ -92,7 +94,7 @@ namespace mb {
                 return arc;
             }
 
-            bool Load(uint8_t*, size_t);
+            bool Load(uint8_t*, std::size_t);
             bool Load(std::filesystem::path);
             bool Save(std::filesystem::path);
 

@@ -1,8 +1,8 @@
 #ifndef __MB_GRAPHICS_H__
 #define __MB_GRAPHICS_H__
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_ttf.h>
-#include <SDL2/SDL_rect.h>
+#include <SDL3/SDL.h>
+#include <SDL3_ttf/SDL_ttf.h>
+#include <SDL3/SDL_rect.h>
 #include <graphics/Text.hpp>
 #include <graphics/Sprite.hpp>
 #include <graphics/Polygon.hpp>
@@ -50,14 +50,14 @@ public:
     std::function<void(SDL_Renderer*)> mDraw;
     SDL_Renderer* GetInternalRender() { return mInternalRender; }
     
-    SDL_Rect GetSize();
+    SDL_FRect GetSize();
 
     void Initialize(Window*);
     std::shared_ptr<SpriteInstance> InstanceSprite(std::string);
     std::shared_ptr<SpriteInstance> InstanceSprite(std::string, int, int);
     std::shared_ptr<Polygon> CreatePolygon(std::vector<Math::Vec2<float>>);
-    std::shared_ptr<Rect> CreateRect(int,int,int,int);
-    std::shared_ptr<Circle> CreateCircle(int,int,int);
+    std::shared_ptr<Rect> CreateRect(float,float,float,float);
+    std::shared_ptr<Circle> CreateCircle(float,float,float);
     std::shared_ptr<Text> CreateText(std::string, std::string);
     std::shared_ptr<TileMapLayer> CreateTilemapLayer(nlohmann::json);
     std::shared_ptr<TileMapLayer> CreateTilemapLayer();
@@ -75,16 +75,16 @@ public:
         }
     };
 
-    bool SetText(std::shared_ptr<Text> t, std::string font, std::string text, int wrap=-1, int align=TTF_WRAPPED_ALIGN_LEFT);
+    bool SetText(std::shared_ptr<Text> t, std::string font, std::string text, int wrap=-1, TTF_HorizontalAlignment align=TTF_HORIZONTAL_ALIGN_LEFT);
 
     void Push(std::shared_ptr<Renderable>);
     void Free(std::shared_ptr<Renderable>);
 
     bool LoadFont(std::filesystem::path, int, std::string="");
-    bool LoadFontFromMemory(std::string, uint8_t*, size_t, int);
+    bool LoadFontFromMemory(std::string, uint8_t*, std::size_t, int);
     bool LoadSprite(std::filesystem::path);
-    bool LoadSpriteFromMemory(nlohmann::json, uint8_t*, size_t);
-    std::shared_ptr<TileMap> LoadTilemapFromMeory(nlohmann::json&, uint8_t*, size_t);
+    bool LoadSpriteFromMemory(nlohmann::json, uint8_t*, std::size_t);
+    std::shared_ptr<TileMap> LoadTilemapFromMeory(nlohmann::json&, uint8_t*, std::size_t);
     std::shared_ptr<TileMap> LoadTilemap(std::filesystem::path);
     std::shared_ptr<TileMap> CreateTilemap(std::string);
 

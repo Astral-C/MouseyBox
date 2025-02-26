@@ -8,7 +8,7 @@ Camera::Camera(){}
 Camera::~Camera(){}
 
 void Camera::Init(SDL_Renderer* r){
-    SDL_RenderGetViewport(r, &mViewportRect);
+    SDL_GetRenderViewport(r, &mViewportRect);
     mb::Log::Debug(std::format("Viewport {} {} {} {}", mViewportRect.x, mViewportRect.y, mViewportRect.w, mViewportRect.h));
     mRect.w = mViewportRect.w;
     mRect.h = mViewportRect.h;
@@ -25,7 +25,7 @@ void Camera::GetFocusedPosition(float* x, float* y){
 }
 
 void Camera::Update(SDL_Renderer* r){
-    SDL_RenderGetViewport(r, &mViewportRect);
+    SDL_GetRenderViewport(r, &mViewportRect);
     if(mFocus != nullptr){
         mRect.x = (mFocus->mX + (mFocus->GetRect().w / 2)) - (mViewportRect.w / 2)  + mOffsetX;
         mRect.y = (mFocus->mY + (mFocus->GetRect().h / 2)) - (mViewportRect.h / 2)  + mOffsetY;

@@ -2,6 +2,7 @@
 #define __MB_MATH_H__
 
 #include <utility>
+#include <cmath>
 
 namespace mb::Math {
 

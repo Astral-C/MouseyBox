@@ -1,8 +1,8 @@
 #ifndef __MB_RENDERABLE_H__
 #define __MB_RENDERABLE_H__
 
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_rect.h>
+#include <SDL3/SDL.h>
+#include <SDL3/SDL_rect.h>
 #include <graphics/RenderableType.hpp>
 
 namespace mb::Graphics {
@@ -15,7 +15,7 @@ protected:
     bool mVisible { true };
     int mPriority { 0 };
     float mScale { 1.0f };
-    SDL_Rect mDrawRect {};
+    SDL_FRect mDrawRect {};
     SDL_Color mOverlayColor { 255, 255, 255, 255 };
     SDL_Texture* mTexture { nullptr };
     bool mStatic { false };
@@ -38,7 +38,7 @@ public:
     bool GetStatic() { return mStatic; }
     void SetStatic(bool value) { mStatic = value; }
 
-    SDL_Rect* GetRect() { return &mDrawRect; }
+    SDL_FRect* GetRect() { return &mDrawRect; }
     SDL_Color* GetColor() { return &mOverlayColor; }
 };
 

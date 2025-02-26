@@ -17,7 +17,7 @@ namespace mb {
         mName = n;
     }
 
-    void File::SetData(uint8_t* data, size_t size){
+    void File::SetData(uint8_t* data, std::size_t size){
         mData = new uint8_t[size];
         mSize = size;
         memcpy(mData, data, size);
@@ -142,7 +142,7 @@ namespace mb {
 
         uint16_t curFileIdx = 0;
 
-        for(size_t d = 0; d < mDirectories.size(); d++){
+        for(std::size_t d = 0; d < mDirectories.size(); d++){
             std::shared_ptr<Directory> dir = mDirectories[d];
             directorySegment.writeUInt16(curFileIdx);
             directorySegment.writeUInt16(dir->mFiles.size() + dir->mDirectories.size());
@@ -157,7 +157,7 @@ namespace mb {
                 nameTableSegment.writeUInt8(0);
             }
 
-            for(size_t subd = 0; subd < dir->mDirectories.size(); subd++){
+            for(std::size_t subd = 0; subd < dir->mDirectories.size(); subd++){
                 std::shared_ptr<Directory> subdir = dir->mDirectories[subd];
                 fileSegment.writeUInt8(1);
                 fileSegment.writeUInt8(0);
@@ -176,7 +176,7 @@ namespace mb {
                 curFileIdx++;
             }
 
-            for(size_t f = 0; f < dir->mFiles.size(); f++){
+            for(std::size_t f = 0; f < dir->mFiles.size(); f++){
                 std::shared_ptr<File> file = dir->mFiles[f];
 
                 std::vector<uint8_t> CompressedData;
@@ -264,7 +264,7 @@ namespace mb {
 
     }
 
-    bool Archive::Load(uint8_t* data, size_t size){
+    bool Archive::Load(uint8_t* data, std::size_t size){
         bStream::CMemoryStream stream(data, size, bStream::Endianess::Little, bStream::OpenMode::In);
         Log::Debug(std::format("System Endianess is {}", bStream::getSystemEndianess() == bStream::Endianess::Little ? "Little" : "Big"));
         stream.seek(0x08);
@@ -285,10 +285,10 @@ namespace mb {
         stream.seek(stringsOffset);
         stream.readBytesTo((uint8_t*)nameTable, stringsSize);
 
-        for(size_t d = 0; d < dirNodeCount; d++){ mDirectories.push_back(std::make_shared<Directory>()); }
+        for(std::size_t d = 0; d < dirNodeCount; d++){ mDirectories.push_back(std::make_shared<Directory>()); }
 
         stream.seek(dirNodeOffset);
-        for(size_t d = 0; d < dirNodeCount; d++){
+        for(std::size_t d = 0; d < dirNodeCount; d++){
             // u16, u16, u32
             std::shared_ptr<Directory> dir = mDirectories[d];
             uint16_t firstFile = stream.readUInt16();
@@ -296,7 +296,7 @@ namespace mb {
             dir->SetName(std::string(nameTable + stream.readUInt32()));
             Log::Debug(std::format("Reading Directory {}", dir->GetName()));
 
-            size_t dirPos = stream.tell();
+            std::size_t dirPos = stream.tell();
 
             stream.seek(fileOffset + (firstFile * 16));
             for(int f = 0; f < fileCount; f++){
@@ -315,7 +315,7 @@ namespace mb {
                     uint32_t fileSize = stream.readUInt32();
                     uint32_t fileOffset = stream.readUInt32();
                     uint32_t nameOffset = stream.readUInt32();
-                    size_t retPos = stream.tell(); 
+                    std::size_t retPos = stream.tell(); 
                     
                     std::shared_ptr<File> file =  std::make_shared<File>();
                     file->SetName(std::string(nameTable + nameOffset));
@@ -373,20 +373,23 @@ namespace mb {
         stream.seek(stringsOffset);
         stream.readBytesTo((uint8_t*)nameTable, stringsSize);
 
-        for(size_t d = 0; d < dirNodeCount; d++){ mDirectories.push_back(std::make_shared<Directory>()); }
+        mDirectories.reserve(dirNodeCount);
+
+        for(std::size_t d = 0; d < dirNodeCount; d++){ mDirectories.push_back(std::make_shared<Directory>()); }
 
         stream.seek(dirNodeOffset);
-        for(size_t d = 0; d < dirNodeCount; d++){
+        for(std::size_t d = 0; d < dirNodeCount; d++){
             // u16, u16, u32
             std::shared_ptr<Directory> dir = mDirectories[d];
             uint16_t firstFile = stream.readUInt16();
             uint16_t fileCount = stream.readUInt16();
             dir->SetName(std::string(nameTable + stream.readUInt32()));
 
-            size_t dirPos = stream.tell();
+            std::size_t dirPos = stream.tell();
+            dir->mFiles.reserve(fileCount);
 
             stream.seek(fileOffset + (firstFile * 16));
-            for(size_t f = 0; f < fileCount; f++){
+            for(std::size_t f = 0; f < fileCount; f++){
                 uint8_t type = stream.readUInt8();
                 uint8_t compressed = stream.readUInt8();
                 uint16_t id = stream.readUInt16();
@@ -401,7 +404,7 @@ namespace mb {
                     uint32_t fileSize = stream.readUInt32();
                     uint32_t fileOffset = stream.readUInt32();
                     uint32_t nameOffset = stream.readUInt32();
-                    size_t retPos = stream.tell(); 
+                    std::size_t retPos = stream.tell(); 
                     
                     std::shared_ptr<File> file =  std::make_shared<File>();
                     file->SetName(std::string(nameTable + nameOffset));

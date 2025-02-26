@@ -1,6 +1,6 @@
 #ifndef __MB_ENTITY_H__
 #define __MB_ENTITY_H__
-#include <SDL2/SDL.h>
+#include <SDL3/SDL.h>
 #include <string>
 #include <memory>
 #include <vector>
@@ -32,13 +32,13 @@ namespace mb {
         ~Entity(){}
 
     public:
-        uint32_t mHealth { 100 };
+        int32_t mHealth { 100 };
         uint32_t mState { 0 };
         uint32_t mChannel { 0xFFFFFFFF };
         Entity* mWorld { nullptr };
         Entity* mParent { nullptr };
 
-        int mX { 0 }, mY { 0 };
+        float mX { 0 }, mY { 0 };
         float mVelX { 0 }, mVelY { 0 };
         
         std::function<void(Entity*)> mUpdate {};
@@ -49,7 +49,7 @@ namespace mb {
 
         void SetRenderable(std::shared_ptr<Graphics::Renderable> s) { mRenderable = s; }
         std::shared_ptr<Graphics::Renderable> GetRenderable() { return mRenderable.lock(); }
-        SDL_Rect GetRect() { return { mRenderable.lock()->GetRect()->x, mRenderable.lock()->GetRect()->y, static_cast<int>(round(mRenderable.lock()->GetRect()->w * mRenderable.lock()->GetScale())), static_cast<int>(round(mRenderable.lock()->GetRect()->h * mRenderable.lock()->GetScale()))}; }
+        SDL_FRect GetRect() { return { mRenderable.lock()->GetRect()->x, mRenderable.lock()->GetRect()->y, (mRenderable.lock()->GetRect()->w * mRenderable.lock()->GetScale()), (mRenderable.lock()->GetRect()->h * mRenderable.lock()->GetScale())}; }
         void SetAnimation(std::string anim) { if(mRenderable.lock()->IsType(RenderableType::Sprite)) dynamic_pointer_cast<Graphics::SpriteInstance>(mRenderable.lock())->SetAnimation(anim); }
         void SetScale(float factor) { mRenderable.lock()->SetScale(factor); }
         float GetScale() { return mRenderable.lock()->GetScale(); }

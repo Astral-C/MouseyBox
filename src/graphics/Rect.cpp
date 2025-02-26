@@ -14,10 +14,10 @@ void Rect::Draw(SDL_Renderer* r, Camera* cam) {
     SDL_SetRenderDrawBlendMode(r, SDL_BLENDMODE_BLEND);
     SDL_GetRenderDrawColor(r, &tr, &tg, &tb, &ta);
     SDL_SetRenderDrawColor(r, mOverlayColor.r, mOverlayColor.g, mOverlayColor.b, mOverlayColor.a);
-    SDL_RenderGetScale(r, &scalex, &scaley);
-    SDL_RenderSetScale(r, (float)mThickness, (float)mThickness);
+    SDL_GetRenderScale(r, &scalex, &scaley);
+    SDL_SetRenderScale(r, (float)mThickness, (float)mThickness);
 
-    SDL_Rect rect = mDrawRect;
+    SDL_FRect rect = mDrawRect;
     if(!mStatic){
         rect.x -= cam->mRect.x;
         rect.y -= cam->mRect.y;
@@ -32,19 +32,19 @@ void Rect::Draw(SDL_Renderer* r, Camera* cam) {
         rect.w /= mThickness;
         rect.h /= mThickness;
 #ifndef __GAMECUBE__
-        SDL_RenderDrawRect(r, &rect);
+        SDL_RenderRect(r, &rect);
 #else
         // Top Bottom
-        SDL_RenderDrawLine(r, rect.x, rect.y, rect.x + rect.w, rect.y);
-        SDL_RenderDrawLine(r, rect.x, rect.y + rect.h, rect.x + rect.w, rect.y + rect.h);
+        SDL_RenderLine(r, rect.x, rect.y, rect.x + rect.w, rect.y);
+        SDL_RenderLine(r, rect.x, rect.y + rect.h, rect.x + rect.w, rect.y + rect.h);
         // Left Right
-        SDL_RenderDrawLine(r, rect.x, rect.y, rect.x, rect.y + rect.h);
-        SDL_RenderDrawLine(r, rect.x + rect.w, rect.y, rect.x + rect.w, rect.y + rect.h);
+        SDL_RenderLine(r, rect.x, rect.y, rect.x, rect.y + rect.h);
+        SDL_RenderLine(r, rect.x + rect.w, rect.y, rect.x + rect.w, rect.y + rect.h);
 #endif
     }
 
     SDL_SetRenderDrawColor(r, tr, tg, tb, ta);
-    SDL_RenderSetScale(r, scalex, scaley);
+    SDL_SetRenderScale(r, scalex, scaley);
 }
 
 Rect::~Rect(){}

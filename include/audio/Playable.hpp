@@ -1,7 +1,7 @@
 #ifndef __PLAYABLE_H__
 #define __PLAYABLE_H__
 
-#include <SDL.h>
+#include <SDL3/SDL.h>
 #include <filesystem>
 
 namespace mb::Audio {
@@ -22,7 +22,7 @@ namespace mb::Audio {
         virtual void Mix(uint8_t*, int) {}
 
         virtual void Load(std::filesystem::path) {}
-        virtual void Load(uint8_t*, size_t) {}
+        virtual void Load(uint8_t*, std::size_t) {}
 
 
         Playable();

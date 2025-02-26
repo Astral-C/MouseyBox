@@ -150,7 +150,7 @@ namespace mb {
             Entity* nextEnt = entity->mNextEntity; // keep track of the next in use ent in the event that this one is freed in its update
 
             if(entity->mRenderable.lock()){
-                SDL_Rect* r = entity->mRenderable.lock()->GetRect();
+                SDL_FRect* r = entity->mRenderable.lock()->GetRect();
                 r->x = entity->mX;
                 r->y = entity->mY;
             }

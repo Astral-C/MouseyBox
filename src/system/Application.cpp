@@ -37,9 +37,26 @@ namespace mb {
 #endif
         mb::Log::InfoFrom("MouseyBox", "Creating Application");
 
+        if(!SDL_InitSubSystem(SDL_INIT_VIDEO)){
+            mb::Log::WarnFrom("MouseyBox", "SDL Video Subsystem Failed!");
+            SDL_Quit();
+            return false;
+        }
 
-        if(SDL_Init(SDL_INIT_EVENTS | SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_JOYSTICK) < 0){
-            mb::Log::WarnFrom("MouseyBox", "SDL Init failed!");
+        if(!SDL_InitSubSystem(SDL_INIT_AUDIO)){
+            mb::Log::WarnFrom("MouseyBox", "SDL Audio Subsystem Failed!");
+            SDL_Quit();
+            return false;
+        }
+
+        if(!SDL_InitSubSystem(SDL_INIT_EVENTS)){
+            mb::Log::WarnFrom("MouseyBox", "SDL Event Subsystem Failed!");
+            SDL_Quit();
+            return false;
+        }
+
+        if(!SDL_InitSubSystem(SDL_INIT_JOYSTICK)){
+            mb::Log::WarnFrom("MouseyBox", "SDL Joystick Subsystem Failed!");
             SDL_Quit();
             return false;
         }
@@ -68,7 +85,7 @@ namespace mb {
         SDL_Event e;
         SDL_PollEvent(&e);
 
-        if(e.type == SDL_QUIT){
+        if(e.type == SDL_EVENT_QUIT){
             mQuit = true;
         }
 
@@ -96,7 +113,7 @@ namespace mb {
 #ifdef __GAMECUBE__
 #else
             mPrevTime = mCurTime;
-            mCurTime = SDL_GetTicks64();
+            mCurTime = SDL_GetTicks();
 
             uint64_t curFrameTicks = mCurTime - mPrevTime;
 

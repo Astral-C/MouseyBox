@@ -3,19 +3,19 @@
 #include <iostream>
 
 namespace mb::Audio {
-
-    void Mixer::UpdateAudio(void* userdata, uint8_t* stream, int len){
-        memset(stream, 0, len);
-        Mixer* mixer = static_cast<Mixer*>(userdata);
-        for(auto playable : mixer->mPlaying){
-            playable->Mix(stream, len);
+    void Mixer::UpdateAudio(){
+        uint8_t samples[4096] = {0};
+        for(auto playable : mPlaying){
+            playable->Mix(samples, sizeof(samples));
             
             if(playable->AtEnd() && !playable->ShouldLoop()){
-                std::erase(mixer->mPlaying, playable);
+                std::erase(mPlaying, playable);
             } else if(playable->AtEnd() && playable->ShouldLoop()){
                 playable->Loop();
             }
         }
+        // push to audio device
+        SDL_PutAudioStreamData(mStream, samples, sizeof(samples));
     }
 
     void Mixer::Play(std::string name){
@@ -43,24 +43,21 @@ namespace mb::Audio {
     Mixer::Mixer(){
         mb::Log::InfoFrom("MouseyBoxAudio", "Creating Mixer");
         mTargetSpec = {
-            .freq = 44100,
-            .format = AUDIO_S16,
+            .format = SDL_AUDIO_S16,
             .channels = 2,
-            .samples = 4096,
-            .callback = UpdateAudio,
-            .userdata = this
+            .freq = 44100
         };
 
-        mDeviceID = SDL_OpenAudioDevice(NULL, 0, &mTargetSpec, &mDeviceSpec, 0);
-        if(mDeviceID < 0){
+        mStream = SDL_OpenAudioDeviceStream(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &mTargetSpec, NULL, NULL);
+        if(mStream == nullptr){
             mb::Log::DebugFrom("MouseyBoxAudio", "Mixer Setup Failed");
         } else {
             mb::Log::DebugFrom("MouseyBoxAudio", "Mixer Setup Complete");
         }
-        SDL_PauseAudioDevice(mDeviceID, 0);
+        SDL_ResumeAudioDevice(SDL_GetAudioStreamDevice(mStream));
     }
 
     Mixer::~Mixer(){
-        SDL_CloseAudioDevice(mDeviceID);
+        SDL_CloseAudioDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK);
     }
 }

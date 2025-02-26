@@ -1,6 +1,6 @@
 #ifndef __MB_INPUT_H__
 #define __MB_INPUT_H__
-#include <SDL2/SDL.h>
+#include <SDL3/SDL.h>
 #include <string>
 #include <memory>
 #include <vector>
@@ -12,7 +12,7 @@ namespace mb::Input {
     namespace Mouse {
         bool Released(uint32_t mask);
         bool Pressed(uint32_t mask);
-        mb::Math::Vec2<int> GetPosition();
+        mb::Math::Vec2<float> GetPosition();
     };
 
     enum CommandType {
@@ -23,9 +23,9 @@ namespace mb::Input {
     struct Command {
         CommandType type;
         uint32_t value;
-        SDL_KeyCode key;
-        SDL_GameControllerAxis axis;
-        SDL_GameControllerButton button;
+        SDL_Keycode key;
+        SDL_GamepadAxis axis;
+        SDL_GamepadButton button;
     };
 
     SDL_Joystick* GetJoystick(int idx=0);
@@ -33,10 +33,10 @@ namespace mb::Input {
     void Initialize();
     void Cleanup();
     void Update();
-    bool GetKey(SDL_KeyCode);
-    bool GetKeyPressed(SDL_KeyCode);
-    bool GetKeyHeld(SDL_KeyCode);
-    bool GetKeyReleased(SDL_KeyCode);
+    bool GetKey(SDL_Keycode);
+    bool GetKeyPressed(SDL_Keycode);
+    bool GetKeyHeld(SDL_Keycode);
+    bool GetKeyReleased(SDL_Keycode);
     
     void OpenPrimaryJoystick();
     bool OpenJoysticks(int);
@@ -45,9 +45,9 @@ namespace mb::Input {
     bool JoystickButton(int, int idx=0);
 
     void RegisterCommand(std::string);
-    void SetCommandKey(std::string, SDL_KeyCode);
-    void SetCommandButton(std::string, SDL_GameControllerButton);
-    void SetCommandAxis(std::string SDL_GameControllerAxis);
+    void SetCommandKey(std::string, SDL_Keycode);
+    void SetCommandButton(std::string, SDL_GamepadButton);
+    void SetCommandAxis(std::string SDL_GamepadAxis);
 
     int32_t GetValue();
 
