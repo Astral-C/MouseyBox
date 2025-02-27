@@ -38,6 +38,10 @@ void Text::Draw(SDL_Renderer* r, Camera* cam) {
             rect.y -= cam->mRect.y;
         }
         SDL_SetTextureColorMod(mTexture, mOverlayColor.r, mOverlayColor.g, mOverlayColor.b);
+
+        rect.w *= mScale;
+        rect.h *= mScale;
+
         SDL_RenderTexture(r,  mTexture, nullptr, &rect);
     }
 }

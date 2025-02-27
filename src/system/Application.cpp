@@ -98,15 +98,15 @@ namespace mb {
     void Application::Run(){
 #ifndef __SWITCH__
         while(!mQuit)
-#else
+        #else
         while(appletMainLoop() && !mQuit)
-#endif
-    {
-
-#ifdef __GAMECUBE__
+        #endif
+        {
+            
+            #ifdef __GAMECUBE__
             PAD_ScanPads();
-#endif
-
+            #endif
+            
             Update(mDelta);
             if(mRenderer != nullptr) mRenderer->Update();
 

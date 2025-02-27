@@ -24,8 +24,8 @@ namespace mb::Audio {
         std::map<std::string, std::shared_ptr<Playable>> mLoaded {};
         std::vector<std::shared_ptr<Playable>> mPlaying {};
 
-        void UpdateAudio();
-    
+        static void Update(void *userdata, SDL_AudioStream *stream, int len, int total);
+        
     public:
 
         template<typename T>
