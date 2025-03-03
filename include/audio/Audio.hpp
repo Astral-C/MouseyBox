@@ -24,9 +24,9 @@ namespace mb::Audio {
         std::map<std::string, std::shared_ptr<Playable>> mLoaded {};
         std::vector<std::shared_ptr<Playable>> mPlaying {};
 
-        void UpdateAudio();
-    
+        
     public:
+        void UpdateAudio();
 
         template<typename T>
         std::shared_ptr<T> Load(std::string name, std::filesystem::path path){

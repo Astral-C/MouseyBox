@@ -9,6 +9,11 @@
 //
 
 namespace mb::Audio {
+
+    std::string notePrefix[12] = {
+        "C-", "C#", "D-", "D#", "E-", "F-", "F#", "G-", "G#", "A-", "A#", "B-",
+    };
+
     // for implementing shitty vibrato
     static int16_t sine_table[] = {
         0, 24, 49, 74, 97,120,141,161,
@@ -100,6 +105,43 @@ namespace mb::Audio {
         }
     };
 
+    std::string GetNoteName(uint32_t note){
+        if(note == 0) return "...";
+        uint32_t truePeriod = 0;
+        size_t noteIdx = 0;
+        uint32_t closestDist = 0xFFFFFFFF;
+
+        for (size_t i = 0; i < 36; i++){
+            if(closestDist == 0) break;
+            if(abs((int)finetune_table[0][i] - (int)note) < closestDist){
+                closestDist = abs((int)finetune_table[0][i] - (int)note);
+                noteIdx = i;
+            }
+        }
+      
+        return std::format("{}{}", notePrefix[noteIdx % 12], static_cast<unsigned int>(floor(noteIdx / 12) + 4));
+    }
+
+    uint32_t GetTruePeriod(uint32_t period, uint8_t finetune){
+        uint32_t truePeriod = 0;
+        size_t noteIdx = 0;
+        uint32_t closestDist = 0xFFFFFFFF;
+
+        for (size_t i = 0; i < 36; i++){
+            if(closestDist == 0) break;
+            if(abs((int)finetune_table[finetune][i] - (int)period) < closestDist){
+                closestDist = abs((int)finetune_table[finetune][i] - (int)period);
+                noteIdx = i;
+            }
+        }
+
+        if(finetune >= 8) finetune = 16 - finetune;
+
+        return finetune_table[finetune][noteIdx];
+        
+    }
+
+
     void MODTracker::Load(uint8_t* data, size_t size){
         bStream::CMemoryStream stream(data, size, bStream::Endianess::Big, bStream::OpenMode::In);
 
@@ -113,7 +155,7 @@ namespace mb::Audio {
             stream.readBytesTo((uint8_t*)sample.mName, 22);
             sample.mSampleLength = stream.readUInt16();
             sample.mFineTune = stream.readInt8() & 0b00001111;
-            sample.mVolume = stream.readInt8();
+            sample.mVolume = stream.readUInt8();
             sample.mRepeatOffset = stream.readUInt16();
             sample.mRepeatLength = stream.readUInt16();
             mSamples[i] = sample;
@@ -136,7 +178,7 @@ namespace mb::Audio {
         mPatterns.resize(patternCount);
         for(int i = 0; i < patternCount; i++){
             for(int r = 0; r < 64; r++){
-                for(int c = 0; c < 4; c++){
+                for(int c = 0; c < (mIs8Channel ? 8 : 4); c++){
                     mPatterns[i].Rows[r][c] = stream.readUInt32();
                 }
             }
@@ -169,7 +211,7 @@ namespace mb::Audio {
             mb::Log::Debug("Loaded Sample name is {}", sample.mName);
             sample.mSampleLength = stream.readUInt16() * 2;
             sample.mFineTune = stream.readInt8() & 0b00001111;
-            sample.mVolume = stream.readInt8();
+            sample.mVolume = stream.readUInt8();
             sample.mRepeatOffset = stream.readUInt16() * 2;
             sample.mRepeatLength = stream.readUInt16() * 2;
             mSamples[i] = sample;
@@ -187,21 +229,17 @@ namespace mb::Audio {
             mIs8Channel = true;
         }
 
-        uint32_t patternCount = 0;
-        for(int i = 0; i < 128; i++){
-            if(mPositions[i] > patternCount){
-                patternCount = mPositions[i];
-            }
-        }
-
+        uint32_t patternCount = *std::max_element(mPositions.begin(), mPositions.end());
+        
         mPatterns.resize(patternCount+1);
         for(int i = 0; i < patternCount+1; i++){
             for(int r = 0; r < 64; r++){
-                for(int c = 0; c < 4; c++){
+                for(int c = 0; c < (mIs8Channel ? 8 : 4); c++){
                     mPatterns[i].Rows[r][c] = stream.readUInt32();
                 }
             }
         }
+        
         mb::Log::Debug("Reading Sample Data at {}", stream.tell());
         for(int i = 0; i < 31; i++){
             if(mSamples[i].mSampleLength <= 0) continue;
@@ -217,9 +255,10 @@ namespace mb::Audio {
     void MODTracker::Tick(){
         if(mTickTimer >= mUpdatesPerTick){
             if(mCurrentTicks >= mSpeed){
-                int channelIdx = 0;
-                for(int i = 0; i < mChannels.size(); i++){
-                    bool trigger = true;
+              int channelIdx = 0;
+              
+              std::string rowDebug = "| "; 
+              for(int i = 0; i < (mIs8Channel ? 8 : 4); i++){
                     uint32_t note = mPatterns[mPositions[mCurrentPattern]].Rows[mCurrentRow][i];
 
                     uint32_t period = (note & 0x0FFF0000) >> 16;
@@ -228,27 +267,33 @@ namespace mb::Audio {
                     mChannels[i].mEffect = (note & 0x00000F00) >> 8;
                     mChannels[i].mEffectArgs = (note & 0x000000FF);
 
-                    if(instrument > 0 && instrument <= 32){
-                        mChannels[i].mInstrument = instrument;
-                        mChannels[i].mPan = 0x80;
+
+                    if(instrument > 0 && instrument <= 31){
+                        mChannels[i].mInstrument = instrument - 1;
                         mChannels[i].mVolume = mSamples[mChannels[i].mInstrument].mVolume;
+                        mChannels[i].mPan = 0x80;
                         if(mChannels[i].mInstrument != mChannels[i].mPrevInstrument){
                             mChannels[i].mSampleOffset = 0;
                         }
                     }
+                    
+                    bool trigger = period > 0 && instrument > 0 && instrument <= 31 && mChannels[i].mPrevInstrument != mChannels[i].mInstrument;
+
+                    period = GetTruePeriod(period, mSamples[mChannels[i].mInstrument].mFineTune);
                     // Per Tick Effects, first tick events
                     switch (mChannels[i].mEffect){
+                        case 0x0: break;
                         case 0x1:
                         case 0x2:
-                            if(period == 0) break;
-                            trigger = false;
+                            if(mChannels[i].mPrevInstrument == mChannels[i].mInstrument) trigger = false;
                             mChannels[i].mPortaSpeed = mChannels[i].mEffectArgs;
                             break;
                         case 0x3:
-                            if(period == 0) break;
-                            trigger = false;
-                            mChannels[i].mPortaPeriod = period;
-                            mChannels[i].mPortaSpeed = (mChannels[i].mEffectArgs & 0x0F);
+                            if(mChannels[i].mPrevInstrument == mChannels[i].mInstrument) trigger = false;
+                            if(period != 0){
+                                mChannels[i].mPortaPeriod = period; // use previous porta period of period is 0
+                            }
+                            if(mChannels[i].mEffectArgs != 0) mChannels[i].mPortaSpeed = mChannels[i].mEffectArgs;
                             break;
                         case 0x4:
                             if(((mChannels[i].mEffectArgs & 0xF0) >> 4) != 0){
@@ -263,6 +308,7 @@ namespace mb::Audio {
                             }
                             break;
                         case 0x5:
+                            trigger = false;
                         case 0x6:
                         case 0xA:
                             if((mChannels[i].mEffectArgs & 0x0F) != 0) {
@@ -338,189 +384,213 @@ namespace mb::Audio {
                             }
                             break;
                         case 0xF:
+                            if(mChannels[i].mEffectArgs < 0x20){
+                              mSpeed = mChannels[i].mEffectArgs;
+                            } else {
+                              mBPM = mChannels[i].mEffectArgs;
+                              mUpdatesPerTick = 44100 * 2.5 / mBPM;
+                            }
                             break;
                         default:
                             if(mChannels[i].mEffect > 0) mb::Log::Debug("Unimplemented Effect {:x}", mChannels[i].mEffect);
                             break;
                     }
-
+                    
                     // Reset a few things if these effects arent in use
                     if(mChannels[i].mEffect != 0x7){
                         mChannels[i].mTremoloBase = -1;
                     }
 
-                    if(period > 0 && trigger){
+                  
+                    mChannels[i].mPrevNote = mChannels[i].mNote;
+                    if(trigger){
                         mChannels[i].mNote = period;
                         mChannels[i].mPeriod = period;
-                        mChannels[i].mSampleOffset = 0;
                     }
+
+                    std::string noteStr = "...";
+
+                    if(mChannels[i].mNote != mChannels[i].mPrevNote){
+                        noteStr = GetNoteName(mChannels[i].mNote);
+                    }
+
+                    rowDebug += std::format("{} {:02X} v{:02d} {:01X}{:02X} | ",
+                        noteStr, mChannels[i].mInstrument+1, mChannels[i].mVolume, mChannels[i].mEffect, mChannels[i].mEffectArgs
+                    );
                 }
+
+                mb::Log::Debug("[{:02d}]{}", mCurrentRow, rowDebug);
 
                 mCurrentRow++;
                 if(mCurrentRow == 64){
                     mCurrentRow = 0;
                     mCurrentPattern++;
+                    mb::Log::Debug("[============================== Pattern {} ==============================]", mPositions[mCurrentPattern]);
                 }
 
                 mCurrentTicks = 0;
             }
 
             // Inter tick effects
-            for(int i = 0; i < mChannels.size(); i++){
-                switch (mChannels[i].mEffect){
-                case 0x0:
-                    switch((mCurrentTicks - mSpeed) % 3){
-                        case 0:
-                            mChannels[i].mPeriod = mChannels[i].mNote;
-                            break;
-                        case 1:
-                            mChannels[i].mPeriod = mChannels[i].mNote + (((mChannels[i].mEffectArgs & 0xF0) >> 4) * 16);
-                            break;
-                        case 2:
-                            mChannels[i].mPeriod = mChannels[i].mNote + ((mChannels[i].mEffectArgs & 0x0F) * 16);
-                            break;
-                    }
-                    break;
-                case 0x1:
-                    if(mCurrentTicks == 0) 
-                        break;
-                    if(mChannels[i].mPeriod < 856){
-                        mChannels[i].mPeriod += mChannels[i].mPortaSpeed;
-                    } else {
-                        mChannels[i].mPeriod = 856;
-                    }
-                    break;
-                case 0x2:
-                    if(mCurrentTicks == 0) 
-                        break;
-                    if(mChannels[i].mPeriod > 113){
-                        mChannels[i].mPeriod -= mChannels[i].mPortaSpeed;
-                    } else {
-                        mChannels[i].mPeriod = 113;
-                    }
-                    break;
-                case 0x5:
-                    if(mChannels[i].mVolSlideSpeed != 0) {
-                        if(mChannels[i].mVolSlideDir != 0){
-                            mChannels[i].mVolume = std::min(mChannels[i].mVolume + mChannels[i].mVolSlideSpeed, 64);
-                        } else {
-                            mChannels[i].mVolume = std::max(0, mChannels[i].mVolume - mChannels[i].mVolSlideSpeed);
+            
+            if(mCurrentTicks > 0){
+              for(int i = 0; i < mChannels.size(); i++){
+                    switch (mChannels[i].mEffect){
+                    case 0x0:
+                        switch((mCurrentTicks - mSpeed) % 3){
+                            case 0:
+                                mChannels[i].mPeriod = mChannels[i].mNote;
+                                break;
+                            case 1:
+                                mChannels[i].mPeriod = mChannels[i].mNote + (((mChannels[i].mEffectArgs & 0xF0) >> 4) * 16);
+                                break;
+                            case 2:
+                                mChannels[i].mPeriod = mChannels[i].mNote + ((mChannels[i].mEffectArgs & 0x0F) * 16);
+                                break;
                         }
-                    }
-                case 0x3:
-                    if(mCurrentTicks == 0)
                         break;
-                    if(mChannels[i].mPeriod < mChannels[i].mPortaPeriod){
-
-                        mChannels[i].mPeriod += mChannels[i].mPortaSpeed;
-
-                        if(mChannels[i].mPeriod >= mChannels[i].mPortaPeriod){
-                            mChannels[i].mPeriod = mChannels[i].mPortaPeriod;
-                        } else if(mChannels[i].mPeriod >= 856){
-                            mChannels[i].mPeriod = 856;
+                    case 0x1:
+                        if(mCurrentTicks > 0){ 
+                            if(mChannels[i].mPeriod > 113){
+                                mChannels[i].mPeriod -= mChannels[i].mPortaSpeed;
+                            } else {
+                                mChannels[i].mPeriod = 113;
+                            }
                         }
-                    } else if(mChannels[i].mPeriod > mChannels[i].mPortaPeriod){
-
-                        mChannels[i].mPeriod -= mChannels[i].mPortaSpeed;
-
-                        if(mChannels[i].mPeriod <= mChannels[i].mPortaPeriod){
-                            mChannels[i].mPeriod = mChannels[i].mPortaPeriod;
-                        } else if(mChannels[i].mPeriod <= 113){
-                            mChannels[i].mPeriod = 113;
+                        break;
+                    case 0x2:
+                        if(mCurrentTicks > 0){ 
+                            if(mChannels[i].mPeriod < 856){
+                                mChannels[i].mPeriod += mChannels[i].mPortaSpeed;
+                            } else {
+                                mChannels[i].mPeriod = 856;
+                            }
                         }
-                    }
-                    break;
-                case 0xD:
-                    if(mCurrentTicks == 0){
-                        mCurrentPattern++;
+                        break;
+                    case 0x5:
+                        if(mChannels[i].mVolSlideSpeed != 0) {
+                            if(mChannels[i].mVolSlideDir == 1){ // 1 means slide up
+                                mChannels[i].mVolume = std::min(mChannels[i].mVolume + mChannels[i].mVolSlideSpeed, 64);
+                            } else {
+                                mChannels[i].mVolume = std::max(0, mChannels[i].mVolume - mChannels[i].mVolSlideSpeed);
+                            }
+                        }
+                    case 0x3:
+                        if(mCurrentTicks > 0){
+                            if(mChannels[i].mPeriod < mChannels[i].mPortaPeriod){
+                                mChannels[i].mPeriod += mChannels[i].mPortaSpeed;
+
+                                if(mChannels[i].mPeriod >= mChannels[i].mPortaPeriod){
+                                    mChannels[i].mPeriod = mChannels[i].mPortaPeriod;
+                                } else if(mChannels[i].mPeriod >= 856){
+                                    mChannels[i].mPeriod = 856;
+                                }
+                            } else if(mChannels[i].mPeriod > mChannels[i].mPortaPeriod){
+                                mChannels[i].mPeriod -= mChannels[i].mPortaSpeed;
+
+                                if(mChannels[i].mPeriod <= mChannels[i].mPortaPeriod){
+                                    mChannels[i].mPeriod = mChannels[i].mPortaPeriod;
+                                } else if(mChannels[i].mPeriod <= 113){
+                                    mChannels[i].mPeriod = 113;
+                                }
+                            }
+                        }
+                        break;
+                    case 0xD:
+                        if(mCurrentTicks == mSpeed-1){
+                            mCurrentPattern++;
+                            mCurrentRow = 0;
+                            if(mCurrentPattern > mSongLength){
+                                mCurrentPattern = 0;
+                            }                        
+
+                            mCurrentRow = (((mChannels[i].mEffectArgs & 0xF0) >> 4) * 10) + (mChannels[i].mEffectArgs & 0x0F) - 1;
+                            if(mCurrentRow >= 64){
+                                mCurrentRow = 0;
+                            }
+                        }
+                        break;
+                    case 0xB:
+                        mCurrentPattern = mChannels[i].mEffectArgs;
                         mCurrentRow = 0;
                         if(mCurrentPattern > mSongLength){
-                            mCurrentPattern = 0;
-                        }                        
-
-                        mCurrentRow = (((mChannels[i].mEffectArgs & 0xF0) >> 4) * 10) + (mChannels[i].mEffectArgs & 0x0F) - 1;
-                        if(mCurrentRow >= 64){
-                            mCurrentRow = 0;
+                            mCurrentPattern = mSongLength;
                         }
-                    }
-                    break;
-                case 0xB:
-                    mCurrentPattern = mChannels[i].mEffectArgs;
-                    mCurrentRow = 0;
-                    if(mCurrentPattern > mSongLength){
-                        mCurrentPattern = mSongLength;
-                    }
-                    break;
-                case 0x6:
-                    if(mChannels[i].mVolSlideSpeed != 0) {
-                        if(mChannels[i].mVolSlideDir != 0){
-                            mChannels[i].mVolume = std::min(mChannels[i].mVolume + mChannels[i].mVolSlideSpeed, 64);
-                        } else {
-                            mChannels[i].mVolume = std::max(0, mChannels[i].mVolume - mChannels[i].mVolSlideSpeed);
-                        }
-                    }
-                case 0x4:
-                    if(mChannels[i].mVibratoPos > 32){
-                        mChannels[i].mPeriod = mChannels[i].mNote - (sine_table[mChannels[i].mVibratoPos % 32] * mChannels[i].mVibratoDepth) >> 7;
-                    } else {
-                        mChannels[i].mPeriod = mChannels[i].mNote + (sine_table[mChannels[i].mVibratoPos % 32] * mChannels[i].mVibratoDepth) >> 7;
-                    }
-                    mChannels[i].mVibratoPos = (mChannels[i].mVibratoPos + mChannels[i].mVibratoSpeed) % 64;
-                    break;
-                case 0x7:
-                    if(mChannels[i].mTremoloPos > 32){
-                        mChannels[i].mVolume -= (sine_table[mChannels[i].mTremoloPos % 32] * mChannels[i].mTremoloDepth) / 64;
-                    } else {
-                        mChannels[i].mVolume += (sine_table[mChannels[i].mTremoloPos % 32] * mChannels[i].mTremoloDepth) / 64;
-                    }
-                    mChannels[i].mTremoloPos = (mChannels[i].mTremoloPos + mChannels[i].mTremoloSpeed) % 64;
-                    break;
-                    
-                case 0xA:
-                    if(mChannels[i].mVolSlideSpeed != 0) {
-                        if(mChannels[i].mVolSlideDir != 0){
-                            mChannels[i].mVolume = std::min(mChannels[i].mVolume + mChannels[i].mVolSlideSpeed, 64);
-                        } else {
-                            mChannels[i].mVolume = std::max(0, mChannels[i].mVolume - mChannels[i].mVolSlideSpeed);
-                        }
-                    }
-                    break;
-
-                case 0x8:
-                    mChannels[i].mPan = mChannels[i].mEffectArgs;
-                    break;
-
-                case 0xE:
-                    switch((mChannels[i].mEffectArgs & 0xF0) >> 4){
-                        case 0x9:
-                            mChannels[i].mRetriggerCounter++;
-                            if(mChannels[i].mRetriggerCounter % mChannels[i].mRetriggerTicks == 0){
-                                mChannels[i].mSampleOffset = 0;  
+                        break;
+                    case 0x6:
+                        if(mChannels[i].mVolSlideSpeed != 0) {
+                            if(mChannels[i].mVolSlideDir != 0){
+                                mChannels[i].mVolume = std::min(mChannels[i].mVolume + mChannels[i].mVolSlideSpeed, 64);
+                            } else {
+                                mChannels[i].mVolume = std::max(0, mChannels[i].mVolume - mChannels[i].mVolSlideSpeed);
                             }
-                            break;
-                        case 0xA:
-                        case 0xB:
-                            break;
-                        case 0xC:
-                            if(mChannels[i].mNoteCutTicks > 0 && mChannels[i].mNoteCutTicks != 0xFF){
-                                mChannels[i].mNoteCutTicks--;
-                            } else if (mChannels[i].mNoteCutTicks == 0){
-                                mChannels[i].mPeriod = 0;
-                                mChannels[i].mSampleOffset = 0;
-                                mChannels[i].mNoteCutTicks = 0xFF;   
+                        }
+                    case 0x4:
+                        if(mCurrentRow > 0){
+                            uint16_t vibratoVal = sine_table[mChannels[i].mVibratoPos];
+                            if(mChannels[i].mVibratoPos > 32){
+                                mChannels[i].mPeriod = mChannels[i].mNote + vibratoVal * mChannels[i].mVibratoDepth / 128; 
+                            } else {
+                                mChannels[i].mPeriod = mChannels[i].mNote - vibratoVal * mChannels[i].mVibratoDepth / 128; 
                             }
-                            break;
-                    }
-                    break;
+                            mChannels[i].mVibratoPos = (mChannels[i].mVibratoPos + mChannels[i].mVibratoSpeed) % 64;
+                        }
+                        break;
+                    case 0x7:
+                        if(mChannels[i].mTremoloPos > 32){
+                            mChannels[i].mVolume -= (sine_table[mChannels[i].mTremoloPos % 32] * mChannels[i].mTremoloDepth) / 64;
+                        } else {
+                            mChannels[i].mVolume += (sine_table[mChannels[i].mTremoloPos % 32] * mChannels[i].mTremoloDepth) / 64;
+                        }
+                        mChannels[i].mTremoloPos = (mChannels[i].mTremoloPos + mChannels[i].mTremoloSpeed) % 64;
+                        break;
+                        
+                    case 0xA:
+                        if(mChannels[i].mVolSlideSpeed != 0) {
+                            if(mChannels[i].mVolSlideDir != 0){
+                                mChannels[i].mVolume = std::min(mChannels[i].mVolume + mChannels[i].mVolSlideSpeed, 64);
+                            } else {
+                                mChannels[i].mVolume = std::max(0, mChannels[i].mVolume - mChannels[i].mVolSlideSpeed);
+                            }
+                        }
+                        break;
 
-                case 0xF:
-                    mSpeed = mChannels[i].mEffectArgs;
-                    break;
-                default:
-                    break;
+                    case 0x8:
+                        mChannels[i].mPan = mChannels[i].mEffectArgs;
+                        break;
+
+                    case 0xE:
+                        switch((mChannels[i].mEffectArgs & 0xF0) >> 4){
+                            case 0x9:
+                                mChannels[i].mRetriggerCounter++;
+                                if(mChannels[i].mRetriggerCounter % mChannels[i].mRetriggerTicks == 0){
+                                    mChannels[i].mSampleOffset = 0;  
+                                }
+                                break;
+                            case 0xA:
+                            case 0xB:
+                                break;
+                            case 0xC:
+                                if(mChannels[i].mNoteCutTicks > 0 && mChannels[i].mNoteCutTicks != 0xFF){
+                                    mChannels[i].mNoteCutTicks--;
+                                } else if (mChannels[i].mNoteCutTicks == 0){
+                                    mChannels[i].mPeriod = 0;
+                                    mChannels[i].mSampleOffset = 0;
+                                    mChannels[i].mNoteCutTicks = 0xFF;   
+                                }
+                                break;
+                        }
+                        break;
+
+                    case 0xF:
+                        mSpeed = mChannels[i].mEffectArgs;
+                        break;
+                    default:
+                        break;
+                    }
                 }
             }
-
+            
             // per tick effects
             mCurrentTicks++;
             mTickTimer = 0;
@@ -530,22 +600,6 @@ namespace mb::Audio {
 
     }
 
-    uint32_t GetTruePeriod(uint32_t period, uint8_t finetune){
-        uint32_t truePeriod = 0;
-        size_t noteIdx = 0;
-        uint32_t closestDist = 0xFFFFFFFF;
-
-        for (size_t i = 0; i < 36; i++){
-            if(closestDist == 0) break;
-            if(abs((int)finetune_table[finetune][i] - (int)period) < closestDist){
-                closestDist = abs((int)finetune_table[finetune][i] - (int)period);
-                noteIdx = i;
-            }
-        }
-
-        return finetune_table[finetune][noteIdx];
-        
-    }
 
     void MODTracker::Mix(uint8_t* data, int len){
         int samplesPerTick, dataPtr = 0;
@@ -561,7 +615,7 @@ namespace mb::Audio {
                 auto channel = mChannels[c];
                 if(channel.mVolume == 0 || channel.mPeriod == 0 || channel.mInstrument == 0) continue;
 
-                MOD::Sample instrument = mSamples[channel.mInstrument-1];
+                MOD::Sample instrument = mSamples[channel.mInstrument];
                 // 3546895?
                 double freq = (((8363.0 * 428.0) / channel.mPeriod) / mSampleRate);
 

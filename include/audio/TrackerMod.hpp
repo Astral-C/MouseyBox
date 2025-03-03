@@ -15,14 +15,14 @@ namespace mb::Audio {
 namespace MOD {
     
     struct Pattern {
-        uint32_t Rows[64][4];
+        uint32_t Rows[64][8];
     };
 
     struct Sample {
         char mName[22];
         uint16_t mSampleLength; //in u16s
         int8_t mFineTune;       // First nybble should be blank, next is finetune
-        int8_t mVolume;         //max is 64, 0x00 - 0x40
+        int8_t mVolume { 0x40 };         //max is 64, 0x00 - 0x40
         uint16_t mRepeatOffset; //in u16s
         uint16_t mRepeatLength; //in u16s
         
@@ -34,14 +34,15 @@ namespace MOD {
 
     struct Channel {
         int8_t mVolume { 0x40 };
-        uint8_t mPrevInstrument;
-        uint8_t mInstrument;
-        uint8_t mEffect;
-        uint8_t mEffectArgs;
-        uint8_t mPan;
+        uint8_t mPrevInstrument { 0x00 };
+        uint8_t mInstrument { 0x00 };
+        uint8_t mEffect { 0xFF };
+        uint8_t mEffectArgs { 0xFF };
+        uint8_t mPan { 0x80 };
 
-        int8_t mFineTune { -1 };
+        int8_t mFineTune { 0 };
 
+        uint32_t mPrevNote { 0 };
         uint32_t mNote { 0 };
         uint32_t mPeriod { 0 };
 
@@ -81,7 +82,7 @@ namespace MOD {
 
     class MODTracker : public Playable {
     private:
-        std::array<MOD::Channel, 4> mChannels;
+        std::array<MOD::Channel, 8> mChannels;
         std::array<MOD::Sample, 32> mSamples;
         std::array<uint8_t, 128> mPositions;
 
@@ -92,15 +93,16 @@ namespace MOD {
         uint32_t mUpdatesPerTick;
         uint32_t mSampleRate { 44100 };
 
-        uint16_t mBPM;
-        uint16_t mSpeed;
-        uint16_t mCurrentRow;
-        uint16_t mCurrentPattern;
+        uint16_t mBPM { 125 };
+        uint16_t mSpeed { 6 };
 
-        uint8_t mLoopRow;
-        uint8_t mLoopCount;
+        uint16_t mCurrentRow { 0 };
+        uint16_t mCurrentPattern { 0 };
 
-        uint8_t mSongLength;
+        uint8_t mLoopRow { 0 };
+        uint8_t mLoopCount { 0 };
+
+        uint8_t mSongLength { 0 };
 
         bool mIs8Channel { false };
 
