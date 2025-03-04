@@ -10,14 +10,18 @@
 #include <array>
 
 namespace mb::Audio {
-
-    class S3MChannel {};
+    class S3MChannel {
+        bool mEnabled { false };
+        uint8_t mChannelType { 0 };
+    };
 
     class S3MTracker : public Playable {
     private:
         std::string mName;
         uint8_t mType;
         std::array<S3MChannel, 32> mChannels;
+
+        std::vector<uint8_t> mOrders;
 
         uint8_t mOrderNum { 0 };
         uint8_t mInstrumentCount { 0 };

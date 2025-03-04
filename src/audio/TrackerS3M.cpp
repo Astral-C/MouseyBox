@@ -19,12 +19,12 @@ namespace mb::Audio {
 
         stream.readUInt16(); // 0x0000
 
-        mOrderNum = stream.readUInt8();
-        mInstrumentCount = stream.readUInt8();
-        mPatternCount = stream.readUInt8();
-        mFlags = stream.readUInt8();
-        mCWT = stream.readUInt8();
-        mFormatVersion = stream.readUInt8();
+        mOrderNum = stream.readUInt16();
+        mInstrumentCount = stream.readUInt16();
+        mPatternCount = stream.readUInt16();
+        mFlags = stream.readUInt16();
+        mCWT = stream.readUInt16();
+        mFormatVersion = stream.readUInt16();
         stream.readUInt32(); // SCRM
     
         mGlobalVolume = stream.readUInt8();
@@ -32,17 +32,38 @@ namespace mb::Audio {
         mTempo = stream.readUInt8();
         mMasterVolume = stream.readUInt8();
     
-        stream.readUInt32();
-        stream.readUInt32();
-
-        stream.readUInt16();
+        stream.seek(0x3E);
         mSpecial = stream.readUInt16();
 
         // read channel settings
-        for(int i = 0; i < 32; i++){
-
+        for(std::size_t i = 0; i < 32; i++){
+            uint8_t settings = strema.readUInt8();
+            mChannels[i].mEnabled = (settings & 0x80 >= 0;
+            mChannels[i].mType = (settings & 0x7F);
         }
 
+        stream.seek(0x60);
+        mOrders.reserve(mOrderNum);
+        for(std::size_t i = 0; i < mOrderNum; i ++){
+            mOrders.push_back(stream.readUInt8());
+        }
+
+        for (std::size_t i = 0; i < mPatternCount; i++) {
+            uint32_t patternOffs = static_cast<uint32_t>(stream.readUInt16())*16;
+        
+            // seek to and read pattern
+
+            std::size_t pos = stream.tell();
+            stream.seek(patternOffs);
+            mPatterns.push_back()
+        }
+
+        for (std::size_t i = 0; i < mInstrumentCount; i++) {
+            mInstrumentPointers.push_back(static_cast<uint32_t>(stream.readUInt16())*16);
+
+            // seek to and read instrument
+        }
+        
     }
 
     void S3MTracker::Mix(uint8_t* data, int len){

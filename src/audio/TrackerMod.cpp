@@ -22,7 +22,7 @@ namespace mb::Audio {
 	    180,161,141,120, 97, 74, 49, 24
     };
 
-    static uint16_t finetune_table[16][36] = {
+    static uint16_t period_table[16][36] = {
         {
             856,808,762,720,678,640,604,570,538,508,480,453, // C-1 to B-1 Finetune 0
             428,404,381,360,339,320,302,285,269,254,240,226, // C-2 to B-2 Finetune 0
@@ -111,13 +111,7 @@ namespace mb::Audio {
         size_t noteIdx = 0;
         uint32_t closestDist = 0xFFFFFFFF;
 
-        for (size_t i = 0; i < 36; i++){
-            if(closestDist == 0) break;
-            if(abs((int)finetune_table[0][i] - (int)note) < closestDist){
-                closestDist = abs((int)finetune_table[0][i] - (int)note);
-                noteIdx = i;
-            }
-        }
+        noteIdx = std::distance(std::begin(period_table[0]), std::find(std::begin(period_table[0]), std::end(period_table[0]), note));
       
         return std::format("{}{}", notePrefix[noteIdx % 12], static_cast<unsigned int>(floor(noteIdx / 12) + 4));
     }
@@ -127,17 +121,10 @@ namespace mb::Audio {
         size_t noteIdx = 0;
         uint32_t closestDist = 0xFFFFFFFF;
 
-        for (size_t i = 0; i < 36; i++){
-            if(closestDist == 0) break;
-            if(abs((int)finetune_table[finetune][i] - (int)period) < closestDist){
-                closestDist = abs((int)finetune_table[finetune][i] - (int)period);
-                noteIdx = i;
-            }
-        }
-
         if(finetune >= 8) finetune = 16 - finetune;
-
-        return finetune_table[finetune][noteIdx];
+        noteIdx = std::distance(std::begin(period_table[0]), std::find(std::begin(period_table[0]), std::end(period_table[0]), period));
+        
+        return period_table[finetune][noteIdx];
         
     }
 
@@ -240,10 +227,8 @@ namespace mb::Audio {
             }
         }
         
-        mb::Log::Debug("Reading Sample Data at {}", stream.tell());
-        for(int i = 0; i < 31; i++){
+        for(int i = 0; i < 31; i++){    
             if(mSamples[i].mSampleLength <= 0) continue;
-
             mSamples[i].mData.reserve(mSamples[i].mSampleLength);
             for(int s = 0; s < mSamples[i].mSampleLength; s++){
                 mSamples[i].mData.push_back(stream.readInt8());
@@ -285,15 +270,15 @@ namespace mb::Audio {
                         case 0x0: break;
                         case 0x1:
                         case 0x2:
-                            if(mChannels[i].mPrevInstrument == mChannels[i].mInstrument) trigger = false;
-                            mChannels[i].mPortaSpeed = mChannels[i].mEffectArgs;
+                            trigger = false;
+                            
+                            if(mChannels[i].mEffectArgs != 0) mChannels[i].mPortaSpeed = mChannels[i].mEffectArgs;
                             break;
                         case 0x3:
-                            if(mChannels[i].mPrevInstrument == mChannels[i].mInstrument) trigger = false;
-                            if(period != 0){
-                                mChannels[i].mPortaPeriod = period; // use previous porta period of period is 0
-                            }
+                            trigger = false;
+                            if(period != 0) mChannels[i].mPortaPeriod = period; // use previous porta period of period is 0
                             if(mChannels[i].mEffectArgs != 0) mChannels[i].mPortaSpeed = mChannels[i].mEffectArgs;
+                            mb::Log::Debug("Row Tone Porta to {}({}) with speed {}", GetNoteName(mChannels[i].mPortaPeriod), mChannels[i].mPortaPeriod, mChannels[i].mPortaSpeed);
                             break;
                         case 0x4:
                             if(((mChannels[i].mEffectArgs & 0xF0) >> 4) != 0){
@@ -450,21 +435,17 @@ namespace mb::Audio {
                         }
                         break;
                     case 0x1:
-                        if(mCurrentTicks > 0){ 
-                            if(mChannels[i].mPeriod > 113){
-                                mChannels[i].mPeriod -= mChannels[i].mPortaSpeed;
-                            } else {
-                                mChannels[i].mPeriod = 113;
-                            }
+                        if(mChannels[i].mPeriod > 113){
+                            mChannels[i].mPeriod -= mChannels[i].mPortaSpeed;
+                        } else {
+                            mChannels[i].mPeriod = 113;
                         }
                         break;
                     case 0x2:
-                        if(mCurrentTicks > 0){ 
-                            if(mChannels[i].mPeriod < 856){
-                                mChannels[i].mPeriod += mChannels[i].mPortaSpeed;
-                            } else {
-                                mChannels[i].mPeriod = 856;
-                            }
+                        if(mChannels[i].mPeriod < 856){
+                            mChannels[i].mPeriod += mChannels[i].mPortaSpeed;
+                        } else {
+                            mChannels[i].mPeriod = 856;
                         }
                         break;
                     case 0x5:
@@ -476,33 +457,26 @@ namespace mb::Audio {
                             }
                         }
                     case 0x3:
-                        if(mCurrentTicks > 0){
+                        if(mChannels[i].mPeriod < mChannels[i].mPortaPeriod){
+                            mChannels[i].mPeriod += mChannels[i].mPortaSpeed;
+
+                            if(mChannels[i].mPeriod > mChannels[i].mPortaPeriod){
+                                mChannels[i].mPeriod = mChannels[i].mPortaPeriod;
+                            }
+                        } else if(mChannels[i].mPeriod > mChannels[i].mPortaPeriod){
+                            mChannels[i].mPeriod -= mChannels[i].mPortaSpeed;
+
                             if(mChannels[i].mPeriod < mChannels[i].mPortaPeriod){
-                                mChannels[i].mPeriod += mChannels[i].mPortaSpeed;
-
-                                if(mChannels[i].mPeriod >= mChannels[i].mPortaPeriod){
-                                    mChannels[i].mPeriod = mChannels[i].mPortaPeriod;
-                                } else if(mChannels[i].mPeriod >= 856){
-                                    mChannels[i].mPeriod = 856;
-                                }
-                            } else if(mChannels[i].mPeriod > mChannels[i].mPortaPeriod){
-                                mChannels[i].mPeriod -= mChannels[i].mPortaSpeed;
-
-                                if(mChannels[i].mPeriod <= mChannels[i].mPortaPeriod){
-                                    mChannels[i].mPeriod = mChannels[i].mPortaPeriod;
-                                } else if(mChannels[i].mPeriod <= 113){
-                                    mChannels[i].mPeriod = 113;
-                                }
+                                mChannels[i].mPeriod = mChannels[i].mPortaPeriod;
                             }
                         }
                         break;
                     case 0xD:
                         if(mCurrentTicks == mSpeed-1){
                             mCurrentPattern++;
-                            mCurrentRow = 0;
                             if(mCurrentPattern > mSongLength){
-                                mCurrentPattern = 0;
-                            }                        
+                              mCurrentPattern = 0;
+                            }
 
                             mCurrentRow = (((mChannels[i].mEffectArgs & 0xF0) >> 4) * 10) + (mChannels[i].mEffectArgs & 0x0F) - 1;
                             if(mCurrentRow >= 64){
@@ -514,7 +488,7 @@ namespace mb::Audio {
                         mCurrentPattern = mChannels[i].mEffectArgs;
                         mCurrentRow = 0;
                         if(mCurrentPattern > mSongLength){
-                            mCurrentPattern = mSongLength;
+                            mCurrentPattern = 0;
                         }
                         break;
                     case 0x6:
@@ -581,10 +555,6 @@ namespace mb::Audio {
                                 break;
                         }
                         break;
-
-                    case 0xF:
-                        mSpeed = mChannels[i].mEffectArgs;
-                        break;
                     default:
                         break;
                     }
@@ -611,25 +581,27 @@ namespace mb::Audio {
             int16_t sampleLeft = 0, sampleRight = 0;
             Tick();
 
-            for(int c = 0; c < mChannels.size(); c++){
-                auto channel = mChannels[c];
-                if(channel.mVolume == 0 || channel.mPeriod == 0 || channel.mInstrument == 0) continue;
+            for(int c = 0; c < (mIs8Channel ? 8 : 4); c++){
+                MOD::Channel* channel = &mChannels[c];
+                if(channel->mVolume == 0 || channel->mPeriod == 0) continue;
 
-                MOD::Sample instrument = mSamples[channel.mInstrument];
+                MOD::Sample* instrument = &mSamples[channel->mInstrument];
                 // 3546895?
-                double freq = (((8363.0 * 428.0) / channel.mPeriod) / mSampleRate);
+                double freq = (((8363.0 * 428.0) / channel->mPeriod) / mSampleRate);
 
-                int16_t sampleSlice = instrument.mData[static_cast<uint32_t>(channel.mSampleOffset)];
+                int16_t sampleSlice = instrument->mData[static_cast<uint32_t>(channel->mSampleOffset)];
 
-                sampleLeft += (sampleSlice * channel.mVolume * (0xFF - channel.mPan)) / 0xFF;
-                sampleRight += (sampleSlice * channel.mVolume * channel.mPan) / 0xFF;
+                sampleLeft += (sampleSlice * channel->mVolume * (0xFF - channel->mPan)) / 0xFF;
+                sampleRight += (sampleSlice * channel->mVolume * channel->mPan) / 0xFF;
 
-                mChannels[c].mSampleOffset += freq;
-                if(instrument.mRepeatLength >= 2 && (mChannels[c].mSampleOffset >= instrument.mRepeatOffset + instrument.mRepeatLength || channel.mSampleOffset >= instrument.mSampleLength)){
-                    mChannels[c].mSampleOffset = instrument.mRepeatOffset + std::fmod(mChannels[c].mSampleOffset, instrument.mRepeatLength);
-                } else if(instrument.mRepeatLength < 2 && channel.mSampleOffset >= instrument.mSampleLength){
-                    mChannels[c].mPeriod = 0;
-                    mChannels[c].mSampleOffset = 0;
+                channel->mSampleOffset += freq;
+                if(channel->mSampleOffset > instrument->mSampleLength){
+                    if(instrument->mRepeatLength >= 2){
+                        channel->mSampleOffset = instrument->mRepeatOffset + std::fmod(channel->mSampleOffset, instrument->mRepeatLength);
+                    } else if(instrument->mRepeatLength < 2){
+                        channel->mPeriod = 0;
+                        channel->mSampleOffset = 0;
+                    }
                 }
             }
 
