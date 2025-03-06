@@ -13,6 +13,8 @@ include_directories(include)
 include_directories(lib/asio/asio/include)
 include_directories(mouseybox ${SDL3_INCLUDE_DIRS})
 
+add_subirectory(lib/libxm)
+
 file(GLOB_RECURSE MOUSEY_SRC
     "src/*.cpp"
     "src/*.c"
@@ -22,7 +24,7 @@ file(GLOB_RECURSE MOUSEY_SRC
 
 add_library(mouseybox STATIC ${MOUSEY_SRC})
 
-target_link_libraries(mouseybox SDL3::SDL3 SDL3_ttf::SDL3_ttf)
+target_link_libraries(mouseybox SDL3::SDL3 SDL3_ttf::SDL3_ttf xms)
 
 add_executable(mouseytools "tools/tools.cpp")
 target_link_libraries(mouseytools mouseybox SDL3::SDL3 SDL3_ttf::SDL3_ttf)
