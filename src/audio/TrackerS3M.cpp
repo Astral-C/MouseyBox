@@ -35,6 +35,7 @@ namespace mb::Audio {
         stream.seek(0x3E);
         mSpecial = stream.readUInt16();
 
+        /*
         // read channel settings
         for(std::size_t i = 0; i < 32; i++){
             uint8_t settings = strema.readUInt8();
@@ -42,6 +43,7 @@ namespace mb::Audio {
             mChannels[i].mType = (settings & 0x7F);
         }
 
+        
         stream.seek(0x60);
         mOrders.reserve(mOrderNum);
         for(std::size_t i = 0; i < mOrderNum; i ++){
@@ -63,7 +65,7 @@ namespace mb::Audio {
 
             // seek to and read instrument
         }
-        
+        */
     }
 
     void S3MTracker::Mix(uint8_t* data, int len){
