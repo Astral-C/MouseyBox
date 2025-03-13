@@ -17,7 +17,7 @@ find_package(SDL3 CONFIG REQUIRED)
 find_package(SDL3_ttf CONFIG REQUIRED)
 
 option(ENABLE_OPENMPT "Enable OpenMPT in Audio" OFF)
-option(DISABLE_ENTITY "Disalbe Built in Entity System" ON)
+option(DISABLE_ENTITY "Disalbe Built in Entity System" OFF)
 
 if(ENABLE_OPENMPT)
     add_compile_definitions(ENABLE_OPENMPT)
