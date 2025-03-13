@@ -19,12 +19,12 @@ namespace mb::Audio {
 
         stream.readUInt16(); // 0x0000
 
-        mOrderNum = stream.readUInt8();
-        mInstrumentCount = stream.readUInt8();
-        mPatternCount = stream.readUInt8();
-        mFlags = stream.readUInt8();
-        mCWT = stream.readUInt8();
-        mFormatVersion = stream.readUInt8();
+        mOrderNum = stream.readUInt16();
+        mInstrumentCount = stream.readUInt16();
+        mPatternCount = stream.readUInt16();
+        mFlags = stream.readUInt16();
+        mCWT = stream.readUInt16();
+        mFormatVersion = stream.readUInt16();
         stream.readUInt32(); // SCRM
     
         mGlobalVolume = stream.readUInt8();
@@ -39,6 +39,7 @@ namespace mb::Audio {
 
         stream.readUInt16();
 
+        /*
         // read channel settings
         for(int i = 0; i < 32; i++){
             uint8_t channelSettings = stream.readUInt8();
@@ -47,6 +48,7 @@ namespace mb::Audio {
             }
             mChannels[i].mChannelType = static_cast<S3MChannelType>(channelSettings & 0b01111111);
         }
+            */
 
         
 

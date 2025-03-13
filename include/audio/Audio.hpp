@@ -27,6 +27,7 @@ namespace mb::Audio {
         static void Update(void *userdata, SDL_AudioStream *stream, int len, int total);
         
     public:
+        void UpdateAudio();
 
         template<typename T>
         std::shared_ptr<T> Load(std::string name, std::filesystem::path path){
