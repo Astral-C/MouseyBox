@@ -260,7 +260,7 @@ namespace mb::Audio {
                         }
                     }
                     
-                    bool trigger = period > 0 && instrument > 0 && instrument <= 31 && mChannels[i].mPrevInstrument != mChannels[i].mInstrument;
+                    trigger = period > 0 && instrument > 0 && instrument <= 31 && mChannels[i].mPrevInstrument != mChannels[i].mInstrument;
 
                     period = GetTruePeriod(period, mSamples[mChannels[i].mInstrument].mFineTune);
                     // Per Tick Effects, first tick events
@@ -397,18 +397,12 @@ namespace mb::Audio {
                         noteStr = GetNoteName(mChannels[i].mNote);
                     }
 
-                    rowDebug += std::format("{} {:02X} v{:02d} {:01X}{:02X} | ",
-                        noteStr, mChannels[i].mInstrument+1, mChannels[i].mVolume, mChannels[i].mEffect, mChannels[i].mEffectArgs
-                    );
                 }
-
-                mb::Log::Debug("[{:02d}]{}", mCurrentRow, rowDebug);
 
                 mCurrentRow++;
                 if(mCurrentRow == 64){
                     mCurrentRow = 0;
                     mCurrentPattern++;
-                    mb::Log::Debug("[============================== Pattern {} ==============================]", mPositions[mCurrentPattern]);
                 }
 
                 mCurrentTicks = 0;

@@ -108,7 +108,6 @@ namespace mb {
             #endif
             
             Update(mDelta);
-            mAudio->UpdateAudio();
             if(mRenderer != nullptr) mRenderer->Update();
 
 #ifdef __GAMECUBE__
