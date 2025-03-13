@@ -8,6 +8,17 @@ set(CMAKE_EXE_LINKER_FLAGS "-static-libgcc -static-libstdc++")
 find_package(SDL3 CONFIG REQUIRED)
 find_package(SDL3_ttf CONFIG REQUIRED)
 
+option(ENABLE_OPENMPT "Enable OpenMPT in Audio" OFF)
+option(DISABLE_ENTITY "Disalbe Built in Entity System" ON)
+
+if(ENABLE_OPENMPT)
+    add_compile_definitions(ENABLE_OPENMPT)
+endif()
+
+if(DISABLE_ENTITY)
+    add_compile_definitions(DISABLE_ENTITY)
+endif()
+
 include_directories(lib)
 include_directories(include)
 include_directories(lib/asio/asio/include)
