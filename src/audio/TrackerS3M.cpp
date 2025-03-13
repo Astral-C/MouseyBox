@@ -11,7 +11,7 @@ namespace mb::Audio {
     }
 
     void S3MTracker::Load(std::filesystem::path path){
-        bStream::CFileStream stream(path.string(), bStream::Endianess::Big, bStream::OpenMode::In);
+        bStream::CFileStream stream(path.string(), bStream::Endianess::Little, bStream::OpenMode::In);
 
         mName = stream.readString(28);
         stream.readUInt8(); // 1A
@@ -30,18 +30,25 @@ namespace mb::Audio {
         mGlobalVolume = stream.readUInt8();
         mSpeed = stream.readUInt8();
         mTempo = stream.readUInt8();
-        mMasterVolume = stream.readUInt8();
-    
+        mMixingVolume = stream.readUInt8();
+        stream.readUInt8(); // click removal for gravis ultrasound
+        mPanning = stream.readUInt8(); 
+
         stream.readUInt32();
         stream.readUInt32();
 
         stream.readUInt16();
-        mSpecial = stream.readUInt16();
 
         // read channel settings
         for(int i = 0; i < 32; i++){
-
+            uint8_t channelSettings = stream.readUInt8();
+            if(channelSettings & 0b10000000){
+                mChannels[i].mEnabled = true;
+            }
+            mChannels[i].mChannelType = static_cast<S3MChannelType>(channelSettings & 0b01111111);
         }
+
+        
 
     }
 

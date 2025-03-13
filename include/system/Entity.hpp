@@ -1,3 +1,4 @@
+#ifndef DISABLE_ENTITY
 #ifndef __MB_ENTITY_H__
 #define __MB_ENTITY_H__
 #include <SDL3/SDL.h>
@@ -87,4 +88,5 @@ namespace mb {
 
 }
 
+#endif
 #endif

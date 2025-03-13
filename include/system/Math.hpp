@@ -6,6 +6,8 @@
 
 namespace mb::Math {
 
+    constexpr double PI = 3.14159265358979323846;
+
     template <typename T>
     struct Line2D;
     template <typename T>
@@ -34,7 +36,7 @@ namespace mb::Math {
             return v;
         }
 
-        Vec2<T>& operator=(Vec2<T>& o){ 
+        Vec2<T>& operator=(Vec2<T> o){ 
             x = o.x;
             y = o.y;
             return *this;
@@ -55,6 +57,18 @@ namespace mb::Math {
             return (x * o.x) + (y * o.y) + (z * o.z);
         }
 
+        T length(){
+            return std::sqrt(std::pow(x,2) + std::pow(y,2) + std::pow(z,2));
+        }
+
+        Vec3<T> operator/=(double o){
+            Vec3<T> v;
+            v.x = x / o;
+            v.y = y / o;
+            v.z = z / o;
+            return v;
+        }
+
         Vec3<T> operator-(Vec3<T>& o){
             Vec3<T> v;
             v.x = x - o.x;
@@ -63,11 +77,11 @@ namespace mb::Math {
             return v;
         }
 
-        Vec3<T>& operator=(Vec3<T>& o){ 
+        Vec3<T>& operator=(Vec3<T> o){ 
             x = o.x;
             y = o.y;
             z = o.z;
-            return &this;
+            return *this;
         }
     };
 
@@ -171,6 +185,12 @@ namespace mb::Math {
             return false;
         }
     };
+
+    template <typename T, typename = typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+    T Lerp(T a, T b, double t){
+        return (1 - t) * a + t * b;
+    }
+
 }
 
 #endif

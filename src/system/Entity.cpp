@@ -1,3 +1,4 @@
+#ifndef DISABLE_ENTITY
 #include <system/Entity.hpp>
 #include <system/Log.hpp>
 
@@ -181,3 +182,4 @@ namespace mb {
     }
 
 }
+#endif

@@ -217,19 +217,20 @@ namespace mb::Audio {
     void MODTracker::Tick(){
         if(mTickTimer >= mUpdatesPerTick){
             if(mCurrentTicks >= mSpeed){
-                int channelIdx = 0;
                 for(int i = 0; i < mChannels.size(); i++){
                     bool trigger = true;
                     uint32_t note = mPatterns[mPositions[mCurrentPattern]].Rows[mCurrentRow][i];
 
+                    uint32_t instrument = (note & 0xF0000000) >> 24 | (note & 0x0000F000) >> 12;
                     uint32_t period = (note & 0x0FFF0000) >> 16;
                     mChannels[i].mPrevInstrument = mChannels[i].mInstrument;
-                    uint32_t instrument = (note & 0xF0000000) >> 24 | (note & 0x0000F000) >> 12;
                     mChannels[i].mEffect = (note & 0x00000F00) >> 8;
                     mChannels[i].mEffectArgs = (note & 0x000000FF);
 
-                    if(instrument > 0 && instrument <= 32){
-                        mChannels[i].mInstrument = instrument;
+                    mb::Log::Debug("[CHAN{}] Effect is {} and args are {:02x}", i, mChannels[i].mEffect, mChannels[i].mEffectArgs);
+
+                    if(instrument > 0 && instrument < 32){
+                        mChannels[i].mInstrument = instrument - 1;
                         mChannels[i].mPan = 0x80;
                         mChannels[i].mVolume = mSamples[mChannels[i].mInstrument].mVolume;
                         if(mChannels[i].mInstrument != mChannels[i].mPrevInstrument){
@@ -245,8 +246,8 @@ namespace mb::Audio {
                             mChannels[i].mPortaSpeed = mChannels[i].mEffectArgs;
                             break;
                         case 0x3:
-                            if(period == 0) break;
                             trigger = false;
+                            if(period == 0) break;
                             mChannels[i].mPortaPeriod = period;
                             mChannels[i].mPortaSpeed = (mChannels[i].mEffectArgs & 0x0F);
                             break;
@@ -263,6 +264,7 @@ namespace mb::Audio {
                             }
                             break;
                         case 0x5:
+                            trigger = false;
                         case 0x6:
                         case 0xA:
                             if((mChannels[i].mEffectArgs & 0x0F) != 0) {
@@ -400,6 +402,7 @@ namespace mb::Audio {
                     }
                     break;
                 case 0x5:
+                    mb::Log::Debug("[VolSlide + Tone Porta] Volume {}->{} Period {}->{}", mChannels[i].mVolume, mChannels[i].mVolSlideDir == 0 ? 0 : 64, mChannels[i].mPeriod, mChannels[i].mPortaPeriod);
                     if(mChannels[i].mVolSlideSpeed != 0) {
                         if(mChannels[i].mVolSlideDir != 0){
                             mChannels[i].mVolume = std::min(mChannels[i].mVolume + mChannels[i].mVolSlideSpeed, 64);

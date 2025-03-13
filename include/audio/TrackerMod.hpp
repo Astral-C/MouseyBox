@@ -40,7 +40,7 @@ namespace MOD {
         uint8_t mEffectArgs;
         uint8_t mPan;
 
-        int8_t mFineTune { -1 };
+        int8_t mFineTune { 0 };
 
         uint32_t mNote { 0 };
         uint32_t mPeriod { 0 };
@@ -82,7 +82,7 @@ namespace MOD {
     class MODTracker : public Playable {
     private:
         std::array<MOD::Channel, 4> mChannels;
-        std::array<MOD::Sample, 32> mSamples;
+        std::array<MOD::Sample, 31> mSamples;
         std::array<uint8_t, 128> mPositions;
 
         std::vector<MOD::Pattern> mPatterns;

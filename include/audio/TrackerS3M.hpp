@@ -11,7 +11,17 @@
 
 namespace mb::Audio {
 
-    class S3MChannel {};
+    enum S3MChannelType {
+        LeftPCM,
+        RightPCM,
+        MelodyOPL2,
+        DrumsOPL2
+    };
+
+    struct S3MChannel {
+        bool mEnabled { false };
+        S3MChannelType mChannelType { LeftPCM };
+    };
 
     class S3MTracker : public Playable {
     private:
@@ -28,7 +38,8 @@ namespace mb::Audio {
         uint8_t mGlobalVolume { 0 };
         uint8_t mSpeed { 0 };
         uint8_t mTempo { 0 };
-        uint8_t mMasterVolume { 0 };
+        uint8_t mMixingVolume { 0 };
+        uint8_t mPanning { 0 };
         uint8_t mSpecial { 0 };
 
     public:
