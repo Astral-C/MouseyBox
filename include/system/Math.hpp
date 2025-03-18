@@ -47,6 +47,31 @@ namespace mb::Math {
         }
     };
 
+    template <typename T, typename = typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+    class Matrix2x2 {
+        T rows[2][2];
+    public:
+        Matrix2x2() { rows[0][0] = 0; rows[0][1] = 0; rows[1][0] = 0; rows[1][1] = 0; }
+        Matrix2x2(T a, T b, T c, T d) { rows[0][0] = a; rows[0][1] = b; rows[1][0] = c; rows[1][1] = d; }
+
+        T* operator[](int r) { return rows[r]; }
+
+        Vec2<T> operator*(Vec2<T> v){
+            return {(rows[0][0] * v.x) + (rows[0][1] * v.y), (rows[1][0] * v.x) + (rows[1][1] * v.y)}; 
+        }
+
+        Matrix2x2<T> Inverse(){
+            Matrix2x2<T> inverted;
+            
+            float determinant = 1.0f/((rows[0][0]*rows[1][1])-(rows[0][1]*rows[1][0]));
+            inverted[0][0] = rows[1][1] * determinant;
+            inverted[0][1] = -rows[0][1] * determinant;
+            inverted[1][0] = -rows[1][0] * determinant;
+            inverted[1][1] = rows[0][0] * determinant;
+            return inverted;
+        }
+    };
+
     template <typename T>
     struct Vec3 {
         T x;
