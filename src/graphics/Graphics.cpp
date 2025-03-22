@@ -93,6 +93,21 @@ SDL_FRect Renderer::GetSize(){
     return rendererRect;
 }
 
+bool Renderer::LoadSprites(std::filesystem::path path){
+    nlohmann::json spriteConfig = nlohmann::json::parse(std::ifstream(path.string()));
+    mb::Log::Debug("Parsed sprite config!");
+
+    for(auto sprite : spriteConfig){
+        if(mSprites.contains(sprite["name"])) continue;
+        
+        std::shared_ptr<Sprite> newSprite = std::make_shared<Sprite>(mInternalRender, sprite);
+        Log::Debug("Loading Sprite {}", sprite["name"].get<std::string>());
+        mSprites.insert({sprite["name"], newSprite});
+    }
+
+    return true;
+}
+
 bool Renderer::LoadSprite(std::filesystem::path path){
     nlohmann::json spriteConfig = nlohmann::json::parse(std::ifstream(path.string()));
     mb::Log::Debug("Parsed sprite config!");
