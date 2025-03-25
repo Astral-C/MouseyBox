@@ -7,7 +7,7 @@
 namespace mb::Graphics {
 
 class Camera {
-    SDL_FRect mBounds;
+    SDL_FRect mBounds {};
     SDL_Rect mViewportRect {};
 #ifndef DISABLE_ENTITY
     Entity* mFocus { nullptr };

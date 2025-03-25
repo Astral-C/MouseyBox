@@ -1,6 +1,7 @@
 #include <system/Log.hpp>
 #include <graphics/Graphics.hpp>
 #include <graphics/Sprite.hpp>
+#include <graphics/Particle.hpp>
 #include <graphics/stb_image.h>
 #include <SDL3_ttf/SDL_ttf.h>
 #include <filesystem>
@@ -121,7 +122,7 @@ bool Renderer::LoadSprite(std::filesystem::path path){
     return true;
 }
 
-bool Renderer::LoadSpriteFromMemory(nlohmann::json spriteConfig, uint8_t* data, size_t size){
+bool Renderer::LoadSpriteFromMemory(nlohmann::json spriteConfig, uint8_t* data, std::size_t size){
     if(mSprites.contains(spriteConfig["name"])) return true;
 
     std::shared_ptr<Sprite> newSprite = std::make_shared<Sprite>(mInternalRender, spriteConfig, data, size);
@@ -159,6 +160,17 @@ std::shared_ptr<Polygon> Renderer::CreatePolygon(std::vector<Math::Vec2<float>> 
 
     mRenderables.push_back(poly);
     return poly;
+}
+
+std::shared_ptr<ParticleSystem> Renderer::CreateParticleSystem(std::filesystem::path path){
+    nlohmann::json spriteConfig = nlohmann::json::parse(std::ifstream(path.string()));
+    mb::Log::Debug("Parsed particle config!");
+    
+    std::shared_ptr<ParticleSystem> newSystem = std::make_shared<ParticleSystem>(mInternalRender, spriteConfig);
+    Log::Debug("Creating Particle System");
+
+    mRenderables.push_back(newSystem);
+    return newSystem;
 }
 
 std::shared_ptr<SpriteInstance> Renderer::InstanceSprite(std::string name){
@@ -210,7 +222,7 @@ bool Renderer::LoadFont(std::filesystem::path path, int ptSize, std::string name
     return true;
 }
 
-bool Renderer::LoadFontFromMemory(std::string name, uint8_t* data, size_t size, int ptSize){
+bool Renderer::LoadFontFromMemory(std::string name, uint8_t* data, std::size_t size, int ptSize){
     SDL_IOStream* mem = SDL_IOFromMem(data, size);
     TTF_Font* ttf = TTF_OpenFontIO(mem, 1, ptSize);
     
@@ -285,7 +297,7 @@ std::shared_ptr<TileMap> Renderer::LoadTilemap(std::filesystem::path path){
     return map;
 }
 
-std::shared_ptr<TileMap> Renderer::LoadTilemapFromMeory(nlohmann::json& mapJson, uint8_t* data, size_t size){
+std::shared_ptr<TileMap> Renderer::LoadTilemapFromMeory(nlohmann::json& mapJson, uint8_t* data, std::size_t size){
     std::shared_ptr<TileMap> map = std::make_shared<TileMap>(this, mapJson, data, size);
     mTileMaps.insert({map->mName, map});
     return map;

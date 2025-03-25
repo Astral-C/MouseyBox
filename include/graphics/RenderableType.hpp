@@ -7,7 +7,8 @@ enum RenderableType {
     Polygon,
     Rect,
     Text,
-    TilemapLayer
+    TilemapLayer,
+    ParticleSystem
 };
 
 #endif

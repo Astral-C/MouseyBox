@@ -10,6 +10,7 @@
 #include <graphics/Rect.hpp>
 #include <graphics/Camera.hpp>
 #include <graphics/Circle.hpp>
+#include <graphics/Particle.hpp>
 #include <vector>
 #include <string>
 
@@ -58,11 +59,12 @@ public:
     std::shared_ptr<Polygon> CreatePolygon(std::vector<Math::Vec2<float>>);
     std::shared_ptr<Rect> CreateRect(float,float,float,float);
     std::shared_ptr<Circle> CreateCircle(float,float,float);
+    std::shared_ptr<ParticleSystem> CreateParticleSystem(std::filesystem::path);
     std::shared_ptr<Text> CreateText(std::string, std::string);
     std::shared_ptr<TileMapLayer> CreateTilemapLayer(nlohmann::json);
     std::shared_ptr<TileMapLayer> CreateTilemapLayer();
     std::shared_ptr<TileMap> GetTilemap(std::string);
-
+    
     void DeleteTilemap(std::string);
     void DeleteFont(std::string);
     void DeleteSprite(std::string);
