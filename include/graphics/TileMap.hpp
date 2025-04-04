@@ -23,12 +23,12 @@ struct TilemapCollision {
 class TileMapLayer : public Renderable {
     friend TileMap;
     std::shared_ptr<TileMap> mMap;
-    std::vector<int32_t> mTiles {};
+    std::vector<uint32_t> mTiles {};
 public:
     float mColorShift[4] { 1.0f, 1.0f, 1.0f, 1.0f };
     float mLayerShift { 1 };
     
-    std::vector<int32_t> GetTiles(){ return mTiles; }
+    std::vector<uint32_t> GetTiles(){ return mTiles; }
 
     TileMapLayer();
     TileMapLayer(nlohmann::json);
@@ -54,11 +54,11 @@ class TileMap : public std::enable_shared_from_this<TileMap> {
 public:
     std::string mName;
 
-    bool SetTileAt(int32_t, int, int, int);
-    int32_t TileAt(int, int, int);
+    bool SetTileAt(uint32_t, int, int, int, bool fx=false, bool fy=false);
+    uint32_t TileAt(int, int, int);
 
-    bool SetTile(int32_t, int, int, int);
-    int32_t GetTile(int, int, int);
+    bool SetTile(uint32_t, int, int, int, bool fx=false, bool fy=false);
+    uint32_t GetTile(int, int, int);
 
     void Update(SDL_Renderer*);
 

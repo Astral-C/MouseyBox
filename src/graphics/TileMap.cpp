@@ -157,43 +157,46 @@ void TileMap::NewLayer(Renderer* r){
 }
 
 
-int32_t TileMap::TileAt(int x, int y, int z){
+uint32_t TileMap::TileAt(int x, int y, int z){
     if(std::shared_ptr<TileMapLayer> layer = mLayers[z].lock()) {        
         int tx = (x / layer->mScale) / mTileSize;
         int ty = (y / layer->mScale) / mTileSize;
-        return layer->mTiles[(ty * mTileWidth) + tx];
+        mb::Log::Debug("Got Tile {}", layer->mTiles[(y * mTileWidth) + x] >> 8);
+        return layer->mTiles[(ty * mTileWidth) + tx] >> 8;
     } else {
         return -1;
     }
 }
 
-bool TileMap::SetTileAt(int32_t tid, int x, int y, int z){
+bool TileMap::SetTileAt(uint32_t tid, int x, int y, int z, bool fx, bool fy){
     if(std::shared_ptr<TileMapLayer> layer = mLayers[z].lock()) {
         int tx = (x / layer->mScale) / mTileSize;
         int ty = (y / layer->mScale) / mTileSize;
 
         if(tx < 0 || tx > mTileWidth || ty > mTileHeight || ty < 0 || z < 0 || z > mLayers.size()) return false;
-        
-        layer->mTiles[(ty * mTileWidth) + tx] = tid;
+        mb::Log::Debug("Set Tile {}[{}]({})", tid, static_cast<uint32_t>(tid) << 8, fx | fy << 1 | (static_cast<uint32_t>(tid) << 8));
+        layer->mTiles[(ty * mTileWidth) + tx] = fx | fy << 1 | static_cast<uint32_t>(tid) << 8;
         return true;
     } else {
         return false;
     }
 }
 
-bool TileMap::SetTile(int32_t tid, int x, int y, int z){
+bool TileMap::SetTile(uint32_t tid, int x, int y, int z, bool fx, bool fy){
     if(x < 0 || x > mTileWidth || y > mTileHeight || y < 0 || z < 0 || z > mLayers.size()) return false;
     if(std::shared_ptr<TileMapLayer> layer = mLayers[z].lock()){
-        layer->mTiles[(y * mTileWidth) + x] = tid;
+        mb::Log::Debug("Set Tile {}[{}]({})", tid, static_cast<uint32_t>(tid) << 8, fx | fy << 1 | static_cast<uint32_t>(tid) << 8);
+        layer->mTiles[(y * mTileWidth) + x] = fx | fy << 1 | static_cast<uint32_t>(tid) << 8;
     } else {
         return false;
     }
     return true;
 }
 
-int32_t TileMap::GetTile(int x, int y, int z){
+uint32_t TileMap::GetTile(int x, int y, int z){
     if(std::shared_ptr<TileMapLayer> layer = mLayers[z].lock()){
-        return layer->mTiles[(y * mTileWidth) + x];
+        mb::Log::Debug("Got Tile {}", layer->mTiles[(y * mTileWidth) + x] >> 8);
+        return layer->mTiles[(y * mTileWidth) + x] >> 8;
     } else {
         return -1;
     }
@@ -230,14 +233,17 @@ void TileMap::Update(SDL_Renderer* r){
             for(int y = 0; y < mTileHeight; y++){
                 int ty = y * mTileSize;
                 for(int x = 0; x < mTileWidth; x++){
+                    uint32_t tile = layer->mTiles[(y * mTileWidth) + x];
                     int tx = x * mTileSize;
-                    int tid = layer->mTiles[(y * mTileWidth) + x];
+                    bool fx = (tile & 1) > 0;
+                    bool fy = (tile & 2) > 0;
+                    uint32_t tid = tile >> 8;
                     if(tid == -1) continue;
 
                     SDL_FRect tileDest {static_cast<float>(tx), static_cast<float>(ty), static_cast<float>(mTileSize), static_cast<float>(mTileSize)};         
                     SDL_FRect tileSource {static_cast<float>((tid % mTileSetPitch) * mTileSize), static_cast<float>((tid / mTileSetPitch) * mTileSize), static_cast<float>(mTileSize), static_cast<float>(mTileSize)};
 
-                    SDL_RenderTexture(r, mTileSet, &tileSource, &tileDest);
+                    SDL_RenderTextureRotated(r, mTileSet, &tileSource, &tileDest, 0.0f, nullptr, static_cast<SDL_FlipMode>((fx ? 1 : 0) | (fy ? 2 : 0)));
                 }   
             }
             SDL_SetTextureColorMod(layer->mTexture, static_cast<uint8_t>(0xFF * layer->mColorShift[0]), static_cast<uint8_t>(0xFF * layer->mColorShift[1]), static_cast<uint8_t>(0xFF * layer->mColorShift[2]));

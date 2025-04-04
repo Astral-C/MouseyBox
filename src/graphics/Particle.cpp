@@ -5,6 +5,7 @@
 #include <graphics/stb_image.h>
 #include <filesystem>
 #include <fstream>
+#include <random>
 
 namespace mb {
 namespace Graphics {
@@ -46,7 +47,67 @@ ParticleSystem::ParticleSystem(SDL_Renderer* r, nlohmann::json& config){
         mParticleMax = 10;
     }
 
+    if(config.contains("spawn_area_width")){
+        mDrawRect.w = config["spawn_area_width"];
+    } else {
+        mDrawRect.w = 10;
+    }
+
+    if(config.contains("spawn_area_height")){
+        mDrawRect.w = config["spawn_area_height"];
+    } else {
+        mDrawRect.w = 10;
+    }    
+
+    int lifemin, lifemax;
+
+    if(config.contains("min_lifetime")){
+        lifemin = config["min_lifetime"];
+    } else {
+        lifemin = 100;
+    }
+
+    if(config.contains("max_lifetime")){
+        lifemax = config["max_lifetime"];
+    } else {
+        lifemax = 200;
+    }
+
+    float velxmin, velxmax;
+
+    if(config.contains("min_vel_x")){
+        velxmin = config["min_vel_x"];
+    } else {
+        velxmin = 0.0f;
+    }
+
+    if(config.contains("max_vel_x")){
+        velxmax = config["max_vel_x"];
+    } else {
+        velxmax = 1.0f;
+    }
+
+    float velymin, velymax;
+
+    if(config.contains("min_vel_y")){
+        velymin = config["min_vel_y"];
+    } else {
+        velymin = 0.0f;
+    }
+
+    if(config.contains("max_vel_y")){
+        velymax = config["max_vel_y"];
+    } else {
+        velymax = 1.0f;
+    }
+
     mParticles = new Particle[mParticleMax];
+    mGen = std::mt19937(mRand());
+    mDistX = std::uniform_int_distribution<int>(0, mDrawRect.w);
+    mDistY = std::uniform_int_distribution<int>(0, mDrawRect.h);
+    mLifeDist = std::uniform_int_distribution<int>(lifemin, lifemax);
+    mVelXDist = std::uniform_real_distribution<float>(velxmin, velxmax);
+    mVelYDist = std::uniform_real_distribution<float>(velymin, velymax);
 
     stbi_image_free(imgData);
 
@@ -84,7 +145,37 @@ ParticleSystem::ParticleSystem(SDL_Renderer* r, nlohmann::json& config, uint8_t*
         mParticleMax = 10;
     }
 
+    if(config.contains("spawn_area_width")){
+        mDrawRect.w = config["spawn_area_width"];
+    } else {
+        mDrawRect.w = 10;
+    }
+
+    if(config.contains("spawn_area_height")){
+        mDrawRect.w = config["spawn_area_height"];
+    } else {
+        mDrawRect.w = 10;
+    }    
+
+    int lifemin, lifemax;
+
+    if(config.contains("min_lifetime")){
+        lifemin = config["min_lifetime"];
+    } else {
+        lifemin = 100;
+    }
+
+    if(config.contains("max_lifetime")){
+        lifemax = config["max_lifetime"];
+    } else {
+        lifemax = 200;
+    }    
+
     mParticles = new Particle[mParticleMax];
+    mGen = std::mt19937(mRand());
+    mDistX = std::uniform_int_distribution<int>(0, mDrawRect.w);
+    mDistY = std::uniform_int_distribution<int>(0, mDrawRect.h);
+    mLifeDist = std::uniform_int_distribution<int>(lifemin, lifemax);
 
     stbi_image_free(imgData);
 
@@ -110,14 +201,25 @@ void ParticleSystem::Draw(SDL_Renderer* r, Camera* cam) {
     draw.h = mHeight * mScale;
 
     for(int i = 0; i < mParticleMax; i++){
-        draw.x = mParticles[i].mPosition.x;
-        draw.y = mParticles[i].mPosition.y;
-        SDL_SetTextureAlphaMod(mTexture, mOverlayColor.a);
-        SDL_SetTextureColorMod(mTexture, mOverlayColor.r, mOverlayColor.g, mOverlayColor.b);
-        SDL_RenderTextureRotated(r, mTexture, nullptr, &draw, 0.0f, NULL, SDL_FlipMode::SDL_FLIP_NONE);
-    
-        mParticles[i].mPosition = mParticles[i].mPosition + mParticles[i].mVelocity;
-        mParticles[i].mVelocity = mParticles[i].mVelocity + mParticles[i].mAcceleration;
+        if(mParticles[i].mLifetime > 0){
+            draw.x = mParticles[i].mPosition.x;
+            draw.y = mParticles[i].mPosition.y;
+            SDL_SetTextureAlphaMod(mTexture, mOverlayColor.a);
+            SDL_SetTextureColorMod(mTexture, mOverlayColor.r, mOverlayColor.g, mOverlayColor.b);
+            SDL_RenderTextureRotated(r, mTexture, nullptr, &draw, 0.0f, NULL, SDL_FlipMode::SDL_FLIP_NONE);
+        
+            mParticles[i].mPosition = mParticles[i].mPosition + mParticles[i].mVelocity;
+            mParticles[i].mVelocity = mParticles[i].mVelocity + mParticles[i].mAcceleration;
+            mParticles[i].mLifetime--;
+        } else {
+            mParticles[i].mLifetime = mLifeDist(mGen);
+            mParticles[i].mVelocity.x = 0.0f;
+            mParticles[i].mVelocity.y = 0.0f;
+            mParticles[i].mPosition.x = mDrawRect.x + mDistX(mGen);
+            mParticles[i].mPosition.y = mDrawRect.y + mDistY(mGen);
+            mParticles[i].mAcceleration.x = mVelXDist(mGen);
+            mParticles[i].mAcceleration.y = mVelYDist(mGen);
+        }
     }
 }
 
