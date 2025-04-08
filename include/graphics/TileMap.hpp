@@ -25,6 +25,7 @@ class TileMapLayer : public Renderable {
     std::shared_ptr<TileMap> mMap;
     std::vector<uint32_t> mTiles {};
 public:
+    bool mCollisionEnabled { false };
     float mColorShift[4] { 1.0f, 1.0f, 1.0f, 1.0f };
     float mLayerShift { 1 };
     
