@@ -42,7 +42,6 @@ class TileMap : public std::enable_shared_from_this<TileMap> {
     int mTileSize { 0 };
     int mTileWidth { 0 };
     int mTileHeight { 0 };
-    
 
     int mTileSetWidth { 0 };
     int mTileSetHeight { 0 };
@@ -69,7 +68,7 @@ public:
 
     void SetSize(int, int);
     void LoadTileset(SDL_Renderer*, std::filesystem::path, int);
-    void LoadTilesetFromMemory(SDL_Renderer*, int, uint8_t*, size_t);
+    void LoadTilesetFromMemory(SDL_Renderer*, int, uint8_t*, std::size_t);
 
     int GetTileWidth() { return mTileWidth; }
     int GetTileHeight() { return mTileHeight; }
@@ -82,8 +81,12 @@ public:
 
     void Free(){ mLayers.clear(); }
     void NewLayer(Renderer*);
-    
-    TileMap(Renderer*, nlohmann::json&, uint8_t*, size_t);
+
+    static inline uint32_t TILE_IDX(uint32_t tile) { return tile >> 8; }
+    static inline bool TILE_FLIP_X(uint32_t tile) { return (tile & 1) > 0; }
+    static inline bool TILE_FLIP_Y(uint32_t tile) { return (tile & 2) > 0; }
+
+    TileMap(Renderer*, nlohmann::json&, uint8_t*, std::size_t);
     TileMap(Renderer*, std::filesystem::path);
     TileMap();
     ~TileMap();

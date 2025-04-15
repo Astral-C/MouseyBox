@@ -8,6 +8,7 @@
 #include <format>
 #include <set>
 
+
 namespace mb::Graphics {
 
 TileMapLayer::TileMapLayer(){
@@ -24,6 +25,7 @@ TileMapLayer::TileMapLayer(nlohmann::json layer){
         mColorShift[2] = layer["lightness"][2];
         mColorShift[3] = layer["lightness"][3];
     }
+    if(layer.contains("collidable")) mCollisionEnabled = layer["collidable"].get<bool>();
     if(mLayerShift == 0) mLayerShift = 1;
     for(auto tile : layer["tiles"]){
         mTiles.push_back(tile);
@@ -192,7 +194,7 @@ bool TileMap::SetTile(uint32_t tid, int x, int y, int z, bool fx, bool fy){
 
 uint32_t TileMap::GetTile(int x, int y, int z){
     if(std::shared_ptr<TileMapLayer> layer = mLayers[z].lock()){
-        return layer->mTiles[(y * mTileWidth) + x] >> 8;
+        return layer->mTiles[(y * mTileWidth) + x];
     } else {
         return 0xFFFFFFFF;
     }
