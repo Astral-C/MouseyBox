@@ -77,6 +77,7 @@ namespace mb {
         mAudio = std::make_unique<Audio::Mixer>();
 
         mRenderer->Initialize(mWindow.get());
+
         mb::Log::InfoFrom("MouseyBox", "Initialized Base Application");
         return true;
     }
@@ -89,10 +90,6 @@ namespace mb {
             mQuit = true;
         }
 
-    }
-
-    int Application::SecondsToTicks(int seconds){
-        return mTargetFps * seconds;
     }
 
     void Application::Run(){

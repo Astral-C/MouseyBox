@@ -71,7 +71,7 @@ namespace mb {
         bool ToggleCollide() { mCollide = !mCollide; return mCollide; }
         bool ShouldCollide() { return mCollide; }
 
-        static void Initialize(size_t);
+        static void Initialize(std::size_t);
         static void Cleanup();
 
         static Entity* GetById(uint32_t id);

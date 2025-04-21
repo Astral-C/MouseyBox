@@ -236,7 +236,7 @@ void TileMap::Update(SDL_Renderer* r){
                     bool fx = (tile & 1) > 0;
                     bool fy = (tile & 2) > 0;
                     uint32_t tid = tile >> 8;
-                    if(tid == -1) continue;
+                    if(tid == (0xFFFFFFFF >> 8)) continue;
 
                     SDL_FRect tileDest {static_cast<float>(tx), static_cast<float>(ty), static_cast<float>(mTileSize), static_cast<float>(mTileSize)};         
                     SDL_FRect tileSource {static_cast<float>((tid % mTileSetPitch) * mTileSize), static_cast<float>((tid / mTileSetPitch) * mTileSize), static_cast<float>(mTileSize), static_cast<float>(mTileSize)};

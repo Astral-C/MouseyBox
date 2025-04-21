@@ -108,10 +108,14 @@ class SpriteInstance : public Renderable {
 public:
     int mOffsetX { 0 }, mOffsetY { 0 };
     float mAngle { 0.0f };
+    SDL_FPoint mAnchor { 0.5f, 0.5f };
     SDL_FlipMode mFlip { SDL_FLIP_NONE };
     void Draw(SDL_Renderer*, Camera*) override;
 
-    float* GetAngle() { return &mAngle; }
+    float GetAngle() { return mAngle; }
+    void SetAngle(float a) { mAngle = a; }
+
+    void SetAnchor(float x, float y) { mAnchor.x = x, mAnchor.y = y; }
 
     void SetAnimation(std::string);
     std::shared_ptr<SpriteAnimationInstance> GetAnimation() { return mCurrentAnimation; }

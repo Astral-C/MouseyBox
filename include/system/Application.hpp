@@ -31,7 +31,6 @@ namespace mb {
 
 		virtual void Update(float);
 		virtual bool Initialize(bool commandline=false);
-		int SecondsToTicks(int);
 		void Run();
 
 		Application();

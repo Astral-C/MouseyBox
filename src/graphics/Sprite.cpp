@@ -135,7 +135,7 @@ void SpriteInstance::Draw(SDL_Renderer* r, Camera* cam) {
 
         SDL_SetTextureAlphaMod(sprite->GetTexture(), mOverlayColor.a);
         SDL_SetTextureColorMod(sprite->GetTexture(), mOverlayColor.r, mOverlayColor.g, mOverlayColor.b);
-        SDL_RenderTextureRotated(r, sprite->GetTexture(), curSrcRect, &draw, mAngle, NULL, mFlip);
+        SDL_RenderTextureRotated(r, sprite->GetTexture(), curSrcRect, &draw, mAngle, &mAnchor, mFlip);
         //SDL_RenderRectF(r, &draw);
     }
 }

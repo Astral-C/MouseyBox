@@ -5,7 +5,7 @@
 namespace mb {
     namespace {
         uint8_t mInitialized { 0 };
-        size_t mEntityCount { 0 };
+        std::size_t mEntityCount { 0 };
         Entity*  mEntities { nullptr };
 
         Entity* mFreeHead { nullptr };
@@ -20,14 +20,14 @@ namespace mb {
         mEntities = nullptr;
     }
 
-    void Entity::Initialize(size_t maxEntities){
+    void Entity::Initialize(std::size_t maxEntities){
         if(mEntities != nullptr) return;
         mEntityCount = maxEntities;
         mEntities = new Entity[maxEntities];
         mFreeHead = mEntities;
 
         Entity* prev = nullptr;
-        for(size_t t = 0; t < mEntityCount; t++){
+        for(std::size_t t = 0; t < mEntityCount; t++){
             Entity* e = &mEntities[t];
             e->mId = t;
             
