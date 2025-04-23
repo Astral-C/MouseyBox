@@ -7,15 +7,15 @@
 namespace mb::Graphics {
 
 class Camera {
-    SDL_FRect mBounds {};
-    SDL_Rect mViewportRect {};
+    SDL_FRect mBounds {0.0f, 0.0f, 0.0f, 0.0f};
+    SDL_Rect mViewportRect {0, 0, 0, 0};
 #ifndef DISABLE_ENTITY
     Entity* mFocus { nullptr };
 #endif
 
 public:
     float mOffsetX { 0.0f }, mOffsetY { 0.0f };
-    SDL_Rect mRect {0, 0, 0, 0};
+    SDL_FRect mRect {0.0f, 0.0f, 0.0f, 0.0f};
 
     void Init(SDL_Renderer*);
 #ifndef DISABLE_ENTITY
