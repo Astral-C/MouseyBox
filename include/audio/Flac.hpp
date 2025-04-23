@@ -22,7 +22,7 @@ namespace mb::Audio {
         bool AtEnd();
         void Reset();
         
-        void Mix(uint8_t*, int);
+        void Mix(uint8_t*, uint8_t*, int);
         void Load(std::filesystem::path);
         void Load(uint8_t*, size_t);
 

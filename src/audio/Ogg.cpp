@@ -24,7 +24,7 @@ namespace mb::Audio {
 
     void Ogg::Load(std::filesystem::path path){
         int err = 0;
-        mVorbisHandle = stb_vorbis_open_filename(path.c_str(), &err, NULL);
+        mVorbisHandle = stb_vorbis_open_filename(path.string().c_str(), &err, NULL);
 
         if(err != 0){
             mb::Log::Error("Failed to load OGG: {}", err);
@@ -32,14 +32,16 @@ namespace mb::Audio {
         }
     }
 
-    void Ogg::Mix(uint8_t* data, int len){
-        int16_t mFrameData[len/sizeof(int16_t)];
-        stb_vorbis_get_samples_short_interleaved(mVorbisHandle, 2, (int16_t*)mFrameData, len/sizeof(int16_t));
+    void Ogg::Mix(uint8_t* frameBuffer, uint8_t* data, int len){
+        int16_t* FrameData = reinterpret_cast<int16_t*>(frameBuffer);
+        memset(FrameData, 0, (len / sizeof(int16_t)));
+        
+        stb_vorbis_get_samples_short_interleaved(mVorbisHandle, 2, FrameData, len/sizeof(int16_t));
 
         int16_t* copyBuffer = (int16_t*)data;
 
         for (size_t i = 0; i < len/sizeof(int16_t); i++){
-            copyBuffer[i] += mFrameData[i];
+            copyBuffer[i] += FrameData[i];
         }
     }
 

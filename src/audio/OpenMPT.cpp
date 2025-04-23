@@ -27,7 +27,7 @@ namespace mb::Audio {
         mMod = new openmpt::module(stream);
     }
 
-    void OpenMPT::Mix(uint8_t* data, int len){
+    void OpenMPT::Mix(uint8_t* frameBuffer, uint8_t* data, int len){
         int16_t* sampleBuffer = reinterpret_cast<int16_t*>(data);
         mAtEnd = mMod->read_interleaved_stereo(44100, (len / 2) / 2, sampleBuffer);
     }

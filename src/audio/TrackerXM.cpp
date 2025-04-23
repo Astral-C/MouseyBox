@@ -36,10 +36,12 @@ namespace mb::Audio {
         delete[] data;
     }
 
-    void TrackerXM::Mix(uint8_t* data, int len){
+    void TrackerXM::Mix(uint8_t* frameBuffer, uint8_t* data, int len){
         uint16_t* sampleBuffer = reinterpret_cast<uint16_t*>(data);
 
-        float samples[len/2]{0.0}; // msvc may hate this...
+        float* samples = reinterpret_cast<float*>(frameBuffer);
+        memset(samples, 0, len / sizeof(float));
+
         xm_generate_samples(mXMHandle, samples, len/sizeof(float));
         
         for(int sample = 0; sample < (len/2); sample+=2){

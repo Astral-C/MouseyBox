@@ -281,7 +281,7 @@ namespace mb {
         uint32_t stringsSize = stream.readUInt32();
         uint32_t stringsOffset = stream.readUInt32();
 
-        char* nameTable = new char[stringsSize];
+        char* nameTable = new char[stringsSize]{0};
         stream.seek(stringsOffset);
         stream.readBytesTo((uint8_t*)nameTable, stringsSize);
 

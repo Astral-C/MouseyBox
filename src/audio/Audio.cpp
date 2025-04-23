@@ -4,12 +4,11 @@
 
 namespace mb::Audio {
     void Mixer::Update(void *userdata, SDL_AudioStream *stream, int len, int total){
-        uint8_t samples[len] = { 0 };
         
         Mixer* mixer = static_cast<Mixer*>(userdata);
 
         for(auto playable : mixer->mPlaying){
-            playable->Mix(samples, sizeof(samples));
+            playable->Mix(mixer->mFrameData, mixer->mWorkBuffer, len);
 
             if(playable->AtEnd() && !playable->ShouldLoop()){
                 std::erase(mixer->mPlaying, playable);
@@ -19,7 +18,9 @@ namespace mb::Audio {
         }
 
         // push to audio device
-        SDL_PutAudioStreamData(stream, samples, sizeof(samples));
+        if(SDL_PutAudioStreamData(stream, mixer->mWorkBuffer, len)){
+            mb::Log::Error("Error Pushing Audio to Device: {}", SDL_GetError());
+        }
     }
     
     void Mixer::Play(std::string name){
@@ -58,11 +59,23 @@ namespace mb::Audio {
         } else {
             mb::Log::DebugFrom("MouseyBoxAudio", "Mixer Setup Complete");
         }
+
+        int sampleCount;
+        SDL_AudioSpec deviceSpec;
+        SDL_GetAudioDeviceFormat(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &deviceSpec, &sampleCount);
+
+        // Allocate enough space for 2 channels of 4 byte per sample samples that will fill our audio buffer
+        // This buffer is reused by each formats mix func to store data during mixing as it is guaranteed to have enough space to store the audio data
+        mFrameData = new uint8_t[sampleCount * (sizeof(float) * deviceSpec.channels)];
+        mWorkBuffer = new uint8_t[sampleCount *(sizeof(int16_t) * deviceSpec.channels)];
+
         SDL_ResumeAudioDevice(SDL_GetAudioStreamDevice(mStream));
         SDL_FlushAudioStream(mStream);
     }
     
     Mixer::~Mixer(){
+        if(mFrameData != nullptr) delete[] mFrameData;
+        if(mWorkBuffer != nullptr) delete[] mWorkBuffer;
         SDL_CloseAudioDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK);
     }
 }

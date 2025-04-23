@@ -28,7 +28,7 @@ namespace mb::Audio {
     
     }
 
-    void Wav::Mix(uint8_t* data, int len){
+    void Wav::Mix(uint8_t* frameBuffer, uint8_t* data, int len){
         uint16_t* sampleBuffer = reinterpret_cast<uint16_t*>(data);
         if(mSampleOffset < mDataLen){
             for(int sample = 0; sample < len/2; sample+=2){

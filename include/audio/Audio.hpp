@@ -12,6 +12,8 @@
 
 namespace mb::Audio {
     class Mixer {
+        friend Playable;
+
         float volume { 0.5f };
         SDL_AudioStream* mStream { nullptr };
         SDL_AudioSpec mDeviceSpec {};
@@ -21,12 +23,16 @@ namespace mb::Audio {
             .freq = 44100
         };
 
+        uint8_t* mWorkBuffer { nullptr }; // used by the mixer as the final mix buffer
+        uint8_t* mFrameData { nullptr }; // used by individual format mix funcs to store temporary data such as that read from a file
+
         std::map<std::string, std::shared_ptr<Playable>> mLoaded {};
         std::vector<std::shared_ptr<Playable>> mPlaying {};
 
         static void Update(void *userdata, SDL_AudioStream *stream, int len, int total);
-        
+    
     public:
+
         void UpdateAudio();
 
         template<typename T>

@@ -19,7 +19,7 @@ namespace mb::Audio {
 
         virtual void Loop() {  }
         virtual bool AtEnd() { return true; }
-        virtual void Mix(uint8_t*, int) {}
+        virtual void Mix(uint8_t*, uint8_t*, int) {}
 
         virtual void Load(std::filesystem::path) {}
         virtual void Load(uint8_t*, std::size_t) {}

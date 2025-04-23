@@ -16,22 +16,24 @@ namespace mb::Audio {
     }
 
     void Flac::Load(std::filesystem::path path){
-        mFlacHandle = drflac_open_file(path.c_str(), NULL);
+        mFlacHandle = drflac_open_file(path.string().c_str(), NULL);
 
         if(mFlacHandle == nullptr){
             mb::Log::Error("Error Loading Flac");
         }
     }
 
-    void Flac::Mix(uint8_t* data, int len){
+    void Flac::Mix(uint8_t* frameBuffer, uint8_t* data, int len){
         if(mFlacHandle == nullptr) return;
-        int16_t mFrameData[len / sizeof(int16_t)] = {0};
-        
-        drflac_read_pcm_frames_s16(mFlacHandle, (len / sizeof(int16_t)) / 2, mFrameData);
+
+        int16_t* FrameData = reinterpret_cast<int16_t*>(frameBuffer);
+        memset(FrameData, 0, (len / sizeof(int16_t)));
+
+        drflac_read_pcm_frames_s16(mFlacHandle, (len / sizeof(int16_t)) / 2, FrameData);
         
         int16_t* copyBuffer = (int16_t*)data;
         for (size_t i = 0; i < len/sizeof(int16_t); i++){
-            copyBuffer[i] += mFrameData[i] * mVolume;
+            copyBuffer[i] += FrameData[i] * mVolume;
         }
     }
 
