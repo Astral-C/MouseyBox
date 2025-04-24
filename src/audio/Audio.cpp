@@ -67,7 +67,8 @@ namespace mb::Audio {
         // Allocate enough space for 2 channels of 4 byte per sample samples that will fill our audio buffer
         // This buffer is reused by each formats mix func to store data during mixing as it is guaranteed to have enough space to store the audio data
         mFrameData = new uint8_t[sampleCount * (sizeof(float) * deviceSpec.channels)];
-        mWorkBuffer = new uint8_t[sampleCount *(sizeof(int16_t) * deviceSpec.channels)];
+        mWorkBuffer = new uint8_t[sampleCount * (sizeof(int16_t) * deviceSpec.channels)];
+        mb::Log::InfoFrom("MouseBoxAudio", "Created Frame Buffer of size {} and Work Buffer of size {}", sampleCount * (sizeof(float) * deviceSpec.channels), sampleCount * (sizeof(int16_t) * deviceSpec.channels));
 
         SDL_ResumeAudioDevice(SDL_GetAudioStreamDevice(mStream));
         SDL_FlushAudioStream(mStream);

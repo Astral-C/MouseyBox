@@ -3,6 +3,7 @@
     "version-string" : "mouseybox-win",
     "dependencies": [
         "sdl3",
-        "sdl3-ttf"
+        "sdl3-ttf",
+        "libopenmpt"
     ]
 }
