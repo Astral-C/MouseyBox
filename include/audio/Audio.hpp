@@ -14,7 +14,7 @@ namespace mb::Audio {
     class Mixer {
         friend Playable;
 
-        float volume { 0.5f };
+        float volume { 1.0f };
         SDL_AudioStream* mStream { nullptr };
         SDL_AudioSpec mDeviceSpec {};
         SDL_AudioSpec mTargetSpec {

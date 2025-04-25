@@ -37,7 +37,7 @@ namespace mb::Audio {
     }
 
     void TrackerXM::Mix(uint8_t* frameBuffer, uint8_t* data, int len){
-        uint16_t* sampleBuffer = reinterpret_cast<uint16_t*>(data);
+        int16_t* sampleBuffer = reinterpret_cast<int16_t*>(data);
 
         float* samples = reinterpret_cast<float*>(frameBuffer);
         memset(samples, 0, len / sizeof(float));

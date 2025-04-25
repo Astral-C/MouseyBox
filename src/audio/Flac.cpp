@@ -23,17 +23,18 @@ namespace mb::Audio {
         }
     }
 
-    void Flac::Mix(uint8_t* frameBuffer, uint8_t* data, int len){
+    void Flac::Mix(uint8_t* frameBuffer, uint8_t* workBuffer, int len){
         if(mFlacHandle == nullptr) return;
 
-        int16_t* FrameData = reinterpret_cast<int16_t*>(frameBuffer);
-        memset(FrameData, 0, (len / sizeof(int16_t)));
+        std::size_t requestedSize = len / sizeof(int16_t);
 
-        drflac_read_pcm_frames_s16(mFlacHandle, (len / sizeof(int16_t)) / 2, FrameData);
+        int16_t* FrameData = reinterpret_cast<int16_t*>(frameBuffer);
+
+        drflac_read_pcm_frames_s16(mFlacHandle, requestedSize / 2, FrameData);
         
-        int16_t* copyBuffer = (int16_t*)data;
-        for (size_t i = 0; i < len/sizeof(int16_t); i++){
-            copyBuffer[i] += FrameData[i] * mVolume;
+        int16_t* destBuffer = reinterpret_cast<int16_t*>(workBuffer);
+        for (size_t i = 0; i < requestedSize; i++){
+            destBuffer[i] += FrameData[i] * mVolume;
         }
     }
 
