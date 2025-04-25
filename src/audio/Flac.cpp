@@ -27,7 +27,6 @@ namespace mb::Audio {
         if(mFlacHandle == nullptr) return;
 
         std::size_t requestedSize = len / sizeof(int16_t);
-
         int16_t* FrameData = reinterpret_cast<int16_t*>(frameBuffer);
 
         drflac_read_pcm_frames_s16(mFlacHandle, requestedSize / 2, FrameData);

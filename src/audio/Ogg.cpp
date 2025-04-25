@@ -34,13 +34,13 @@ namespace mb::Audio {
 
     void Ogg::Mix(uint8_t* frameBuffer, uint8_t* data, int len){
         int16_t* FrameData = reinterpret_cast<int16_t*>(frameBuffer);
-        memset(FrameData, 0, (len / sizeof(int16_t)));
+        std::size_t requestedSize = len / sizeof(int16_t);
         
-        stb_vorbis_get_samples_short_interleaved(mVorbisHandle, 2, FrameData, len/sizeof(int16_t));
+        stb_vorbis_get_samples_short_interleaved(mVorbisHandle, 2, FrameData, requestedSize);
 
         int16_t* copyBuffer = (int16_t*)data;
 
-        for (size_t i = 0; i < len/sizeof(int16_t); i++){
+        for (size_t i = 0; i < requestedSize; i++){
             copyBuffer[i] += FrameData[i];
         }
     }

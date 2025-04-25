@@ -1,5 +1,5 @@
-#ifndef __OGG_H__
-#define __OGG_H__
+#ifndef __FLAC_H__
+#define __FLAC_H__
 
 #include <string>
 #include <cstdint>
