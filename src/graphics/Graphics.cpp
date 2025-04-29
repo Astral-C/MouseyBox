@@ -109,6 +109,16 @@ bool Renderer::LoadSprites(std::filesystem::path path){
     return true;
 }
 
+bool Renderer::LoadSpriteSimple(std::string name, std::filesystem::path path){
+    if(mSprites.contains(name)) return true;
+
+    std::shared_ptr<Sprite> newSprite = std::make_shared<Sprite>(mInternalRender, path);
+    Log::Debug("Loading Sprite Image {}", name);
+    mSprites.insert({name, newSprite});
+
+    return true;
+}
+
 bool Renderer::LoadSprite(std::filesystem::path path){
     nlohmann::json spriteConfig = nlohmann::json::parse(std::ifstream(path.string()));
     mb::Log::Debug("Parsed sprite config!");

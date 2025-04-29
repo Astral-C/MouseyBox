@@ -18,18 +18,18 @@ void Circle::Draw(SDL_Renderer* r, Camera* cam) {
     SDL_GetRenderScale(r, &scalex, &scaley);
     SDL_SetRenderScale(r, 1, 1); 
 
-    //if(!mStatic){
-    //    curX -= cam->mRect.x;
-    //    curY -= cam->mRect.y;
-    //}
-
+    
     for(int curX = -mRadius; curX < mRadius; curX++){
         for(int curY = -mRadius; curY < mRadius; curY++){
-            //if(mDrawFilled){
+            if(!mStatic){
+                curX -= cam->mRect.x;
+                curY -= cam->mRect.y;
+            }
+            if(mDrawFilled){
                 if(mb::Math::Vec2<int>::Dist(mb::Math::Vec2<int>(curX, curY), mb::Math::Vec2<int>(0,0)) < mRadius){
                     SDL_RenderPoint(r, curX + mDrawRect.x, curY + mDrawRect.y);
                 }
-            //} else {
+            }// else {
             //    if((abs(mDrawRect.x - curX) < mRadius  && abs(mDrawRect.x - curX) > mRadius - mThickness) && (abs(mDrawRect.y - curY) < mRadius  && abs(mDrawRect.y - curY) > mRadius - mThickness)){
             //        SDL_RenderPoint(r, curX, curY);
             //    }

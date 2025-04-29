@@ -35,6 +35,7 @@ public:
     int GetHeight() { return mHeight; }
     std::shared_ptr<SpriteAnimation> GetAnimation(std::string name) { if(mAnimations.count(name) != 0) { return mAnimations.at(name); } else { return nullptr; }}
 
+    Sprite(SDL_Renderer*, std::string);
     Sprite(SDL_Renderer*, nlohmann::json&);
     Sprite(SDL_Renderer*, nlohmann::json&, uint8_t*, std::size_t);
     Sprite();

@@ -14,6 +14,31 @@ bool GlobalSpritePause = false;
 
 Sprite::Sprite(){}
 
+Sprite::Sprite(SDL_Renderer* r, std::string path){
+    int comp;
+
+#ifdef __GAMECUBE__
+    stbi_set_flip_vertically_on_load(1);
+#endif
+
+    unsigned char* imgData = stbi_load(path.c_str(), &mWidth, &mHeight, &comp, 4);
+    
+#ifdef __GAMECUBE__
+    SDL_Surface* surface = SDL_CreateSurfaceFrom(mWidth, mHeight, SDL_GetPixelFormatForMasks(32, 0xFF000000, 0x00FF0000, 0x0000FF00, 0x000000FF), imgData, mWidth*4);
+#else
+    SDL_Surface* surface = SDL_CreateSurfaceFrom(mWidth, mHeight, SDL_GetPixelFormatForMasks(32, 0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000), imgData, mWidth*4);
+#endif
+    mTexture = SDL_CreateTextureFromSurface(r, surface);
+    SDL_SetTextureScaleMode(mTexture, SDL_SCALEMODE_NEAREST);
+
+    mTextureWidth = mWidth;
+    mTextureHeight = mHeight;
+
+    stbi_image_free(imgData);
+
+    SDL_DestroySurface(surface);
+}
+
 Sprite::Sprite(SDL_Renderer* r, nlohmann::json& config){
     int comp;
 

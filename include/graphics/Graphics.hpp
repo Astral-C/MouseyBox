@@ -86,6 +86,7 @@ public:
     bool LoadFontFromMemory(std::string, uint8_t*, std::size_t, int);
     bool LoadSprite(std::filesystem::path);
     bool LoadSprites(std::filesystem::path);
+    bool LoadSpriteSimple(std::string, std::filesystem::path);
     bool LoadSpriteFromMemory(nlohmann::json, uint8_t*, std::size_t);
     std::shared_ptr<TileMap> LoadTilemapFromMeory(nlohmann::json&, uint8_t*, std::size_t);
     std::shared_ptr<TileMap> LoadTilemap(std::filesystem::path);
