@@ -52,6 +52,9 @@ public:
     std::function<void(SDL_Renderer*)> mDraw;
     SDL_Renderer* GetInternalRender() { return mInternalRender; }
 
+    std::vector<std::string> GetRenderBackends();
+    void SetRenderBackends(std::string, Window*);
+
     SDL_FRect GetSize();
 
     void Initialize(Window*);

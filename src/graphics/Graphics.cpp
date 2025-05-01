@@ -1,3 +1,4 @@
+#include <SDL3/SDL_render.h>
 #include <system/Log.hpp>
 #include <graphics/Graphics.hpp>
 #include <graphics/Sprite.hpp>
@@ -85,6 +86,27 @@ void Renderer::Initialize(Window* win){
     mb::Log::InfoFrom("MouseyBox", "Initing Camera");
     mCamera.Init(mInternalRender);
     mb::Log::InfoFrom("MouseyBox", "Renderer Initizlized");
+}
+
+std::vector<std::string> Renderer::GetRenderBackends(){
+    std::vector<std::string> backends(SDL_GetNumRenderDrivers());
+
+    for(int i = 0; i < SDL_GetNumRenderDrivers(); i++){
+        backends.push_back(std::string(SDL_GetRenderDriver(i)));
+    }
+
+    return backends;
+}
+
+void Renderer::SetRenderBackends(std::string driver, Window* win){
+    SDL_Renderer* newRenderer = SDL_CreateRenderer(win->mWindow, driver.c_str());
+    if(newRenderer != nullptr){
+        if(mInternalRender == nullptr){
+            SDL_DestroyRenderer(mInternalRender);
+        }
+
+        mInternalRender = newRenderer;
+    }
 }
 
 SDL_FRect Renderer::GetSize(){
