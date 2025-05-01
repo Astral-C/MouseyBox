@@ -1,5 +1,6 @@
 #ifndef __MB_GRAPHICS_H__
 #define __MB_GRAPHICS_H__
+#include "system/json.hpp"
 #include <SDL3/SDL.h>
 #include <SDL3_ttf/SDL_ttf.h>
 #include <SDL3/SDL_rect.h>
@@ -28,7 +29,7 @@ private:
 
 public:
     SDL_Window* GetInternalWindow() { return mWindow; }
-    
+
     void Cleanup();
 
     void SetName(std::string);
@@ -50,7 +51,7 @@ public:
 
     std::function<void(SDL_Renderer*)> mDraw;
     SDL_Renderer* GetInternalRender() { return mInternalRender; }
-    
+
     SDL_FRect GetSize();
 
     void Initialize(Window*);
@@ -64,14 +65,14 @@ public:
     std::shared_ptr<TileMapLayer> CreateTilemapLayer(nlohmann::json);
     std::shared_ptr<TileMapLayer> CreateTilemapLayer();
     std::shared_ptr<TileMap> GetTilemap(std::string);
-    
+
     void DeleteTilemap(std::string);
     void DeleteFont(std::string);
     void DeleteSprite(std::string);
 
     std::shared_ptr<Sprite> GetSprite(std::string sprite) {
         if(mSprites.contains(sprite)) {
-            return mSprites[sprite]; 
+            return mSprites[sprite];
         } else {
             return nullptr;
         }
@@ -86,6 +87,7 @@ public:
     bool LoadFontFromMemory(std::string, uint8_t*, std::size_t, int);
     bool LoadSprite(std::filesystem::path);
     bool LoadSprites(std::filesystem::path);
+    bool LoadSprites(nlohmann::json);
     bool LoadSpriteSimple(std::string, std::filesystem::path);
     bool LoadSpriteFromMemory(nlohmann::json, uint8_t*, std::size_t);
     std::shared_ptr<TileMap> LoadTilemapFromMeory(nlohmann::json&, uint8_t*, std::size_t);

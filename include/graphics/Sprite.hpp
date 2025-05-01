@@ -50,7 +50,7 @@ class SpriteAnimation {
     float mSpeed { 0.0f };
     uint32_t mFrameCount { 1 };
     std::vector<SDL_FRect> mFrames;
-    
+
 
 public:
     inline int GetFrameCount(){
@@ -122,7 +122,7 @@ public:
     std::shared_ptr<SpriteAnimationInstance> GetAnimation() { return mCurrentAnimation; }
 
     SpriteInstance(std::shared_ptr<Sprite>);
-    
+
     SpriteInstance();
     ~SpriteInstance();
 };
