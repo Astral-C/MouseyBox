@@ -22,12 +22,12 @@ protected:
 
 public:
     virtual void Draw(SDL_Renderer*, Camera*) = 0;
-    
+
     bool IsType(RenderableType t) { return t == mType; }
 
     int GetPrio() { return mPriority; }
     int* GetSetPrio() { return &mPriority; }
-    
+
     void SetScale(float scale){ mScale = scale; }
     float GetScale(){ return mScale; }
     void SetPriority(int priority){ mPriority = priority; }

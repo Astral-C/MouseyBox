@@ -89,6 +89,7 @@ public:
     bool LoadFont(std::filesystem::path, int, std::string="");
     bool LoadFontFromMemory(std::string, uint8_t*, std::size_t, int);
     bool LoadSprite(std::filesystem::path);
+    bool LoadSprite(nlohmann::json);
     bool LoadSprites(std::filesystem::path);
     bool LoadSprites(nlohmann::json);
     bool LoadSpriteSimple(std::string, std::filesystem::path);
