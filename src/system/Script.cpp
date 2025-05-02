@@ -27,8 +27,12 @@ bool HasGlobalFunc(std::string name){
     return Globals::mCallables.contains(name);
 }
 
-std::map<std::string, SkitterValue> GetGlobalVars(){
+std::map<std::string, SkitterValue>& GetGlobalVars(){
     return Globals::mVars;
+}
+
+std::map<std::string, std::function<SkitterValue(std::vector<SkitterValue>)>>& GetGlobalFuncs(){
+    return Globals::mCallables;
 }
 
 template<>
@@ -142,7 +146,7 @@ std::vector<Token> LexString(std::string stream){
     currentToken.lexeme = "";
 
     while(lexing){
-        
+
         if(sp == stream.size()){
             lexing = false;
         }
@@ -217,12 +221,12 @@ std::vector<Token> LexString(std::string stream){
                     tokens.push_back(currentToken);
                     currentToken.lexeme = "";
                     sp--;
-                    
+
                     state = LexerState::BEGIN;
                 }
                 break;
 
-            case LexerState::INT:                                                                                                                                              
+            case LexerState::INT:
                 if(isdigit(cur) || cur == '.'){
                     currentToken.lexeme += cur;
                 } else {
@@ -277,12 +281,12 @@ std::shared_ptr<TreeNode<AstNode>> Parser::Declaration(){
         // Parse If
         node = IfStatement();
         break;
-    
+
     case TokenType::IDENT:
         //Consume the ident then check whats next?
         node = AssignStatement();
         break;
-    
+
     case TokenType::GLOBAL:
         node = GlobalAssignStatement();
         break;
@@ -316,8 +320,8 @@ std::shared_ptr<TreeNode<AstNode>> Parser::Declarations(){
             ConsumeToken();
             break;
         } else {
-            std::shared_ptr<TreeNode<AstNode>> decl = Declaration(); 
-            
+            std::shared_ptr<TreeNode<AstNode>> decl = Declaration();
+
             if (decl == nullptr){
                 return nullptr;
             }
@@ -343,7 +347,7 @@ std::shared_ptr<TreeNode<AstNode>> Parser::IfStatement(){
     node->AddNode(exp);
 
     std::shared_ptr<TreeNode<AstNode>> decls = Declarations();
-    
+
     if(decls == nullptr){
         return nullptr;
     }
@@ -363,7 +367,7 @@ std::shared_ptr<TreeNode<AstNode>> Parser::IfStatement(){
 
 std::shared_ptr<TreeNode<AstNode>> Parser::AssignStatement(){
     Token t = ConsumeToken(); // Consume Ident
-    
+
     std::shared_ptr<TreeNode<AstNode>> node = std::make_shared<TreeNode<AstNode>>((AstNode){.mType = NodeType::AssigNode, .mToken = t});
 
     if(ConsumeToken().token != TokenType::EQ){
@@ -383,13 +387,13 @@ std::shared_ptr<TreeNode<AstNode>> Parser::AssignStatement(){
         }
     }
 
-    
+
     return node;
 }
 
 std::shared_ptr<TreeNode<AstNode>> Parser::GlobalAssignStatement(){
     Token t = ConsumeToken(); // Consume Global
-    
+
     std::shared_ptr<TreeNode<AstNode>> node = std::make_shared<TreeNode<AstNode>>((AstNode){.mType = NodeType::Global, .mToken = t});
 
     t = ConsumeToken(); // Consume Ident
@@ -413,52 +417,52 @@ std::shared_ptr<TreeNode<AstNode>> Parser::GlobalAssignStatement(){
     }
 
     node->AddNode(anode);
-    
+
     return node;
 }
 
 std::shared_ptr<TreeNode<AstNode>> Parser::CallStatement(){
     Token t = ConsumeToken(); // Consume Call
-    
+
     std::shared_ptr<TreeNode<AstNode>> node = std::make_shared<TreeNode<AstNode>>((AstNode){.mType = NodeType::Call, .mToken = t});
 
     node->AddNode(Literal());
     node->AddNode(Expression());
-    
+
     while(PeekToken().token == TokenType::COMMA){
         ConsumeToken(); // Consume Comma
         node->AddNode(Expression());
     }
 
-    
+
     return node;
 }
 
 std::shared_ptr<TreeNode<AstNode>> Parser::PrintStatement(){
     Token t = ConsumeToken(); // Consume Print
-    
+
     std::shared_ptr<TreeNode<AstNode>> node = std::make_shared<TreeNode<AstNode>>((AstNode){.mType = NodeType::Print, .mToken = t});
 
     node->AddNode(Expression());
-    
+
     while(PeekToken().token == TokenType::COMMA){
         ConsumeToken(); // Consume Comma
         node->AddNode(Expression());
     }
 
-    
+
     return node;
 }
 
 std::shared_ptr<TreeNode<AstNode>> Parser::Group(){
     ConsumeToken(); // consume LParen
-    
+
     std::shared_ptr<TreeNode<AstNode>> exp = Expression();
-    
+
     if(exp == nullptr){
         return nullptr;
     }
-    
+
     if(ConsumeToken().token != TokenType::RPAREN){
         mb::Log::Error("Group missing closing parenthesis!");
         return nullptr;
@@ -490,7 +494,7 @@ std::shared_ptr<TreeNode<AstNode>> Parser::Term(){
         while(PeekToken().token == TokenType::TERM){
             trm = std::make_shared<TreeNode<AstNode>>((AstNode){.mType = NodeType::Term, .mToken = ConsumeToken()});
             std::shared_ptr<TreeNode<AstNode>> rfct = Factor();
-            
+
             trm->AddNode(lfct);
             trm->AddNode(rfct);
             lfct = trm;
@@ -505,7 +509,7 @@ std::shared_ptr<TreeNode<AstNode>> Parser::Term(){
 
 std::shared_ptr<TreeNode<AstNode>> Parser::Factor(){
     std::shared_ptr<TreeNode<AstNode>> fctr = nullptr;
-    
+
     std::shared_ptr<TreeNode<AstNode>> llit = Literal();
 
     if(PeekToken().token == TokenType::FACTOR){
@@ -550,7 +554,7 @@ std::shared_ptr<TreeNode<AstNode>> Parser::Comparison(){
     return cmp;
 }
 
-std::shared_ptr<TreeNode<AstNode>> Parser::And(){  
+std::shared_ptr<TreeNode<AstNode>> Parser::And(){
     std::shared_ptr<TreeNode<AstNode>> andn = std::make_shared<TreeNode<AstNode>>((AstNode){.mType = NodeType::And});
 
     std::shared_ptr<TreeNode<AstNode>> land = Comparison();
@@ -586,7 +590,7 @@ std::shared_ptr<TreeNode<AstNode>> Parser::Expression(){
             std::shared_ptr<TreeNode<AstNode>> ror = And();
             orn->AddNode(ror);
         }
-        
+
         exp->AddNode(orn);
     } else {
         exp->AddNode(lor);
@@ -638,7 +642,7 @@ void PrintParseTree(std::shared_ptr<TreeNode<AstNode>> root, std::string tabs){
 SkitterValue Script::ExecNode(std::shared_ptr<TreeNode<AstNode>> root){
     switch (root->data()->mType)
     {
-    
+
     case NodeType::Variable: {
         if(Globals::mVars.contains(root->data()->mToken.lexeme)){
             return Globals::mVars[root->data()->mToken.lexeme];
@@ -690,7 +694,7 @@ SkitterValue Script::ExecNode(std::shared_ptr<TreeNode<AstNode>> root){
         }
         return val;
     }
-    
+
     case NodeType::Factor: {
         SkitterValue val;
         if(root->data()->mToken.lexeme == "*"){
@@ -725,7 +729,7 @@ SkitterValue Script::ExecNode(std::shared_ptr<TreeNode<AstNode>> root){
         case TokenType::GT:
             val = lhs.value<double>() > rhs.value<double>();
         break;
-        
+
         case TokenType::GT_EQ:
             val = lhs.value<double>() >= rhs.value<double>();
         break;
@@ -761,7 +765,7 @@ SkitterValue Script::ExecNode(std::shared_ptr<TreeNode<AstNode>> root){
                 val = true;
             }
         break;
-        
+
         default:
             break;
         }
@@ -772,13 +776,13 @@ SkitterValue Script::ExecNode(std::shared_ptr<TreeNode<AstNode>> root){
 
     case NodeType::And: {
         SkitterValue ret = ExecNode(root->GetChild(0));
-        
+
         if(ret.mType == SkitterType::Number){
             ret.value<bool>() = ret.value<double>() > 0.0;
         } else if(ret.mType == SkitterType::String){
             ret.value<bool>() = ret.value<std::string>() == "true"; // lol
         }
-        
+
         ret.mType = SkitterType::Bool;
 
         int childCount = root->GetChildren()->size();
@@ -805,7 +809,7 @@ SkitterValue Script::ExecNode(std::shared_ptr<TreeNode<AstNode>> root){
         SkitterValue v = ExecNode(root->GetChild(0));
         if(v.value<bool>()){
             ExecNode(root->GetChild(1));
-        } else{ 
+        } else{
             if(root->GetChildren()->size() > 2){
                 ExecNode(root->GetChild(2));
             }
@@ -835,7 +839,7 @@ SkitterValue Script::ExecNode(std::shared_ptr<TreeNode<AstNode>> root){
         }
 
         SkitterValue v;
-        
+
         if(Globals::mCallables.contains(root->GetChild(0)->data()->mToken.lexeme)){
             v = Globals::mCallables[root->GetChild(0)->data()->mToken.lexeme](args);
         } else {

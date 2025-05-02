@@ -74,11 +74,11 @@ namespace mb::Scripting {
 
     struct SkitterValue {
         SkitterType mType;
-        
+
         std::string mStrValue;
         double mNumValue;
         bool mBoolValue;
-    
+
         template<typename T>
         T& value(){
             //static_assert(std::is_base_of<std::string, , T>::value, "T must be string, double, or bool");
@@ -102,7 +102,7 @@ namespace mb::Scripting {
             mNumValue = n;
             return *this;
         }
-    
+
     };
 
     struct Token {
@@ -121,12 +121,13 @@ namespace mb::Scripting {
     bool HasGlobalFunc(std::string);
     SkitterValue& Variable(std::string);
     std::function<SkitterValue(std::vector<SkitterValue>)>& Function(std::string);
-    std::map<std::string, SkitterValue> GetGlobalVars();
+    std::map<std::string, SkitterValue>& GetGlobalVars();
+    std::map<std::string, std::function<SkitterValue(std::vector<SkitterValue>)>>& GetGlobalFuncs();
 
     class Parser {
         int mCurTokenIdx { 0 };
         std::vector<Token> mTokens;
-    
+
     public:
         void SetTokens(std::vector<Token> t) { mTokens = t; }
 
@@ -200,7 +201,7 @@ namespace mb::Scripting {
                 return mVars[name];
             }
         }
-        
+
         std::function<SkitterValue(std::vector<SkitterValue>)>& operator()(std::string name) {
             if(HasGlobalVar(name)){
                 return Function(name);
