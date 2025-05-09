@@ -24,7 +24,7 @@ Window::Window(std::string name, uint32_t w, uint32_t h){
 #elif __GAMECUBE__
     mWindow = SDL_CreateWindow(mWindowTitle.data(), 640, 480, 0);
 #else
-    mWindow = SDL_CreateWindow(mWindowTitle.data(), 640, 480, SDL_WINDOW_RESIZABLE);
+    mWindow = SDL_CreateWindow(mWindowTitle.data(), w, h, SDL_WINDOW_RESIZABLE);
 #endif
 
     if(mWindow == nullptr){
