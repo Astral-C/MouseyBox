@@ -25,7 +25,7 @@ namespace mb {
     Application::Application(){}
     Application::Application(std::string name){ mApplicationName = name; }
 
-    bool Application::Initialize(bool commandline){
+    bool Application::Initialize(bool commandline, uint32_t w, uint32_t h){
 #ifdef __GAMECUBE__
         SYS_STDIO_Report(true);
 #endif
@@ -71,8 +71,8 @@ namespace mb {
             mb::Log::InfoFrom("MouseyBox", "Done Creating Commandline Application");
             return true;
         }
-        
-        mWindow = std::make_unique<Graphics::Window>(mApplicationName);
+
+        mWindow = std::make_unique<Graphics::Window>(mApplicationName, w, h);
         mRenderer = std::make_unique<Graphics::Renderer>();
         mAudio = std::make_unique<Audio::Mixer>();
 
@@ -81,7 +81,7 @@ namespace mb {
         mb::Log::InfoFrom("MouseyBox", "Initialized Base Application");
         return true;
     }
-    
+
     void Application::Update(float dt){
         SDL_Event e;
         SDL_PollEvent(&e);
@@ -99,11 +99,11 @@ namespace mb {
         while(appletMainLoop() && !mQuit)
         #endif
         {
-            
+
             #ifdef __GAMECUBE__
             PAD_ScanPads();
             #endif
-            
+
             Update(mDelta);
             if(mRenderer != nullptr) mRenderer->Update();
 

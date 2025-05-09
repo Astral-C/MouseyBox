@@ -33,7 +33,7 @@ public:
     void Cleanup();
 
     void SetName(std::string);
-    Window(std::string);
+    Window(std::string, uint32_t, uint32_t);
     ~Window();
 };
 

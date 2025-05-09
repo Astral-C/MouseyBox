@@ -16,7 +16,7 @@
 namespace mb {
 namespace Graphics {
 
-Window::Window(std::string name){
+Window::Window(std::string name, uint32_t w, uint32_t h){
     mb::Log::InfoFrom("MouseyBox", "Creating Window");
     mWindowTitle = name;
 #ifdef __SWITCH__
@@ -24,7 +24,7 @@ Window::Window(std::string name){
 #elif __GAMECUBE__
     mWindow = SDL_CreateWindow(mWindowTitle.data(), 640, 480, 0);
 #else
-    mWindow = SDL_CreateWindow(mWindowTitle.data(), 1280, 720, SDL_WINDOW_RESIZABLE);
+    mWindow = SDL_CreateWindow(mWindowTitle.data(), 640, 480, SDL_WINDOW_RESIZABLE);
 #endif
 
     if(mWindow == nullptr){

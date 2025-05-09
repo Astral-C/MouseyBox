@@ -30,7 +30,7 @@ namespace mb {
 		static bool SDLReady();
 
 		virtual void Update(float);
-		virtual bool Initialize(bool commandline=false);
+		virtual bool Initialize(bool commandline=false, uint32_t w = 1280, uint32_t h = 720);
 		void Run();
 
 		Application();
