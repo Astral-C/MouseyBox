@@ -67,12 +67,17 @@ class SpriteAnimationInstance {
     std::shared_ptr<SpriteAnimation> mAnimation { nullptr };
     float mFrame { 0.0f };
     bool mIsPaused { false };
+    bool mFinished { false };
 
 public:
     inline void Step() {
         if(GlobalSpritePause || mIsPaused) return;
         if(!mAnimation->mLoop){
-            if(mFrame + mAnimation->mSpeed < mAnimation->mFrameCount) mFrame += mAnimation->mSpeed;
+            if(mFrame + mAnimation->mSpeed < mAnimation->mFrameCount){
+                mFrame += mAnimation->mSpeed;
+            } else if(!mFinished) {
+                mFinished = true;
+            }
         } else {
             mFrame = mFrame + mAnimation->mSpeed;
             if(mFrame >= mAnimation->mFrameCount) mFrame = 0.0f;
@@ -93,6 +98,10 @@ public:
 
     inline void Reset(){
         mFrame = 0;
+    }
+
+    inline bool IsFinished() {
+        return mFinished;
     }
 
     SDL_FRect* GetCurrentFrame();
