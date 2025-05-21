@@ -8,9 +8,9 @@ namespace mb::Graphics {
 void Text::SetText(SDL_Renderer* renderer, TTF_Font* font, std::string str, int wrap, TTF_HorizontalAlignment align){
     if(str != mText){
         SDL_Surface* textSurface = NULL;
-        
+
         TTF_SetFontWrapAlignment(font, align);
-        
+
         if(wrap > 0){
             textSurface = TTF_RenderText_Blended_Wrapped(font, str.c_str(), str.size(), mColorFG, wrap);
         } else {
@@ -24,7 +24,7 @@ void Text::SetText(SDL_Renderer* renderer, TTF_Font* font, std::string str, int 
             mTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
             SDL_SetTextureScaleMode(mTexture, SDL_SCALEMODE_NEAREST);
         }
-        
+
         SDL_DestroySurface(textSurface);
         mText = str;
     }

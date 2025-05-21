@@ -8,7 +8,8 @@ enum RenderableType {
     Rect,
     Text,
     TilemapLayer,
-    ParticleSystem
+    ParticleSystem,
+    RenderableTypeCount
 };
 
 #endif

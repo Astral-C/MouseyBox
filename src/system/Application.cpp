@@ -1,3 +1,5 @@
+#include <SDL3/SDL_rect.h>
+#include <SDL3/SDL_video.h>
 #include <system/Application.hpp>
 #include <system/Log.hpp>
 #include <iostream>
@@ -105,7 +107,8 @@ namespace mb {
             #endif
 
             Update(mDelta);
-            if(mRenderer != nullptr) mRenderer->Update();
+            SDL_FRect winRect = mWindow->GetSize();
+            if(mRenderer != nullptr) mRenderer->Update(winRect.w, winRect.h);
 
 #ifdef __GAMECUBE__
 #else

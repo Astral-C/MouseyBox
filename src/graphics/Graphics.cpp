@@ -1,4 +1,7 @@
+#include <SDL3/SDL_oldnames.h>
+#include <SDL3/SDL_rect.h>
 #include <SDL3/SDL_render.h>
+#include <SDL3/SDL_video.h>
 #include <system/Log.hpp>
 #include <graphics/Graphics.hpp>
 #include <graphics/Sprite.hpp>
@@ -43,6 +46,13 @@ void Window::Cleanup(){
     SDL_DestroyWindow(mWindow);
 }
 
+SDL_FRect Window::GetSize(){
+    int x { 0 }, y { 0 }, w { 0 }, h { 0 };
+    SDL_GetWindowPosition(mWindow, &x, &y);
+    SDL_GetWindowSize(mWindow, &w, &h);
+    return { (float)x, (float)y, (float)w, (float)h };
+}
+
 Renderer::Renderer(){}
 Renderer::~Renderer(){}
 
@@ -85,6 +95,9 @@ void Renderer::Initialize(Window* win){
     }
     mb::Log::InfoFrom("MouseyBox", "Initing Camera");
     mCamera.Init(mInternalRender);
+    SDL_GetWindowSize(win->GetInternalWindow(), &mWidth, &mHeight);
+    mTexture = SDL_CreateTexture(mInternalRender, SDL_PixelFormat::SDL_PIXELFORMAT_RGBA32, SDL_TextureAccess::SDL_TEXTUREACCESS_TARGET, mWidth, mHeight);
+    SDL_SetTextureScaleMode(mTexture, SDL_ScaleMode::SDL_SCALEMODE_NEAREST);
     mb::Log::InfoFrom("MouseyBox", "Renderer Initizlized");
 }
 
@@ -110,10 +123,16 @@ void Renderer::SetRenderBackends(std::string driver, Window* win){
 }
 
 SDL_FRect Renderer::GetSize(){
-    int w, h;
-    SDL_GetCurrentRenderOutputSize(mInternalRender, &w, &h);
-    SDL_FRect rendererRect {0, 0, static_cast<float>(w), static_cast<float>(h)};
+    SDL_FRect rendererRect {0, 0, (float)mWidth, (float)mHeight};
     return rendererRect;
+}
+
+void Renderer::SetSize(int w, int h){
+    mWidth = w;
+    mHeight = h;
+    SDL_DestroyTexture(mTexture);
+    mTexture = SDL_CreateTexture(mInternalRender, SDL_PixelFormat::SDL_PIXELFORMAT_RGBA32, SDL_TextureAccess::SDL_TEXTUREACCESS_TARGET, mWidth, mHeight);
+    SDL_SetTextureScaleMode(mTexture, SDL_ScaleMode::SDL_SCALEMODE_NEAREST);
 }
 
 bool Renderer::LoadSprites(std::filesystem::path path){
@@ -372,7 +391,8 @@ void Renderer::Sort(){
     std::sort(mRenderables.begin(), mRenderables.end(), [](std::shared_ptr<Renderable> lhs, std::shared_ptr<Renderable> rhs){ return lhs->GetPrio() < rhs->GetPrio(); });
 }
 
-void Renderer::Update(){
+void Renderer::Update(float winWidth, float winHeight){
+    SDL_SetRenderTarget(mInternalRender, mTexture);
     SDL_RenderClear(mInternalRender);
     Sort();
 
@@ -385,7 +405,9 @@ void Renderer::Update(){
     if(mDraw){
         mDraw(mInternalRender);
     }
-
+    SDL_SetRenderTarget(mInternalRender, nullptr);
+    SDL_FRect winRect { 0.0f, 0.0f, winWidth, winHeight};
+    SDL_RenderTexture(mInternalRender, mTexture, nullptr, &winRect);
     SDL_RenderPresent(mInternalRender);
 }
 
@@ -397,6 +419,9 @@ void Renderer::Cleanup(){
     mRenderables.clear();
     if(mInternalRender != nullptr){
         SDL_DestroyRenderer(mInternalRender);
+    }
+    if(mTexture != nullptr){
+        SDL_DestroyTexture(mTexture);
     }
     TTF_Quit();
 }

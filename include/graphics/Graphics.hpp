@@ -31,6 +31,7 @@ public:
     SDL_Window* GetInternalWindow() { return mWindow; }
 
     void Cleanup();
+    SDL_FRect GetSize();
 
     void SetName(std::string);
     Window(std::string, uint32_t, uint32_t);
@@ -39,11 +40,13 @@ public:
 
 class Renderer {
 private:
+    SDL_Texture* mTexture { nullptr };
     SDL_Renderer* mInternalRender { nullptr };
     std::map<std::string, std::shared_ptr<Font>> mFonts;
     std::map<std::string, std::shared_ptr<Sprite>> mSprites;
     std::map<std::string, std::shared_ptr<TileMap>> mTileMaps;
 
+    int mWidth { 0 }, mHeight { 0};
     std::vector<std::shared_ptr<Renderable>> mRenderables;
 
 public:
@@ -55,6 +58,7 @@ public:
     std::vector<std::string> GetRenderBackends();
     void SetRenderBackends(std::string, Window*);
 
+    void SetSize(int, int);
     SDL_FRect GetSize();
 
     void Initialize(Window*);
@@ -99,7 +103,7 @@ public:
     std::shared_ptr<TileMap> CreateTilemap(std::string);
 
     void Sort();
-    void Update();
+    void Update(float, float);
     void Cleanup();
 
     Renderer();
