@@ -15,7 +15,9 @@ namespace mb::Audio {
 
     class TrackerXM : public Playable {
     private:
-        xm_context_t* mXMHandle;
+        xm_context_t* mXMHandle { nullptr };
+        uint8_t* mPrescanData { nullptr };
+        uint8_t* mCtxData { nullptr };
         uint16_t mLastPattern { 0 };
         uint16_t mLastPatternRows { 0 };
     public:
@@ -23,7 +25,7 @@ namespace mb::Audio {
         void Loop();
         bool AtEnd();
         void Reset();
-        
+
         void Mix(uint8_t*, uint8_t*, int);
         void Load(std::filesystem::path);
         void Load(uint8_t*, std::size_t);
@@ -35,4 +37,3 @@ namespace mb::Audio {
 
 
 #endif
-
