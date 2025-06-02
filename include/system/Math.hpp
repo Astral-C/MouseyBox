@@ -36,10 +36,16 @@ namespace mb::Math {
             return v;
         }
 
-        Vec2<T>& operator=(Vec2<T> o){ 
+        Vec2<T>& operator=(Vec2<T> o){
             x = o.x;
             y = o.y;
             return *this;
+        }
+
+        void Normalize(){
+            T l = (x*x)+(y*y);
+            x /= l;
+            y /= l;
         }
 
         static float Dist(Vec2<T> a, Vec2<T> b){
@@ -57,12 +63,12 @@ namespace mb::Math {
         T* operator[](int r) { return rows[r]; }
 
         Vec2<T> operator*(Vec2<T> v){
-            return {(rows[0][0] * v.x) + (rows[0][1] * v.y), (rows[1][0] * v.x) + (rows[1][1] * v.y)}; 
+            return {(rows[0][0] * v.x) + (rows[0][1] * v.y), (rows[1][0] * v.x) + (rows[1][1] * v.y)};
         }
 
         Matrix2x2<T> Inverse(){
             Matrix2x2<T> inverted;
-            
+
             float determinant = 1.0f/((rows[0][0]*rows[1][1])-(rows[0][1]*rows[1][0]));
             inverted[0][0] = rows[1][1] * determinant;
             inverted[0][1] = -rows[0][1] * determinant;
@@ -77,7 +83,7 @@ namespace mb::Math {
         T x;
         T y;
         T z;
-        
+
         T dot(Vec3<T>& o){
             return (x * o.x) + (y * o.y) + (z * o.z);
         }
@@ -102,7 +108,7 @@ namespace mb::Math {
             return v;
         }
 
-        Vec3<T>& operator=(Vec3<T> o){ 
+        Vec3<T>& operator=(Vec3<T> o){
             x = o.x;
             y = o.y;
             z = o.z;
