@@ -392,6 +392,7 @@ void Renderer::Sort(){
 }
 
 void Renderer::Update(float winWidth, float winHeight){
+    SDL_RenderClear(mInternalRender);
     SDL_SetRenderTarget(mInternalRender, mTexture);
     SDL_RenderClear(mInternalRender);
     Sort();
@@ -405,6 +406,7 @@ void Renderer::Update(float winWidth, float winHeight){
     if(mDraw){
         mDraw(mInternalRender);
     }
+
     SDL_SetRenderTarget(mInternalRender, nullptr);
     SDL_FRect winRect { 0.0f, 0.0f, winWidth, winHeight};
     SDL_RenderTexture(mInternalRender, mTexture, nullptr, &winRect);
