@@ -46,7 +46,7 @@ private:
     std::map<std::string, std::shared_ptr<Sprite>> mSprites;
     std::map<std::string, std::shared_ptr<TileMap>> mTileMaps;
 
-    int mWidth { 0 }, mHeight { 0};
+    int mWidth { 0 }, mHeight { 0 };
     std::vector<std::shared_ptr<Renderable>> mRenderables;
 
 public:

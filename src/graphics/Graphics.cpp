@@ -292,7 +292,7 @@ bool Renderer::LoadFont(std::filesystem::path path, int ptSize, std::string name
     std::shared_ptr<Font> font = std::make_shared<Font>();
     font->font = ttf;
     if(name == ""){
-        mFonts.insert({path, font});
+        mFonts.insert({path.string(), font});
     } else {
         mFonts.insert({name, font});
     }
