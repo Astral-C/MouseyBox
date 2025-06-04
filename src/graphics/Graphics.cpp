@@ -285,7 +285,7 @@ void Renderer::Free(std::shared_ptr<Renderable> r){
 
 
 bool Renderer::LoadFont(std::filesystem::path path, int ptSize, std::string name){
-    TTF_Font* ttf = TTF_OpenFont(path.c_str(), ptSize);
+    TTF_Font* ttf = TTF_OpenFont(path.string().c_str(), ptSize);
 
     if(ttf == nullptr) return false;
 
