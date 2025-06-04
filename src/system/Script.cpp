@@ -874,7 +874,7 @@ SkitterValue Script::ExecNode(std::shared_ptr<TreeNode<AstNode>> root){
         break;
     }
 
-    return (SkitterValue){ .mType = SkitterType::None };
+    return SkitterValue{ .mType = SkitterType::None };
 }
 
 void Script::Execute(){
