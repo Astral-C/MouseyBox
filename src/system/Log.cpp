@@ -6,7 +6,6 @@ namespace mb::Log {
 
     namespace Config {
         std::string mSrc { "MouseyBox" };
-        std::ostream* mDest { &std::cerr };
         Level mLevel { Level::Debug };
     }
 

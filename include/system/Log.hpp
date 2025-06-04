@@ -2,6 +2,7 @@
 #define __MB_LOGGING_H__
 #include <string>
 #include <format>
+#include <iostream>
 
 namespace mb::Log {
 
@@ -14,7 +15,6 @@ namespace mb::Log {
 
     namespace Config {
         extern std::string mSrc;
-        extern std::ostream* mDest;
         extern Level mLevel;
     }
 
@@ -25,7 +25,7 @@ namespace mb::Log {
     void Error(std::string fmt_str, Args&&... args){
         if(Config::mLevel >= Level::Error){
             std::string vfmtstr = std::format("[{}][ERROR] {}\n", Config::mSrc, fmt_str);
-            *Config::mDest << std::vformat(vfmtstr, std::make_format_args(args...));
+            std::cerr << std::vformat(vfmtstr, std::make_format_args(args...));
         }
     }
 
@@ -33,7 +33,7 @@ namespace mb::Log {
     void Warn(std::string fmt_str, Args&&... args){
         if(Config::mLevel >= Level::Warn){
             std::string vfmtstr = std::format("[{}][WARN] {}\n", Config::mSrc, fmt_str);
-            *Config::mDest << std::vformat(vfmtstr, std::make_format_args(args...));
+            std::cerr << std::vformat(vfmtstr, std::make_format_args(args...));
         }
     }
 
@@ -41,14 +41,14 @@ namespace mb::Log {
     void Debug(std::string fmt_str, Args&&... args){
         if(Config::mLevel >= Level::Debug){
             std::string vfmtstr = std::format("[{}][DEBUG] {}\n", Config::mSrc, fmt_str);
-            *Config::mDest << std::vformat(vfmtstr, std::make_format_args(args...));
+            std::cerr << std::vformat(vfmtstr, std::make_format_args(args...));
         }
     }
-    
+
     template<typename... Args>
     void Info(std::string fmt_str, Args&&... args){
         std::string vfmtstr = std::format("[{}][INFO] {}\n", Config::mSrc, fmt_str);
-        *Config::mDest << std::vformat(vfmtstr, std::make_format_args(args...));
+        std::cerr << std::vformat(vfmtstr, std::make_format_args(args...));
     }
 
     // explicit src
@@ -57,7 +57,7 @@ namespace mb::Log {
     void ErrorFrom(std::string src, std::string fmt_str, Args&&... args){
         if(Config::mLevel >= Level::Error){
             std::string vfmtstr = std::format("[{}][ERROR] {}\n", src, fmt_str);
-            *Config::mDest << std::vformat(vfmtstr, std::make_format_args(args...));
+            std::cerr << std::vformat(vfmtstr, std::make_format_args(args...));
         }
     }
 
@@ -65,7 +65,7 @@ namespace mb::Log {
     void WarnFrom(std::string src, std::string fmt_str, Args&&... args){
         if(Config::mLevel >= Level::Warn){
             std::string vfmtstr = std::format("[{}][WARN] {}\n", src, fmt_str);
-            *Config::mDest << std::vformat(vfmtstr, std::make_format_args(args...));
+            std::cerr << std::vformat(vfmtstr, std::make_format_args(args...));
         }
     }
 
@@ -73,14 +73,14 @@ namespace mb::Log {
     void DebugFrom(std::string src, std::string fmt_str, Args&&... args){
         if(Config::mLevel >= Level::Debug){
             std::string vfmtstr = std::format("[{}][DEBUG] {}\n", src, fmt_str);
-            *Config::mDest << std::vformat(vfmtstr, std::make_format_args(args...));
+            std::cerr << std::vformat(vfmtstr, std::make_format_args(args...));
         }
     }
-    
+
     template<typename... Args>
     void InfoFrom(std::string src, std::string fmt_str, Args&&... args){
         std::string vfmtstr = std::format("[{}][INFO] {}\n", src, fmt_str);
-        *Config::mDest << std::vformat(vfmtstr, std::make_format_args(args...));
+        std::cerr << std::vformat(vfmtstr, std::make_format_args(args...));
     }
 }
 
