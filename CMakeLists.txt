@@ -18,6 +18,7 @@ endif()
 
 if(ENABLE_XM)
     add_compile_definitions(ENABLE_XM)
+    add_subdirectory(lib/libxm/src libxm_build)
 endif()
 
 if(DISABLE_ENTITY)
@@ -26,7 +27,6 @@ endif()
 
 find_package(SDL3 CONFIG REQUIRED)
 find_package(SDL3_ttf CONFIG REQUIRED)
-add_subdirectory(lib/libxm/src libxm_build)
 
 include_directories(lib)
 include_directories(include)
@@ -42,11 +42,13 @@ file(GLOB_RECURSE MOUSEY_SRC
 
 add_library(mouseybox STATIC ${MOUSEY_SRC})
 
+target_link_libraries(mouseybox SDL3::SDL3 SDL3_ttf::SDL3_ttf)
 if(ENABLE_OPENMPT)
-    add_compile_definitions(ENABLE_OPENMPT)
-    target_link_libraries(mouseybox SDL3::SDL3 SDL3_ttf::SDL3_ttf openmpt xm)
-else()
-     target_link_libraries(mouseybox SDL3::SDL3 SDL3_ttf::SDL3_ttf xm)
+    target_link_libraries(mouseybox openmpt)
+endif()
+
+if(ENABLE_XM)
+    target_link_libraries(mouseybox xm)
 endif()
 
 add_executable(mouseytools "tools/tools.cpp")
