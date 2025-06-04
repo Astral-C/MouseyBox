@@ -6,4 +6,4 @@
 	url = https://github.com/chriskohlhoff/asio.git
 [submodule "lib/libxm"]
 	path = lib/libxm
-	url = https://github.com/Astral-C/libxm.git
+	url = https://github.com/Artefact2/libxm.git
