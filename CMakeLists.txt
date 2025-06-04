@@ -9,10 +9,15 @@ set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
 
 option(BUILD_SHARED_LIBS "Build using shared libraries" OFF)
 option(ENABLE_OPENMPT "Enable OpenMPT in Audio" OFF)
+option(ENABLE_XM "Enable libxm XM playables in Audio" OFF)
 option(DISABLE_ENTITY "Disalbe Built in Entity System" OFF)
 
 if(ENABLE_OPENMPT)
     add_compile_definitions(ENABLE_OPENMPT)
+endif()
+
+if(ENABLE_XM)
+    add_compile_definitions(ENABLE_XM)
 endif()
 
 if(DISABLE_ENTITY)
