@@ -8,7 +8,7 @@ namespace mb::Noise {
         mGenerator = std::mt19937(seed);
 
         for(int i = 0; i<256;i++){
-            mPermutations[i+256] = mPermutations[i] = mDistribution(mGenerator);
+            mPermutations[i+256] = mPermutations[i] = static_cast<uint8_t>(mDistribution(mGenerator) & 0xFF);
         }
     }
 
@@ -47,7 +47,7 @@ namespace mb::Noise {
 
         float localX = x - std::floor(x);
         float localY = y - std::floor(y);
-        
+
         float u = fade(localX);
         float v = fade(localY);
 
@@ -55,7 +55,7 @@ namespace mb::Noise {
         uint8_t ab = mPermutations[mPermutations[x0] + y1];
         uint8_t ba = mPermutations[mPermutations[x1] + y0];
         uint8_t bb = mPermutations[mPermutations[x1] + y1];
-        
+
         float v0 = gradient(aa, localX, localY);
         float v1 = gradient(ba, localX - 1, localY);
         float v2 = gradient(ab, localX, localY - 1);
@@ -63,7 +63,7 @@ namespace mb::Noise {
 
         float e0 = mb::Math::Lerp<float>(v0, v1, u);
         float e1 = mb::Math::Lerp<float>(v2, v3, u);
-        
+
         return (mb::Math::Lerp<float>(e0, e1, v) + 1) / 2;
     }
 
