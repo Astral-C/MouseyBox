@@ -61,7 +61,7 @@ namespace mb {
     }
 
     void Task::Free(Task* t){
-        if(t < mTasks && t > mTasks + mTaskMax) return;
+        if(t < mTasks || t > mTasks + mTaskMax) return;
 
         // Remove from used-list
         if(t->mPrev != nullptr){

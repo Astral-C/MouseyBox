@@ -97,6 +97,13 @@ namespace mb::Input {
         Mouse::mCurrentState = SDL_GetMouseState(&Mouse::mPosition.x, &Mouse::mPosition.y);
     }
 
+    bool AnyKey(){
+        for(int k = 0; k < mKeyCount; k++){
+            if(mKeyboardState[k] == 1) return true;
+        }
+        return false;
+    }
+
     bool GetKeyPressed(SDL_Keycode key){
         if(SDL_GetScancodeFromKey(key, nullptr) < mKeyCount){
             return !mKeyboardStatePrevious[SDL_GetScancodeFromKey(key, nullptr)] && mKeyboardState[SDL_GetScancodeFromKey(key, nullptr)];
