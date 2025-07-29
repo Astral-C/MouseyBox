@@ -11,7 +11,7 @@ namespace mb::Noise {
         uint8_t mPermutations[512];
 
         std::mt19937 mGenerator;
-        std::uniform_int_distribution<uint8_t> mDistribution {};
+        std::uniform_int_distribution<unsigned int> mDistribution {};
         float at(float x, float y);
 
     public:

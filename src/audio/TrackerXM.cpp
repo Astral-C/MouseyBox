@@ -1,3 +1,4 @@
+#ifdef ENABLE_XM
 #include <math.h>
 #include <algorithm>
 #include <system/Log.hpp>
@@ -82,3 +83,4 @@ namespace mb::Audio {
         delete[] mCtxData;
     }
 }
+#endif

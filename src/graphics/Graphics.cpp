@@ -167,7 +167,7 @@ bool Renderer::LoadSprites(nlohmann::json spriteConfig){
 bool Renderer::LoadSpriteSimple(std::string name, std::filesystem::path path){
     if(mSprites.contains(name)) return true;
 
-    std::shared_ptr<Sprite> newSprite = std::make_shared<Sprite>(mInternalRender, path);
+    std::shared_ptr<Sprite> newSprite = std::make_shared<Sprite>(mInternalRender, path.string());
     Log::Debug("Loading Sprite Image {}", name);
     mSprites.insert({name, newSprite});
 
@@ -285,14 +285,14 @@ void Renderer::Free(std::shared_ptr<Renderable> r){
 
 
 bool Renderer::LoadFont(std::filesystem::path path, int ptSize, std::string name){
-    TTF_Font* ttf = TTF_OpenFont(path.c_str(), ptSize);
+    TTF_Font* ttf = TTF_OpenFont(path.string().c_str(), ptSize);
 
     if(ttf == nullptr) return false;
 
     std::shared_ptr<Font> font = std::make_shared<Font>();
     font->font = ttf;
     if(name == ""){
-        mFonts.insert({path, font});
+        mFonts.insert({path.string(), font});
     } else {
         mFonts.insert({name, font});
     }
@@ -392,6 +392,7 @@ void Renderer::Sort(){
 }
 
 void Renderer::Update(float winWidth, float winHeight){
+    SDL_RenderClear(mInternalRender);
     SDL_SetRenderTarget(mInternalRender, mTexture);
     SDL_RenderClear(mInternalRender);
     Sort();
@@ -405,6 +406,7 @@ void Renderer::Update(float winWidth, float winHeight){
     if(mDraw){
         mDraw(mInternalRender);
     }
+
     SDL_SetRenderTarget(mInternalRender, nullptr);
     SDL_FRect winRect { 0.0f, 0.0f, winWidth, winHeight};
     SDL_RenderTexture(mInternalRender, mTexture, nullptr, &winRect);

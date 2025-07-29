@@ -1,6 +1,6 @@
-#ifndef __OGG_H__
-#define __OGG_H__
-
+#ifdef ENABLE_XM
+#ifndef __XM_H__
+#define __XM_H__
 #include <string>
 #include <cstdint>
 #include <audio/Playable.hpp>
@@ -36,4 +36,5 @@ namespace mb::Audio {
 }
 
 
+#endif
 #endif

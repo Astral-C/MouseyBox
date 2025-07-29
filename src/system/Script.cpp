@@ -312,7 +312,7 @@ std::shared_ptr<TreeNode<AstNode>> Parser::Declaration(){
 }
 
 std::shared_ptr<TreeNode<AstNode>> Parser::Declarations(){
-    std::shared_ptr<TreeNode<AstNode>> node = std::make_shared<TreeNode<AstNode>>((AstNode)(AstNode){.mType = NodeType::Block});
+    std::shared_ptr<TreeNode<AstNode>> node = std::make_shared<TreeNode<AstNode>>(AstNode {.mType = NodeType::Block});
 
     while(!AtEnd()){
         Token peek = PeekToken();
@@ -335,7 +335,7 @@ std::shared_ptr<TreeNode<AstNode>> Parser::Declarations(){
 }
 
 std::shared_ptr<TreeNode<AstNode>> Parser::IfStatement(){
-   std::shared_ptr<TreeNode<AstNode>> node = std::make_shared<TreeNode<AstNode>>((AstNode){.mType = NodeType::If });
+   std::shared_ptr<TreeNode<AstNode>> node = std::make_shared<TreeNode<AstNode>>(AstNode {.mType = NodeType::If });
 
     ConsumeToken(); // Consume 'if' token
 
@@ -368,7 +368,7 @@ std::shared_ptr<TreeNode<AstNode>> Parser::IfStatement(){
 std::shared_ptr<TreeNode<AstNode>> Parser::AssignStatement(){
     Token t = ConsumeToken(); // Consume Ident
 
-    std::shared_ptr<TreeNode<AstNode>> node = std::make_shared<TreeNode<AstNode>>((AstNode){.mType = NodeType::AssigNode, .mToken = t});
+    std::shared_ptr<TreeNode<AstNode>> node = std::make_shared<TreeNode<AstNode>>(AstNode {.mType = NodeType::AssigNode, .mToken = t});
 
     if(ConsumeToken().token != TokenType::EQ){
         mb::Log::Error("Unexpected Token {} on line {}: {}", DebugTokenNames[PrevToken().token], PrevToken().line, PrevToken().lexeme);
@@ -394,10 +394,10 @@ std::shared_ptr<TreeNode<AstNode>> Parser::AssignStatement(){
 std::shared_ptr<TreeNode<AstNode>> Parser::GlobalAssignStatement(){
     Token t = ConsumeToken(); // Consume Global
 
-    std::shared_ptr<TreeNode<AstNode>> node = std::make_shared<TreeNode<AstNode>>((AstNode){.mType = NodeType::Global, .mToken = t});
+    std::shared_ptr<TreeNode<AstNode>> node = std::make_shared<TreeNode<AstNode>>(AstNode{.mType = NodeType::Global, .mToken = t});
 
     t = ConsumeToken(); // Consume Ident
-    std::shared_ptr<TreeNode<AstNode>> anode = std::make_shared<TreeNode<AstNode>>((AstNode){.mType = NodeType::AssigNode, .mToken = t});
+    std::shared_ptr<TreeNode<AstNode>> anode = std::make_shared<TreeNode<AstNode>>(AstNode{.mType = NodeType::AssigNode, .mToken = t});
 
     if(ConsumeToken().token != TokenType::EQ){
         mb::Log::Error("Unexpected Token {} on line {}: {}", DebugTokenNames[PrevToken().token], PrevToken().line, PrevToken().lexeme);
@@ -424,7 +424,7 @@ std::shared_ptr<TreeNode<AstNode>> Parser::GlobalAssignStatement(){
 std::shared_ptr<TreeNode<AstNode>> Parser::CallStatement(){
     Token t = ConsumeToken(); // Consume Call
 
-    std::shared_ptr<TreeNode<AstNode>> node = std::make_shared<TreeNode<AstNode>>((AstNode){.mType = NodeType::Call, .mToken = t});
+    std::shared_ptr<TreeNode<AstNode>> node = std::make_shared<TreeNode<AstNode>>(AstNode{.mType = NodeType::Call, .mToken = t});
 
     node->AddNode(Literal());
     node->AddNode(Expression());
@@ -441,7 +441,7 @@ std::shared_ptr<TreeNode<AstNode>> Parser::CallStatement(){
 std::shared_ptr<TreeNode<AstNode>> Parser::PrintStatement(){
     Token t = ConsumeToken(); // Consume Print
 
-    std::shared_ptr<TreeNode<AstNode>> node = std::make_shared<TreeNode<AstNode>>((AstNode){.mType = NodeType::Print, .mToken = t});
+    std::shared_ptr<TreeNode<AstNode>> node = std::make_shared<TreeNode<AstNode>>(AstNode{.mType = NodeType::Print, .mToken = t});
 
     node->AddNode(Expression());
 
@@ -478,10 +478,10 @@ std::shared_ptr<TreeNode<AstNode>> Parser::Literal(){
         return Group();
     } else if(t.token == TokenType::IDENT) {
         ConsumeToken();
-        return std::make_shared<TreeNode<AstNode>>((AstNode){.mType = NodeType::Variable, .mToken = t});
+        return std::make_shared<TreeNode<AstNode>>(AstNode{.mType = NodeType::Variable, .mToken = t});
     } else {
         ConsumeToken();
-        return std::make_shared<TreeNode<AstNode>>((AstNode){.mType = NodeType::Literal, .mToken = t});
+        return std::make_shared<TreeNode<AstNode>>(AstNode{.mType = NodeType::Literal, .mToken = t});
     }
 }
 
@@ -492,7 +492,7 @@ std::shared_ptr<TreeNode<AstNode>> Parser::Term(){
     if(PeekToken().token == TokenType::TERM){
 
         while(PeekToken().token == TokenType::TERM){
-            trm = std::make_shared<TreeNode<AstNode>>((AstNode){.mType = NodeType::Term, .mToken = ConsumeToken()});
+            trm = std::make_shared<TreeNode<AstNode>>(AstNode{.mType = NodeType::Term, .mToken = ConsumeToken()});
             std::shared_ptr<TreeNode<AstNode>> rfct = Factor();
 
             trm->AddNode(lfct);
@@ -515,7 +515,7 @@ std::shared_ptr<TreeNode<AstNode>> Parser::Factor(){
     if(PeekToken().token == TokenType::FACTOR){
 
         while(PeekToken().token == TokenType::FACTOR){
-            fctr = std::make_shared<TreeNode<AstNode>>((AstNode){.mType = NodeType::Factor, .mToken = ConsumeToken()});
+            fctr = std::make_shared<TreeNode<AstNode>>(AstNode{.mType = NodeType::Factor, .mToken = ConsumeToken()});
 
             std::shared_ptr<TreeNode<AstNode>> rlit = Literal();
 
@@ -540,7 +540,7 @@ std::shared_ptr<TreeNode<AstNode>> Parser::Comparison(){
     if(cmpTypes.contains(PeekToken().token)){
 
         while(cmpTypes.contains(PeekToken().token)){
-            cmp = std::make_shared<TreeNode<AstNode>>((AstNode){.mType = NodeType::Comparison, .mToken = ConsumeToken()});
+            cmp = std::make_shared<TreeNode<AstNode>>(AstNode{.mType = NodeType::Comparison, .mToken = ConsumeToken()});
 
             std::shared_ptr<TreeNode<AstNode>> rtrm = Term();
             cmp->AddNode(ltrm);
@@ -555,7 +555,7 @@ std::shared_ptr<TreeNode<AstNode>> Parser::Comparison(){
 }
 
 std::shared_ptr<TreeNode<AstNode>> Parser::And(){
-    std::shared_ptr<TreeNode<AstNode>> andn = std::make_shared<TreeNode<AstNode>>((AstNode){.mType = NodeType::And});
+    std::shared_ptr<TreeNode<AstNode>> andn = std::make_shared<TreeNode<AstNode>>(AstNode{.mType = NodeType::And});
 
     std::shared_ptr<TreeNode<AstNode>> land = Comparison();
 
@@ -577,12 +577,12 @@ std::shared_ptr<TreeNode<AstNode>> Parser::And(){
 std::shared_ptr<TreeNode<AstNode>> Parser::Expression(){
     std::set<TokenType> OpTokens = {TokenType::IS_EQ, TokenType::IS_NEQ, TokenType::LT, TokenType::LT_EQ, TokenType::GT, TokenType::GT_EQ, TokenType::TERM, TokenType::FACTOR};
 
-    std::shared_ptr<TreeNode<AstNode>> exp = std::make_shared<TreeNode<AstNode>>((AstNode){.mType = NodeType::Exp});
+    std::shared_ptr<TreeNode<AstNode>> exp = std::make_shared<TreeNode<AstNode>>(AstNode{.mType = NodeType::Exp});
 
     std::shared_ptr<TreeNode<AstNode>> lor = And();
 
     if(PeekToken().token == TokenType::OR){
-        std::shared_ptr<TreeNode<AstNode>> orn = std::make_shared<TreeNode<AstNode>>((AstNode){.mType = NodeType::Or});
+        std::shared_ptr<TreeNode<AstNode>> orn = std::make_shared<TreeNode<AstNode>>(AstNode{.mType = NodeType::Or});
         orn->AddNode(lor);
 
         while(PeekToken().token == TokenType::OR){
@@ -874,7 +874,7 @@ SkitterValue Script::ExecNode(std::shared_ptr<TreeNode<AstNode>> root){
         break;
     }
 
-    return (SkitterValue){ .mType = SkitterType::None };
+    return SkitterValue{ .mType = SkitterType::None };
 }
 
 void Script::Execute(){

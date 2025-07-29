@@ -41,12 +41,14 @@ namespace mb {
 
         float mX { 0 }, mY { 0 };
         float mVelX { 0 }, mVelY { 0 };
-        
+
         std::function<void(Entity*)> mUpdate {};
         std::function<void(Entity*)> mReady {};
         std::function<void(Entity*)> mFree {};
 
         char mData[128] {0}; // user data buffer
+
+        bool IsInUse() { return mInUse == 1; }
 
         void SetRenderable(std::shared_ptr<Graphics::Renderable> s) { mRenderable = s; }
         std::shared_ptr<Graphics::Renderable> GetRenderable() { return mRenderable.lock(); }
@@ -76,7 +78,7 @@ namespace mb {
 
         static Entity* GetById(uint32_t id);
         static Entity* GetNextTagged(Entity* e, int tag);
-        
+
         static Entity* New();
         static void Free(Entity*);
 
