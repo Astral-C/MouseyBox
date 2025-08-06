@@ -32,9 +32,11 @@ namespace mb::Input {
 
     void Initialize(){
         mKeyboardState = SDL_GetKeyboardState(&mKeyCount);
-        mKeyboardStatePrevious = new bool[mKeyCount];
-        Mouse::mCurrentState = 0;
-        Mouse::mPrevState = 0;
+        if(mKeyCount != 0){
+            mKeyboardStatePrevious = new bool[mKeyCount];
+            Mouse::mCurrentState = 0;
+            Mouse::mPrevState = 0;
+        }
     } 
 
     void OpenPrimaryJoystick(){
@@ -74,20 +76,7 @@ namespace mb::Input {
         return mJoysticks[idx];
     }
 
-    void RegisterCommand(std::string){
-    }
-
-    void SetCommandKey(std::string, SDL_Keycode){
-
-    }
-    
-    void SetCommandButton(std::string, SDL_GamepadButton){
-
-    }
-    
-    void SetCommandAxis(std::string SDL_GamepadAxis){
-
-    }
+    //void RegisterCommandsFromFile();
 
     void Update(){
         if(mKeyboardStatePrevious != nullptr) memcpy(mKeyboardStatePrevious, mKeyboardState, mKeyCount*sizeof(uint8_t));

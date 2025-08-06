@@ -15,8 +15,8 @@ namespace mb {
         float mCurrent { 0.0f };
         float mDuration { 1.0f };
         uint32_t mTaskId { 0 };
-        std::function<void(Task*,float)> mFunc;
 
+        std::function<void(Task*,float)> mFunc;
         Task* mNext { nullptr };
         Task* mPrev { nullptr };
 

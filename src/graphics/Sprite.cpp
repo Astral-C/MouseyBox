@@ -161,7 +161,13 @@ void SpriteInstance::Draw(SDL_Renderer* r, Camera* cam) {
         SDL_SetTextureAlphaMod(sprite->GetTexture(), mOverlayColor.a);
         SDL_SetTextureColorMod(sprite->GetTexture(), mOverlayColor.r, mOverlayColor.g, mOverlayColor.b);
         SDL_RenderTextureRotated(r, sprite->GetTexture(), curSrcRect, &draw, mAngle, &mAnchor, mFlip);
-        //SDL_RenderRectF(r, &draw);
+        if(mDebug){
+            uint8_t rd, g, b, a;
+            SDL_GetRenderDrawColor(r, &rd, &g, &b, &a);
+            SDL_SetRenderDrawColor(r, 0x00, 0xFF, 0x00, 0xFF);
+            SDL_RenderRect(r, &draw);
+            SDL_SetRenderDrawColor(r, rd, g, b, a);
+        }
     }
 }
 

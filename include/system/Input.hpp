@@ -23,9 +23,9 @@ namespace mb::Input {
     struct Command {
         CommandType type;
         uint32_t value;
-        SDL_Keycode key;
-        SDL_GamepadAxis axis;
-        SDL_GamepadButton button;
+        SDL_Keycode key { SDLK_UNKNOWN };
+        SDL_GamepadAxis axis { SDL_GAMEPAD_AXIS_INVALID };
+        SDL_GamepadButton button { SDL_GAMEPAD_BUTTON_INVALID };
     };
 
     SDL_Joystick* GetJoystick(int idx=0);

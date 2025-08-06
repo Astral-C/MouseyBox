@@ -84,11 +84,11 @@ public:
         }
     }
 
-    void Pause(){
+    inline void Pause(){
         mIsPaused = true;
     }
 
-    void Unpause(){
+    inline void Unpause(){
         mIsPaused = false;
     }
 
@@ -116,6 +116,7 @@ class SpriteInstance : public Renderable {
     std::shared_ptr<SpriteAnimationInstance> mCurrentAnimation { nullptr };
 
 public:
+    bool mDebug { false };
     int mOffsetX { 0 }, mOffsetY { 0 };
     float mAngle { 0.0f };
     SDL_FPoint mAnchor { 0.5f, 0.5f };
