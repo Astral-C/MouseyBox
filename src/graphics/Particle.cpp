@@ -101,6 +101,20 @@ ParticleSystem::ParticleSystem(SDL_Renderer* r, nlohmann::json& config){
         velymax = 1.0f;
     }
 
+    float rmin, rmax;
+
+    if(config.contains("min_vel_rot")){
+        rmin = config["min_vel_rot"];
+    } else {
+        rmin = 0.0f;
+    }
+
+    if(config.contains("max_vel_rot")){
+        rmax = config["max_vel_rot"];
+    } else {
+        rmax = 1.0f;
+    }
+
     mParticles = new Particle[mParticleMax];
     mGen = std::mt19937(mRand());
     mDistX = std::uniform_int_distribution<int>(0, mDrawRect.w);
@@ -108,6 +122,7 @@ ParticleSystem::ParticleSystem(SDL_Renderer* r, nlohmann::json& config){
     mLifeDist = std::uniform_int_distribution<int>(lifemin, lifemax);
     mVelXDist = std::uniform_real_distribution<float>(velxmin, velxmax);
     mVelYDist = std::uniform_real_distribution<float>(velymin, velymax);
+    mVelRDist = std::uniform_real_distribution<float>(rmin, rmax);
 
     stbi_image_free(imgData);
 
@@ -169,13 +184,58 @@ ParticleSystem::ParticleSystem(SDL_Renderer* r, nlohmann::json& config, uint8_t*
         lifemax = config["max_lifetime"];
     } else {
         lifemax = 200;
-    }    
+    }
+
+    float velxmin, velxmax;
+
+    if(config.contains("min_vel_x")){
+        velxmin = config["min_vel_x"];
+    } else {
+        velxmin = 0.0f;
+    }
+
+    if(config.contains("max_vel_x")){
+        velxmax = config["max_vel_x"];
+    } else {
+        velxmax = 1.0f;
+    }
+
+    float velymin, velymax;
+
+    if(config.contains("min_vel_y")){
+        velymin = config["min_vel_y"];
+    } else {
+        velymin = 0.0f;
+    }
+
+    if(config.contains("max_vel_y")){
+        velymax = config["max_vel_y"];
+    } else {
+        velymax = 1.0f;
+    }
+
+    float rmin, rmax;
+
+    if(config.contains("min_vel_rot")){
+        rmin = config["min_vel_rot"];
+    } else {
+        rmin = 0.0f;
+    }
+
+    if(config.contains("max_vel_rot")){
+        rmax = config["max_vel_rot"];
+    } else {
+        rmax = 1.0f;
+    }
 
     mParticles = new Particle[mParticleMax];
     mGen = std::mt19937(mRand());
     mDistX = std::uniform_int_distribution<int>(0, mDrawRect.w);
     mDistY = std::uniform_int_distribution<int>(0, mDrawRect.h);
     mLifeDist = std::uniform_int_distribution<int>(lifemin, lifemax);
+    mVelXDist = std::uniform_real_distribution<float>(velxmin, velxmax);
+    mVelYDist = std::uniform_real_distribution<float>(velymin, velymax);
+    mVelRDist = std::uniform_real_distribution<float>(rmin, rmax);
 
     stbi_image_free(imgData);
 
@@ -204,9 +264,9 @@ void ParticleSystem::Draw(SDL_Renderer* r, Camera* cam) {
         if(mParticles[i].mLifetime > 0){
             draw.x = mParticles[i].mPosition.x;
             draw.y = mParticles[i].mPosition.y;
-            SDL_SetTextureAlphaMod(mTexture, mOverlayColor.a);
-            SDL_SetTextureColorMod(mTexture, mOverlayColor.r, mOverlayColor.g, mOverlayColor.b);
-            SDL_RenderTextureRotated(r, mTexture, nullptr, &draw, 0.0f, NULL, SDL_FlipMode::SDL_FLIP_NONE);
+            SDL_SetTextureAlphaMod(mTexture, mColorMod.a);
+            SDL_SetTextureColorMod(mTexture, mColorMod.r, mColorMod.g, mColorMod.b);
+            SDL_RenderTextureRotated(r, mTexture, nullptr, &draw, mParticles[i].mPosition.z, NULL, SDL_FlipMode::SDL_FLIP_NONE);
         
             mParticles[i].mPosition = mParticles[i].mPosition + mParticles[i].mVelocity;
             mParticles[i].mVelocity = mParticles[i].mVelocity + mParticles[i].mAcceleration;
@@ -215,10 +275,13 @@ void ParticleSystem::Draw(SDL_Renderer* r, Camera* cam) {
             mParticles[i].mLifetime = mLifeDist(mGen);
             mParticles[i].mVelocity.x = 0.0f;
             mParticles[i].mVelocity.y = 0.0f;
+            mParticles[i].mVelocity.z = 0.0f;
             mParticles[i].mPosition.x = mDrawRect.x + mDistX(mGen);
             mParticles[i].mPosition.y = mDrawRect.y + mDistY(mGen);
+            mParticles[i].mPosition.z = 0.0f;
             mParticles[i].mAcceleration.x = mVelXDist(mGen);
             mParticles[i].mAcceleration.y = mVelYDist(mGen);
+            mParticles[i].mAcceleration.y = mVelRDist(mGen);
         }
     }
 }

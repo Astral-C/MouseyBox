@@ -16,7 +16,7 @@ protected:
     int mPriority { 0 };
     float mScale { 1.0f };
     SDL_FRect mDrawRect {};
-    SDL_Color mOverlayColor { 255, 255, 255, 255 };
+    SDL_Color mColorMod { 255, 255, 255, 255 };
     SDL_Texture* mTexture { nullptr };
     bool mStatic { false };
 
@@ -39,7 +39,7 @@ public:
     void SetStatic(bool value) { mStatic = value; }
 
     SDL_FRect* GetRect() { return &mDrawRect; }
-    SDL_Color* GetColor() { return &mOverlayColor; }
+    SDL_Color* GetColor() { return &mColorMod; }
 };
 
 }

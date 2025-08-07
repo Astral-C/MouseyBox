@@ -100,6 +100,14 @@ namespace mb::Math {
             return v;
         }
 
+        Vec3<T> operator+(Vec3<T>& o){
+            Vec3<T> v;
+            v.x = x + o.x;
+            v.y = y + o.y;
+            v.z = z + o.z;
+            return v;
+        }
+
         Vec3<T> operator-(Vec3<T>& o){
             Vec3<T> v;
             v.x = x - o.x;

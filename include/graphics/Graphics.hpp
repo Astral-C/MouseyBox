@@ -17,6 +17,8 @@
 
 namespace mb::Graphics {
 
+extern SDL_BlendMode BlendModeOverlay;
+
 class Renderer;
 
 class Window {

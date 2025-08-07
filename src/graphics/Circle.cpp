@@ -14,7 +14,7 @@ void Circle::Draw(SDL_Renderer* r, Camera* cam) {
     
     SDL_SetRenderDrawBlendMode(r, SDL_BLENDMODE_BLEND);
     SDL_GetRenderDrawColor(r, &tr, &tg, &tb, &ta);
-    SDL_SetRenderDrawColor(r, mOverlayColor.r, mOverlayColor.g, mOverlayColor.b, mOverlayColor.a);
+    SDL_SetRenderDrawColor(r, mColorMod.r, mColorMod.g, mColorMod.b, mColorMod.a);
     SDL_GetRenderScale(r, &scalex, &scaley);
     SDL_SetRenderScale(r, 1, 1); 
 

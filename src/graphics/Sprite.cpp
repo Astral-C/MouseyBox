@@ -125,7 +125,7 @@ SpriteInstance::SpriteInstance(std::shared_ptr<Sprite> sprite){
     mSprite = sprite;
     mSpriteSrc = {0, 0, static_cast<float>(sprite->GetWidth()), static_cast<float>(sprite->GetHeight())};
     mDrawRect = {0, 0, static_cast<float>(sprite->GetWidth()), static_cast<float>(sprite->GetHeight())};
-    mOverlayColor = {255,255,255,255};
+    mColorMod = {255,255,255,255};
 }
 
 SpriteInstance::SpriteInstance(){
@@ -158,8 +158,9 @@ void SpriteInstance::Draw(SDL_Renderer* r, Camera* cam) {
         draw.w = round(draw.w);
         draw.h = round(draw.h);
 
-        SDL_SetTextureAlphaMod(sprite->GetTexture(), mOverlayColor.a);
-        SDL_SetTextureColorMod(sprite->GetTexture(), mOverlayColor.r, mOverlayColor.g, mOverlayColor.b);
+        SDL_SetTextureAlphaMod(sprite->GetTexture(), mColorMod.a);
+        SDL_SetTextureColorMod(sprite->GetTexture(), mColorMod.r, mColorMod.g, mColorMod.b);
+        
         SDL_RenderTextureRotated(r, sprite->GetTexture(), curSrcRect, &draw, mAngle, &mAnchor, mFlip);
         if(mDebug){
             uint8_t rd, g, b, a;

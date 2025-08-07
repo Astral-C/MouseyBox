@@ -15,9 +15,9 @@ namespace mb::Graphics {
 class Renderer;
 
 struct Particle {
-    mb::Math::Vec2<float> mPosition { 0, 0 };
-    mb::Math::Vec2<float> mVelocity { 0.0f, -0.015f };
-    mb::Math::Vec2<float> mAcceleration { 0.0f, -0.005f };
+    mb::Math::Vec3<float> mPosition { 0, 0, 0 };
+    mb::Math::Vec3<float> mVelocity { 0.0f, -0.015f, 0.0f };
+    mb::Math::Vec3<float> mAcceleration { 0.0f, -0.005f, 0.0f };
     int mLifetime { 0 };
 };
 
@@ -31,6 +31,7 @@ class ParticleSystem : public Renderable {
     std::uniform_int_distribution<int> mLifeDist{};
     std::uniform_real_distribution<float> mVelXDist{};
     std::uniform_real_distribution<float> mVelYDist{};
+    std::uniform_real_distribution<float> mVelRDist{};
     int mTextureWidth { 0 }, mTextureHeight { 0 };
     SDL_Texture* mTexture { nullptr };
     Particle* mParticles { nullptr };
