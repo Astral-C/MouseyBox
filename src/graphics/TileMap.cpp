@@ -195,7 +195,7 @@ bool TileMap::SetTile(uint32_t tid, int x, int y, int z, bool fx, bool fy){
 uint32_t TileMap::GetTile(int x, int y, int z){
     if(x >= mTileWidth || x < 0 || y >= mTileHeight || y < 0 || z >= mLayers.size() || z < 0) return 0xFFFFFFFF;
     if(std::shared_ptr<TileMapLayer> layer = mLayers[z].lock()){
-        return layer->mTiles[(y * mTileWidth) + x]  & 0x00FFFFFF;
+        return layer->mTiles[(y * mTileWidth) + x] >> 8;
     } else {
         return  0x00FFFFFF;
     }
