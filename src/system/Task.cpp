@@ -1,5 +1,6 @@
 #include <map>
 #include <system/Task.hpp>
+#include <system/Log.hpp>
 
 namespace mb {
     uint32_t mTaskMax { 0 };
@@ -56,6 +57,8 @@ namespace mb {
         t->mTimed = timed;
         t->mDuration = duration;
         t->mEveryTick = everyTick;
+        t->mComplete = false;
+        t->mCurrent = 0.0f;
 
         return t;
     }
@@ -96,6 +99,7 @@ namespace mb {
             } else if(!task->mTimed){
                 task->mFunc(task, dt);
                 if(task->mComplete){
+                    mb::Log::Debug("Freeing Task");
                     Task::Free(task);
                 }
             }
