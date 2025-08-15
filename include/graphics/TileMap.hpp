@@ -22,7 +22,7 @@ struct TilemapCollision {
 
 class TileMapLayer : public Renderable {
     friend TileMap;
-    std::shared_ptr<TileMap> mMap;
+    TileMap* mMap { nullptr };
     std::vector<uint32_t> mTiles {};
 public:
     bool mCollisionEnabled { false };

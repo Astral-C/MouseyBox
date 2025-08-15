@@ -105,7 +105,7 @@ TileMap::TileMap(Renderer* r, std::filesystem::path json){
 
     LoadTileset(r->GetInternalRender(), tilemapJson["tileImg"].get<std::string>().c_str(), mTileSize);
 
-    Update(r->GetInternalRender());
+    //Update(r->GetInternalRender());
 }
 
 TileMap::TileMap(Renderer* r, nlohmann::json& tilemapJson, uint8_t* data, std::size_t size){
@@ -127,7 +127,7 @@ TileMap::TileMap(Renderer* r, nlohmann::json& tilemapJson, uint8_t* data, std::s
     LoadTilesetFromMemory(r->GetInternalRender(), mTileSize, data, size);
 
 #ifndef __GAMECUBE__
-    Update(r->GetInternalRender());
+    //Update(r->GetInternalRender());
 #endif
 }
 
