@@ -39,30 +39,19 @@ TileMapLayer::~TileMapLayer(){
 }
 
 void TileMapLayer::Draw(SDL_Renderer* r, Camera* cam){
-#ifndef __GAMECUBE__
-    SDL_FRect shifted = {
-        static_cast<float>(mDrawRect.x),
-        static_cast<float>(mDrawRect.y),
-        static_cast<float>(mDrawRect.w * mScale),
-        static_cast<float>(mDrawRect.h * mScale)
-    };
+    if(mMap == nullptr) return;
 
-    shifted.x = (shifted.x - static_cast<float>(cam->mRect.x)) * mLayerShift;
-    shifted.y = (shifted.y - static_cast<float>(cam->mRect.y)) * mLayerShift;
-
-    SDL_RenderTexture(r, mTexture, NULL, &shifted);
-#else
     float shift_x = static_cast<float>(cam->mRect.x) * mLayerShift;
     float shift_y = static_cast<float>(cam->mRect.y) * mLayerShift;
 
     int tileSize = mMap->GetTileSize();
     int tilesetPitch = mMap->GetTilesetPitch();
 
-    int tw = static_cast<int>(ceil((float)cam->mRect.w / (float)tileSize));
-    int th = static_cast<int>(ceil((float)cam->mRect.h / (float)tileSize));
+    int tw = static_cast<int>(ceil((float)cam->mRect.w / (float)tileSize)) + 2;
+    int th = static_cast<int>(ceil((float)cam->mRect.h / (float)tileSize)) + 2;
 
-    int txStart = (((cam->mRect.x * mLayerShift) / mScale) / tileSize);
-    int tyStart = (((cam->mRect.y * mLayerShift) / mScale) / tileSize);
+    int txStart = (((cam->mRect.x * mLayerShift) / mScale) / tileSize)-1;
+    int tyStart = (((cam->mRect.y * mLayerShift) / mScale) / tileSize)-1;
 
     int renderCallCount = 0;
     for(int y = tyStart; y < tyStart + th; y++){
@@ -72,21 +61,18 @@ void TileMapLayer::Draw(SDL_Renderer* r, Camera* cam){
             int tx = x * tileSize;
             if(x < 0 || x > mMap->GetTileWidth()) continue;
             
-            int tid = mTiles[(y * mMap->GetTileWidth()) + x];
+            int tile = mTiles[(y * mMap->GetTileWidth()) + x];
+            int tid = TileMap::TILE_IDX(tile);
             if(tid == -1) continue;
 
-            SDL_FRect tileDest {(tx * mScale), (ty * mScale), tileSize * mScale, tileSize * mScale};
-            tileDest.x -= shift_x;
-            tileDest.y -= shift_y;
+            SDL_FRect tileDest {tx * mScale, ty * mScale, tileSize * mScale, tileSize * mScale};
+            tileDest.x = std::floor(tileDest.x - shift_x);
+            tileDest.y = std::floor(tileDest.y - shift_y);
 
-            SDL_Rect tileSource {(tid % tilesetPitch) * tileSize, (tid / tilesetPitch) * tileSize, tileSize, tileSize};
-            SDL_RenderTexture(r, mMap->GetTileset(), &tileSource, &tileDest);
-            renderCallCount++;
+            SDL_FRect tileSource {std::floor((tid % tilesetPitch) * tileSize), std::floor((tid / tilesetPitch) * tileSize), tileSize, tileSize};
+            SDL_RenderTextureRotated(r, mMap->GetTileset(), &tileSource, &tileDest, 0.0f, nullptr, SDL_FlipMode(TileMap::TILE_FLIP_X(tile) | TileMap::TILE_FLIP_Y(tile)));
         }
     }
-    mb::Log::Debug(std::format("Rendering Layer took {} render calls", renderCallCount));
-
-#endif
 }
 
 TileMap::TileMap(){}
@@ -109,6 +95,7 @@ TileMap::TileMap(Renderer* r, std::filesystem::path json){
     for(auto layer : tilemapJson["layers"]){
         std::weak_ptr<TileMapLayer> newLayer = r->CreateTilemapLayer(layer);
         if(std::shared_ptr<TileMapLayer> locked = newLayer.lock()){
+            locked->mMap = this;
             locked->mDrawRect = {0, 0, static_cast<float>(mTileWidth * mTileSize), static_cast<float>(mTileHeight * mTileSize)};
             mLayers.push_back(newLayer);
         }
@@ -130,10 +117,8 @@ TileMap::TileMap(Renderer* r, nlohmann::json& tilemapJson, uint8_t* data, std::s
     for(auto layer : tilemapJson["layers"]){
         std::weak_ptr<TileMapLayer> newLayer = r->CreateTilemapLayer(layer);
         if(std::shared_ptr<TileMapLayer> locked = newLayer.lock()){
-#ifdef __GAMECUBE__
             // memory leak on GC.... oops!
-            locked->mMap = std::shared_ptr<TileMap>(this);
-#endif
+            locked->mMap = this;
             locked->mDrawRect = {0, 0, static_cast<float>(mTileWidth * mTileSize), static_cast<float>(mTileHeight * mTileSize)};
             mLayers.push_back(newLayer);
         }
