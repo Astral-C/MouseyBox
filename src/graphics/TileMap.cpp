@@ -66,8 +66,8 @@ void TileMapLayer::Draw(SDL_Renderer* r, Camera* cam){
             if(tid == -1) continue;
 
             SDL_FRect tileDest {tx * mScale, ty * mScale, tileSize * mScale, tileSize * mScale};
-            tileDest.x = std::floor(tileDest.x - shift_x);
-            tileDest.y = std::floor(tileDest.y - shift_y);
+            tileDest.x = std::round(tileDest.x - shift_x);
+            tileDest.y = std::round(tileDest.y - shift_y);
 
             SDL_FRect tileSource {std::floor((tid % tilesetPitch) * tileSize), std::floor((tid / tilesetPitch) * tileSize), tileSize, tileSize};
             SDL_RenderTextureRotated(r, mMap->GetTileset(), &tileSource, &tileDest, 0.0f, nullptr, SDL_FlipMode(TileMap::TILE_FLIP_X(tile) | TileMap::TILE_FLIP_Y(tile)));

@@ -133,6 +133,8 @@ void Renderer::SetSize(int w, int h){
     SDL_DestroyTexture(mTexture);
     mTexture = SDL_CreateTexture(mInternalRender, SDL_PixelFormat::SDL_PIXELFORMAT_RGBA32, SDL_TextureAccess::SDL_TEXTUREACCESS_TARGET, mWidth, mHeight);
     SDL_SetTextureScaleMode(mTexture, SDL_ScaleMode::SDL_SCALEMODE_NEAREST);
+    mCamera.mRect.w = mWidth;
+    mCamera.mRect.h = mHeight;
 }
 
 bool Renderer::LoadSprites(std::filesystem::path path){
