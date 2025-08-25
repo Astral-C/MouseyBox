@@ -5,6 +5,8 @@
 #include <string>
 #include <memory>
 #include <vector>
+#include <system/Log.hpp>
+#include <system/Util.hpp>
 #include <system/json.hpp>
 #include <graphics/Renderable.hpp>
 
@@ -50,6 +52,7 @@ class SpriteAnimation {
     float mSpeed { 0.0f };
     uint32_t mFrameCount { 1 };
     std::vector<SDL_FRect> mFrames;
+    uint32_t mNameHash { 0x00000000 };
 
 
 public:
@@ -68,6 +71,7 @@ class SpriteAnimationInstance {
     float mFrame { 0.0f };
     bool mIsPaused { false };
     bool mFinished { false };
+    uint32_t mNameHash { 0x00000000 };
 
 public:
     inline void Step() {
@@ -104,6 +108,8 @@ public:
         return mFinished;
     }
 
+    uint32_t Hash() { return mNameHash; }
+
     SDL_FRect* GetCurrentFrame();
     SpriteAnimationInstance(std::shared_ptr<SpriteAnimation>);
     ~SpriteAnimationInstance(){}
@@ -128,6 +134,7 @@ public:
 
     void SetAnchor(float x, float y) { mAnchor.x = x, mAnchor.y = y; }
 
+    bool IsAnimating(std::string s) {  if(mCurrentAnimation == nullptr) return false; return Util::Hash(s) == mCurrentAnimation->Hash(); }
     void SetAnimation(std::string);
     std::shared_ptr<SpriteAnimationInstance> GetAnimation() { return mCurrentAnimation; }
 

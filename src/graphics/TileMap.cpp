@@ -33,9 +33,6 @@ TileMapLayer::TileMapLayer(nlohmann::json layer){
 }
 
 TileMapLayer::~TileMapLayer(){
-    if(mTexture != nullptr){
-        SDL_DestroyTexture(mTexture);
-    }
 }
 
 void TileMapLayer::Draw(SDL_Renderer* r, Camera* cam){
@@ -55,11 +52,11 @@ void TileMapLayer::Draw(SDL_Renderer* r, Camera* cam){
 
     int renderCallCount = 0;
     for(int y = tyStart; y < tyStart + th; y++){
-        if(y < 0 || y > mMap->GetTileHeight()) continue;
+        if(y < 0 || y >= mMap->GetTileHeight()) continue;
         int ty = y * tileSize;
         for(int x = txStart; x < txStart + tw; x++){
             int tx = x * tileSize;
-            if(x < 0 || x > mMap->GetTileWidth()) continue;
+            if(x < 0 || x >= mMap->GetTileWidth()) continue;
             
             int tile = mTiles[(y * mMap->GetTileWidth()) + x];
             int tid = TileMap::TILE_IDX(tile);
@@ -178,7 +175,7 @@ bool TileMap::SetTile(uint32_t tid, int x, int y, int z, bool fx, bool fy){
 }
 
 uint32_t TileMap::GetTile(int x, int y, int z){
-    if(x >= mTileWidth || x < 0 || y >= mTileHeight || y < 0 || z >= mLayers.size() || z < 0) return 0xFFFFFFFF;
+    if(x >= mTileWidth || x < 0 || y >= mTileHeight || y < 0 || z >= mLayers.size() || z < 0) return 0x00FFFFFF;
     if(std::shared_ptr<TileMapLayer> layer = mLayers[z].lock()){
         return layer->mTiles[(y * mTileWidth) + x] >> 8;
     } else {
@@ -195,47 +192,6 @@ void TileMap::SetMapScale(int scale){
 }
 
 void TileMap::Update(SDL_Renderer* r){
-    for(auto layer_weak : mLayers){
-        if(std::shared_ptr<TileMapLayer> layer = layer_weak.lock()){
-            if(layer->mTexture == nullptr){
-                Log::Debug("Creating Layer Texture");
-
-                layer->mTexture = SDL_CreateTexture(r, SDL_PIXELFORMAT_RGBA32, SDL_TextureAccess::SDL_TEXTUREACCESS_TARGET, mTileWidth * mTileSize, mTileHeight * mTileSize);
-                SDL_SetTextureScaleMode(layer->mTexture, SDL_SCALEMODE_NEAREST);
-                if(layer->mTexture == nullptr){
-                    Log::Error(std::format("Error Creating Layer Texture: {}", SDL_GetError()));
-                }
-            }
-
-            SDL_SetRenderTarget(r, layer->mTexture);
-            SDL_RenderClear(r);
-
-            if(SDL_SetTextureBlendMode(layer->mTexture, SDL_BLENDMODE_BLEND) < 0){
-                mb::Log::Error("MouseyBox", std::format("Error Setting Blend Mode: {}", SDL_GetError()));
-            }
-
-            for(int y = 0; y < mTileHeight; y++){
-                int ty = y * mTileSize;
-                for(int x = 0; x < mTileWidth; x++){
-                    uint32_t tile = layer->mTiles[(y * mTileWidth) + x];
-                    int tx = x * mTileSize;
-                    bool fx = (tile & 1) > 0;
-                    bool fy = (tile & 2) > 0;
-                    uint32_t tid = tile >> 8;
-                    if(tid == (0xFFFFFFFF >> 8)) continue;
-
-                    SDL_FRect tileDest {static_cast<float>(tx), static_cast<float>(ty), static_cast<float>(mTileSize), static_cast<float>(mTileSize)};         
-                    SDL_FRect tileSource {static_cast<float>((tid % mTileSetPitch) * mTileSize), static_cast<float>((tid / mTileSetPitch) * mTileSize), static_cast<float>(mTileSize), static_cast<float>(mTileSize)};
-
-                    SDL_RenderTextureRotated(r, mTileSet, &tileSource, &tileDest, 0.0f, nullptr, static_cast<SDL_FlipMode>((fx ? 1 : 0) | (fy ? 2 : 0)));
-                }   
-            }
-            SDL_SetTextureColorMod(layer->mTexture, static_cast<uint8_t>(0xFF * layer->mColorShift[0]), static_cast<uint8_t>(0xFF * layer->mColorShift[1]), static_cast<uint8_t>(0xFF * layer->mColorShift[2]));
-            SDL_SetTextureAlphaMod(layer->mTexture, static_cast<uint8_t>(0xFF * layer->mColorShift[3]));
-        }
-    }
-
-    SDL_SetRenderTarget(r, nullptr);
 }
 
 void TileMap::SetSize(int w, int h){

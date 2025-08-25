@@ -153,10 +153,10 @@ void SpriteInstance::Draw(SDL_Renderer* r, Camera* cam) {
         draw.h *= mScale;
 
         // draw rect _MUST_ always be whole number! This prevents sheet bleeding.
-        draw.x = round(draw.x);
-        draw.y = round(draw.y);
-        draw.w = round(draw.w);
-        draw.h = round(draw.h);
+        draw.x = std::round(draw.x);
+        draw.y = std::round(draw.y);
+        draw.w = std::round(draw.w);
+        draw.h = std::round(draw.h);
 
         SDL_SetTextureAlphaMod(sprite->GetTexture(), mColorMod.a);
         SDL_SetTextureColorMod(sprite->GetTexture(), mColorMod.r, mColorMod.g, mColorMod.b);
@@ -196,11 +196,14 @@ SpriteAnimation::SpriteAnimation(nlohmann::json config){
     for(auto frame : config["frames"]){
         mFrames.push_back({frame[0],frame[1],frame[2],frame[3]});
     }
+
+    mNameHash = Util::Hash(config["name"].get<std::string>());
 }
 
 SpriteAnimationInstance::SpriteAnimationInstance(std::shared_ptr<SpriteAnimation> a){
     mAnimation = a;
     mFrame = 0;
+    mNameHash = a->mNameHash;
 }
 
 SDL_FRect* SpriteAnimationInstance::GetCurrentFrame(){

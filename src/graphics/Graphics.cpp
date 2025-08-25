@@ -139,8 +139,7 @@ void Renderer::SetSize(int w, int h){
 
 bool Renderer::LoadSprites(std::filesystem::path path){
     nlohmann::json spriteConfig = nlohmann::json::parse(std::ifstream(path.string()));
-    mb::Log::Debug("Parsed sprite config!");
-
+    
     for(auto sprite : spriteConfig){
         if(mSprites.contains(sprite["name"])) continue;
 
@@ -153,8 +152,6 @@ bool Renderer::LoadSprites(std::filesystem::path path){
 }
 
 bool Renderer::LoadSprites(nlohmann::json spriteConfig){
-    mb::Log::Debug("Parsed sprite config!");
-
     for(auto sprite : spriteConfig){
         if(mSprites.contains(sprite["name"])) continue;
 
@@ -178,7 +175,6 @@ bool Renderer::LoadSpriteSimple(std::string name, std::filesystem::path path){
 
 bool Renderer::LoadSprite(std::filesystem::path path){
     nlohmann::json spriteConfig = nlohmann::json::parse(std::ifstream(path.string()));
-    mb::Log::Debug("Parsed sprite config!");
 
     if(mSprites.contains(spriteConfig["name"])) return true;
 
@@ -190,8 +186,6 @@ bool Renderer::LoadSprite(std::filesystem::path path){
 }
 
 bool Renderer::LoadSprite(nlohmann::json spriteConfig){
-    mb::Log::Debug("Parsed sprite config!");
-
     if(mSprites.contains(spriteConfig["name"])) return true;
 
     std::shared_ptr<Sprite> newSprite = std::make_shared<Sprite>(mInternalRender, spriteConfig);

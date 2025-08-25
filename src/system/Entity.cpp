@@ -134,7 +134,7 @@ namespace mb {
         e->mId = 0xFFFFFFFF;
         e->mWorld = nullptr;
         e->mName = "";
-        e->mTags = 0xFFFFFFFF;
+        e->mTags = 0x00000000;
         e->mState = 0;
         
         // Add to front of free list
