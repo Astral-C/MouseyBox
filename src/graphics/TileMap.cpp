@@ -57,7 +57,7 @@ void TileMapLayer::Draw(SDL_Renderer* r, Camera* cam){
         for(int x = txStart; x < txStart + tw; x++){
             int tx = x * tileSize;
             if(x < 0 || x >= mMap->GetTileWidth()) continue;
-            
+
             int tile = mTiles[(y * mMap->GetTileWidth()) + x];
             int tid = TileMap::TILE_IDX(tile);
             if(tid == -1) continue;
@@ -66,7 +66,7 @@ void TileMapLayer::Draw(SDL_Renderer* r, Camera* cam){
             tileDest.x = std::round(tileDest.x - shift_x);
             tileDest.y = std::round(tileDest.y - shift_y);
 
-            SDL_FRect tileSource {std::floor((tid % tilesetPitch) * tileSize), std::floor((tid / tilesetPitch) * tileSize), tileSize, tileSize};
+            SDL_FRect tileSource {static_cast<float>(std::floor((tid % tilesetPitch) * tileSize)), static_cast<float>(std::floor((tid / tilesetPitch) * tileSize)), static_cast<float>(tileSize), static_cast<float>(tileSize)};
             SDL_RenderTextureRotated(r, mMap->GetTileset(), &tileSource, &tileDest, 0.0f, nullptr, SDL_FlipMode(TileMap::TILE_FLIP_X(tile) | TileMap::TILE_FLIP_Y(tile)));
         }
     }
@@ -132,7 +132,7 @@ TileMap::TileMap(Renderer* r, nlohmann::json& tilemapJson, uint8_t* data, std::s
 void TileMap::NewLayer(Renderer* r){
     mLayers.push_back(r->CreateTilemapLayer());
     std::weak_ptr<TileMapLayer> weak_layer = mLayers.back();
-    
+
     if(std::shared_ptr<TileMapLayer> layer = weak_layer.lock()){
         layer->mTiles.resize(mTileWidth * mTileHeight);
         std::fill(layer->mTiles.begin(), layer->mTiles.end(), -1);
@@ -142,7 +142,7 @@ void TileMap::NewLayer(Renderer* r){
 
 
 uint32_t TileMap::TileAt(int x, int y, int z){
-    if(std::shared_ptr<TileMapLayer> layer = mLayers[z].lock()) {        
+    if(std::shared_ptr<TileMapLayer> layer = mLayers[z].lock()) {
         int tx = (x / layer->mScale) / mTileSize;
         int ty = (y / layer->mScale) / mTileSize;
         return layer->mTiles[(ty * mTileWidth) + tx] & 0x00FFFFFF;
@@ -205,7 +205,7 @@ void TileMap::SetSize(int w, int h){
         if(std::shared_ptr<TileMapLayer> layer = layer_weak.lock()){
             layer->mTiles.resize(w * h);
             layer->mDrawRect = {0, 0, static_cast<float>(mTileWidth * mTileSize), static_cast<float>(mTileHeight * mTileSize)};
-            
+
             for(int y = 0; y < mTileHeight; y++){
                 for(int x = 0; x < mTileWidth; x++){
                     if(y > oh || x > ow){
@@ -246,7 +246,7 @@ static void stbi__vertical_flip(void *image, int w, int h, int bytes_per_pixel)
 void TileMap::LoadTileset(SDL_Renderer* r, std::filesystem::path p, int tileSize){
     mTileSize = tileSize;
 
-    int comp;    
+    int comp;
     unsigned char* imgData = stbi_load(p.string().c_str(), &mTileSetWidth, &mTileSetHeight, &comp, 4);
 
 #ifdef __GAMECUBE__
