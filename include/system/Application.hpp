@@ -9,7 +9,6 @@
 #endif
 
 namespace mb {
-
 	class Application {
 	private:
 		std::string mApplicationName {"MouseyBoxApp"};

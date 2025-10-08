@@ -17,9 +17,6 @@ namespace mb {
     private:
 
         uint8_t mInUse { false };
-        uint8_t mCollide { false };
-        uint8_t mGrounded { false };
-        uint8_t mOnWall { false };
         uint32_t mId { 0xFFFFFFFF };
         uint32_t mTags { 0x00000000 };
 
@@ -27,7 +24,6 @@ namespace mb {
         Entity* mPrevEntity { nullptr };
 
         std::weak_ptr<Graphics::Renderable> mRenderable {};
-        std::string mName { "Entity" };
 
         Entity(){}
         ~Entity(){}
@@ -46,7 +42,7 @@ namespace mb {
         std::function<void(Entity*)> mReady {};
         std::function<void(Entity*)> mFree {};
 
-        char mData[128] {0}; // user data buffer
+        void* mData; // user data buffer
 
         bool IsInUse() { return mInUse == 1; }
 
@@ -62,16 +58,6 @@ namespace mb {
 
         void Tag(uint32_t t){ mTags = t; }
         uint32_t Tag() { return mTags; }
-
-        void Grounded(bool g) { mGrounded = g; }
-        bool Grounded() { return mGrounded; }
-
-
-        void OnWall(bool w) { mOnWall = w; }
-        bool OnWall() { return mOnWall; }
-
-        bool ToggleCollide() { mCollide = !mCollide; return mCollide; }
-        bool ShouldCollide() { return mCollide; }
 
         static void Initialize(std::size_t);
         static void Cleanup();

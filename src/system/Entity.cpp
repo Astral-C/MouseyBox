@@ -10,7 +10,7 @@ namespace mb {
 
         Entity* mFreeHead { nullptr };
         Entity* mUsedHead { nullptr };
-        
+
     }
 
     void Entity::Cleanup(){
@@ -30,7 +30,7 @@ namespace mb {
         for(std::size_t t = 0; t < mEntityCount; t++){
             Entity* e = &mEntities[t];
             e->mId = t;
-            
+
             e->mNextEntity = &mEntities[t + 1];
             e->mPrevEntity = prev;
             prev = e;
@@ -44,9 +44,9 @@ namespace mb {
         Entity* e = mFreeHead;
         if(mFreeHead == nullptr) return nullptr;
         e->mInUse = 1;
-        
+
         mFreeHead = mFreeHead->mNextEntity;
-        
+
         if(mUsedHead == nullptr){
             // Used-list is empty, init used-list with this entity as the current head
             mUsedHead = e;
@@ -69,7 +69,7 @@ namespace mb {
     Entity* Entity::Get(std::function<bool(Entity*)> comp){
         for(Entity* e = &mEntities[0]; e < mEntities + mEntityCount; e++){
             if(e->mId){
-                return 
+                return
             }
         }
         return nullptr;
@@ -127,19 +127,19 @@ namespace mb {
         e->mInUse = 0;
         e->mX = 0;
         e->mY = 0;
-        memset(e->mData, 0, sizeof(e->mData));
+        e->mData = nullptr;
         e->mChannel = 0xFFFFFFFF;
-        e->mCollide = 0;
-        e->mGrounded = 0;
         e->mId = 0xFFFFFFFF;
         e->mWorld = nullptr;
-        e->mName = "";
         e->mTags = 0x00000000;
         e->mState = 0;
-        
+
         // Add to front of free list
         e->mPrevEntity = nullptr;
         e->mNextEntity = mFreeHead;
+        e->mFree = {};
+        e->mUpdate = {};
+        e->mReady = {};
 
         mFreeHead->mPrevEntity = e;
         mFreeHead = e;
@@ -178,7 +178,7 @@ namespace mb {
     void Entity::ForAll(std::function<void(Entity*)> func){
         for(int i = 0; i < mEntityCount; i++){
             func(&mEntities[i]);
-        }   
+        }
     }
 
 }
