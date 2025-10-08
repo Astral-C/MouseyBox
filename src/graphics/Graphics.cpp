@@ -72,8 +72,8 @@ void Renderer::Initialize(Window* win){
         if(driver == nullptr && strcmp(SDL_GetRenderDriver(i), "opengl") == 0){
             driver = "opengl";
         }
-        if(driver == nullptr && strcmp(SDL_GetRenderDriver(i), "opengles") == 0){
-            driver = "opengles";
+        if(driver == nullptr && strcmp(SDL_GetRenderDriver(i), "opengles2") == 0){
+            driver = "opengles2";
         }
         //if(strcmp(SDL_GetRenderDriver(i), "vulkan") == 0){
         //    driver = "vulkan"; // prefer vulkan
@@ -83,6 +83,7 @@ void Renderer::Initialize(Window* win){
     if(driver == nullptr){
         mb::Log::DebugFrom("MouseyBox", "No Render Drivers Found");
         SDL_Quit();
+        return;
     }
 
     mb::Log::DebugFrom("MouseyBox", "Using driver {}", driver);
@@ -139,7 +140,7 @@ void Renderer::SetSize(int w, int h){
 
 bool Renderer::LoadSprites(std::filesystem::path path){
     nlohmann::json spriteConfig = nlohmann::json::parse(std::ifstream(path.string()));
-    
+
     for(auto sprite : spriteConfig){
         if(mSprites.contains(sprite["name"])) continue;
 

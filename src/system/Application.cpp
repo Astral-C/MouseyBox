@@ -94,6 +94,20 @@ namespace mb {
 
     }
 
+    void Application::Frame(){
+        Update(mDelta);
+        SDL_FRect winRect = mWindow->GetSize();
+        if(mRenderer != nullptr) mRenderer->Update(winRect.w, winRect.h);
+
+        mPrevTime = mCurTime;
+        mCurTime = SDL_GetTicks();
+
+        uint64_t curFrameTicks = mCurTime - mPrevTime;
+
+        mDelta = ((float)curFrameTicks / 10000.0f);
+        mDelta = 0.001f > mDelta ? 0.001f : mDelta;
+    }
+
     void Application::Run(){
 #ifndef __SWITCH__
         while(!mQuit)

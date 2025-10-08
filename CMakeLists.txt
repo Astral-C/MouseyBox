@@ -12,21 +12,24 @@ option(ENABLE_OPENMPT "Enable OpenMPT in Audio" OFF)
 option(ENABLE_XM "Enable libxm XM playables in Audio" OFF)
 option(DISABLE_ENTITY "Disalbe Built in Entity System" OFF)
 
-if(ENABLE_OPENMPT)
-    add_compile_definitions(ENABLE_OPENMPT)
-endif()
-
-if(ENABLE_XM)
-    add_compile_definitions(ENABLE_XM)
-    add_subdirectory(lib/libxm/src libxm_build)
-endif()
-
 if(DISABLE_ENTITY)
     add_compile_definitions(DISABLE_ENTITY)
 endif()
 
-find_package(SDL3 CONFIG REQUIRED)
-find_package(SDL3_ttf CONFIG REQUIRED)
+if(NOT EMSCRIPTEN)
+    if(ENABLE_OPENMPT)
+        add_compile_definitions(ENABLE_OPENMPT)
+    endif()
+
+    if(ENABLE_XM)
+        add_compile_definitions(ENABLE_XM)
+        add_subdirectory(lib/libxm/src libxm_build)
+    endif()
+
+
+    find_package(SDL3 CONFIG REQUIRED)
+    find_package(SDL3_ttf CONFIG REQUIRED)
+endif()
 
 include_directories(lib)
 include_directories(include)
@@ -42,7 +45,18 @@ file(GLOB_RECURSE MOUSEY_SRC
 
 add_library(mouseybox STATIC ${MOUSEY_SRC})
 
-target_link_libraries(mouseybox SDL3::SDL3 SDL3_ttf::SDL3_ttf)
+if(EMSCRIPTEN)
+    # requires that you have sdl tt3 port py in this folder! should be fixed once this gets merged in emscripten upstream
+    target_compile_options(mouseybox PRIVATE --use-port=sdl3_ttf.py)
+    target_link_options(mouseybox PRIVATE --use-port=sdl3_ttf.py)
+
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${USE_FLAGS}")
+    target_link_libraries(mouseybox)
+else()
+    target_link_libraries(mouseybox SDL3::SDL3 SDL3_ttf::SDL3_ttf)
+endif()
+
+
 if(ENABLE_OPENMPT)
     target_link_libraries(mouseybox openmpt)
 endif()
@@ -51,8 +65,10 @@ if(ENABLE_XM)
     target_link_libraries(mouseybox xm)
 endif()
 
-add_executable(mouseytools "tools/tools.cpp")
-target_link_libraries(mouseytools mouseybox SDL3::SDL3 SDL3_ttf::SDL3_ttf)
+if(TOOLS)
+    add_executable(mouseytools "tools/tools.cpp")
+    target_link_libraries(mouseytools mouseybox SDL3::SDL3 SDL3_ttf::SDL3_ttf)
+endif()
 
 if(EXAMPLE)
 
