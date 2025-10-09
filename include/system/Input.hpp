@@ -38,7 +38,7 @@ namespace mb::Input {
     bool GetKeyHeld(SDL_Keycode);
     bool GetKeyReleased(SDL_Keycode);
     bool AnyKey();
-    
+
     void OpenPrimaryJoystick();
     bool OpenJoysticks(int);
 

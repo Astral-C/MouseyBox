@@ -8,7 +8,7 @@ namespace mb::Input {
         int mKeyCount { 0 };
         int mJoystickIndex { 0 };
         SDL_Joystick* mJoysticks[4] { nullptr, nullptr, nullptr, nullptr };
-        const bool* mKeyboardState { nullptr };
+        bool* mKeyboardState { nullptr };
         bool* mKeyboardStatePrevious { nullptr };
     }
 
@@ -31,13 +31,14 @@ namespace mb::Input {
     };
 
     void Initialize(){
-        mKeyboardState = SDL_GetKeyboardState(&mKeyCount);
+        const bool* state = SDL_GetKeyboardState(&mKeyCount);
         if(mKeyCount != 0){
+            mKeyboardState = new bool[mKeyCount];
             mKeyboardStatePrevious = new bool[mKeyCount];
             Mouse::mCurrentState = 0;
             Mouse::mPrevState = 0;
         }
-    } 
+    }
 
     void OpenPrimaryJoystick(){
         mJoysticks[0] = SDL_OpenJoystick(0);
@@ -69,6 +70,7 @@ namespace mb::Input {
 
     void Cleanup(){
         SDL_CloseJoystick(mJoysticks[0]);
+        if(mKeyboardState != nullptr) delete[] mKeyboardState;
         if(mKeyboardStatePrevious != nullptr) delete[] mKeyboardStatePrevious;
     }
 
@@ -79,9 +81,10 @@ namespace mb::Input {
     //void RegisterCommandsFromFile();
 
     void Update(){
-        if(mKeyboardStatePrevious != nullptr) memcpy(mKeyboardStatePrevious, mKeyboardState, mKeyCount*sizeof(uint8_t));
         SDL_PumpEvents();
-        mKeyboardState = SDL_GetKeyboardState(&mKeyCount);
+        if(mKeyboardStatePrevious != nullptr) memcpy(mKeyboardStatePrevious, mKeyboardState, mKeyCount*sizeof(uint8_t));
+        const bool* state = SDL_GetKeyboardState(&mKeyCount);
+        if(mKeyboardState != nullptr) memcpy(mKeyboardState, state, mKeyCount*sizeof(uint8_t));
         Mouse::mPrevState = Mouse::mCurrentState;
         Mouse::mCurrentState = SDL_GetMouseState(&Mouse::mPosition.x, &Mouse::mPosition.y);
     }
