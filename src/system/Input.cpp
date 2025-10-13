@@ -97,6 +97,7 @@ namespace mb::Input {
     }
 
     bool GetKeyPressed(SDL_Keycode key){
+        if(!mKeyboardState) return false;
         if(SDL_GetScancodeFromKey(key, nullptr) < mKeyCount){
             return !mKeyboardStatePrevious[SDL_GetScancodeFromKey(key, nullptr)] && mKeyboardState[SDL_GetScancodeFromKey(key, nullptr)];
         }
@@ -104,6 +105,7 @@ namespace mb::Input {
     }
 
     bool GetKeyHeld(SDL_Keycode key){
+        if(!mKeyboardState) return false;
         if(SDL_GetScancodeFromKey(key, nullptr) < mKeyCount){
             return mKeyboardStatePrevious[SDL_GetScancodeFromKey(key, nullptr)] && mKeyboardState[SDL_GetScancodeFromKey(key, nullptr)];
         }
@@ -111,6 +113,7 @@ namespace mb::Input {
     }
 
     bool GetKeyReleased(SDL_Keycode key){
+        if(!mKeyboardState) return false;
         if(SDL_GetScancodeFromKey(key, nullptr) < mKeyCount){
             return mKeyboardStatePrevious[SDL_GetScancodeFromKey(key, nullptr)] && !mKeyboardState[SDL_GetScancodeFromKey(key, nullptr)];
         }
@@ -118,6 +121,7 @@ namespace mb::Input {
     }
 
     bool GetKey(SDL_Keycode key){
+        if(!mKeyboardState) return false;
         if(SDL_GetScancodeFromKey(key, nullptr) < mKeyCount) return mKeyboardState[SDL_GetScancodeFromKey(key, nullptr)];
         return false;
     }
