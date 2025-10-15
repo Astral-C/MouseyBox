@@ -36,6 +36,19 @@ namespace mb::Math {
             return v;
         }
 
+        Vec2<T> operator-(Vec2<T> o){
+            Vec2<T> v;
+            v.x = x - o.x;
+            v.y = y - o.y;
+            return v;
+        }
+
+        Vec2<T>& operator*(T s){
+            x *= s;
+            y *= s;
+            return *this;
+        }
+
         Vec2<T>& operator=(Vec2<T> o){
             x = o.x;
             y = o.y;
@@ -43,9 +56,9 @@ namespace mb::Math {
         }
 
         void Normalize(){
-            T l = (x*x)+(y*y);
-            x /= l;
-            y /= l;
+            double l = (x*x)+(y*y);
+            x = x / l;
+            y = y / l;
         }
 
         static float Dist(Vec2<T> a, Vec2<T> b){
