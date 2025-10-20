@@ -28,13 +28,13 @@ public:
     bool mCollisionEnabled { false };
     float mColorShift[4] { 1.0f, 1.0f, 1.0f, 1.0f };
     float mLayerShift { 1 };
-    
+
     std::vector<uint32_t> GetTiles(){ return mTiles; }
 
     TileMapLayer();
     TileMapLayer(nlohmann::json);
     ~TileMapLayer();
-    
+
     void Draw(SDL_Renderer*, Camera* cam) override;
 };
 
@@ -49,15 +49,15 @@ class TileMap : public std::enable_shared_from_this<TileMap> {
 
     SDL_Texture* mTileSet { nullptr };
 
-    std::vector<std::weak_ptr<TileMapLayer>> mLayers; 
+    std::vector<std::weak_ptr<TileMapLayer>> mLayers;
 
 public:
     std::string mName;
 
-    bool SetTileAt(uint32_t, int, int, int, bool fx=false, bool fy=false);
+    bool SetTileAt(uint32_t, int, int, int, bool fx=false, bool fy=false, bool ow=false);
     uint32_t TileAt(int, int, int);
 
-    bool SetTile(uint32_t, int, int, int, bool fx=false, bool fy=false);
+    bool SetTile(uint32_t, int, int, int, bool fx=false, bool fy=false, bool ow=false);
     uint32_t GetTile(int, int, int);
 
     void Update(SDL_Renderer*);
@@ -75,7 +75,7 @@ public:
     int GetTileSize() { return mTileSize; }
     int GetTilesetPitch() { return mTileSetPitch; }
     SDL_Texture* GetTileset() { return mTileSet; }
-    
+
     int GetTilesetWidth() { return mTileSetWidth; }
     int GetTilesetHeight() { return mTileSetHeight; }
 
@@ -85,6 +85,8 @@ public:
     static inline uint32_t TILE_IDX(uint32_t tile) { return tile >> 8; }
     static inline bool TILE_FLIP_X(uint32_t tile) { return (tile & 1) > 0; }
     static inline bool TILE_FLIP_Y(uint32_t tile) { return (tile & 2) > 0; }
+    static inline bool TILE_ONE_WAY(uint32_t tile) { return (tile & 3) > 0; }
+    static inline bool TILE_EMPTY(uint32_t tile) { return tile == 0x00FFFFFF; }
 
     TileMap(Renderer*, nlohmann::json&, uint8_t*, std::size_t);
     TileMap(Renderer*, std::filesystem::path);

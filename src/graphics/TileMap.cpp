@@ -151,23 +151,23 @@ uint32_t TileMap::TileAt(int x, int y, int z){
     }
 }
 
-bool TileMap::SetTileAt(uint32_t tid, int x, int y, int z, bool fx, bool fy){
+bool TileMap::SetTileAt(uint32_t tid, int x, int y, int z, bool fx, bool fy, bool ow){
     if(std::shared_ptr<TileMapLayer> layer = mLayers[z].lock()) {
         int tx = (x / layer->mScale) / mTileSize;
         int ty = (y / layer->mScale) / mTileSize;
 
         if(tx < 0 || tx > mTileWidth || ty > mTileHeight || ty < 0 || z < 0 || z > mLayers.size()) return false;
-        layer->mTiles[(ty * mTileWidth) + tx] = fx | fy << 1 | static_cast<uint32_t>(tid) << 8;
+        layer->mTiles[(ty * mTileWidth) + tx] = fx | fy << 1 | ow << 2 |  static_cast<uint32_t>(tid) << 8;
         return true;
     } else {
         return false;
     }
 }
 
-bool TileMap::SetTile(uint32_t tid, int x, int y, int z, bool fx, bool fy){
+bool TileMap::SetTile(uint32_t tid, int x, int y, int z, bool fx, bool fy, bool ow){
     if(x < 0 || x >= mTileWidth || y >= mTileHeight || y < 0 || z < 0 || z > mLayers.size()) return false;
     if(std::shared_ptr<TileMapLayer> layer = mLayers[z].lock()){
-        layer->mTiles[(y * mTileWidth) + x] = fx | fy << 1 | static_cast<uint32_t>(tid) << 8;
+        layer->mTiles[(y * mTileWidth) + x] = fx | fy << 1 | ow << 2 | static_cast<uint32_t>(tid) << 8;
     } else {
         return false;
     }

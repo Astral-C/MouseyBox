@@ -57,8 +57,10 @@ namespace mb::Math {
 
         void Normalize(){
             double l = (x*x)+(y*y);
-            x = x / l;
-            y = y / l;
+            if(l != 0.0f){
+                x = x / l;
+                y = y / l;
+            }
         }
 
         static float Dist(Vec2<T> a, Vec2<T> b){
