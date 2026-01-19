@@ -8,6 +8,10 @@ namespace mb {
     Task* mFreeHead { nullptr };
     Task* mUsedHead { nullptr };
 
+    bool ActiveTasks(){
+        return mUsedHead != nullptr;
+    }
+
     void Task::Initialize(std::size_t taskMax){
         if(mTasks != nullptr) return;
         mTaskMax = taskMax;
@@ -18,7 +22,7 @@ namespace mb {
         for(std::size_t t = 0; t < mTaskMax; t++){
             Task* tsk = &mTasks[t];
             tsk->mTaskId = t;
-            
+
             tsk->mNext = &mTasks[t + 1];
             tsk->mPrev = prev;
             prev = tsk;
@@ -37,9 +41,9 @@ namespace mb {
     Task* Task::New(std::function<void(Task*, float)> task, bool timed, float duration, bool everyTick){
         Task* t = mFreeHead;
         if(mFreeHead == nullptr) return nullptr;
-        
+
         mFreeHead = mFreeHead->mNext;
-        
+
         if(mUsedHead == nullptr){
             // Used-list is empty, init used-list with this entity as the current head
             mUsedHead = t;
@@ -85,7 +89,7 @@ namespace mb {
         mFreeHead->mPrev = t;
         mFreeHead = t;
     }
-    
+
     void Task::Update(float dt){
         for(Task* task = mUsedHead; task != nullptr;){
             Task* next = task->mNext;

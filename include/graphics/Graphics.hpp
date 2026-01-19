@@ -5,6 +5,7 @@
 #include <SDL3_ttf/SDL_ttf.h>
 #include <SDL3/SDL_rect.h>
 #include <graphics/Text.hpp>
+#include <graphics/DynText.hpp>
 #include <graphics/Sprite.hpp>
 #include <graphics/Polygon.hpp>
 #include <graphics/TileMap.hpp>
@@ -45,6 +46,7 @@ private:
     SDL_Texture* mTexture { nullptr };
     SDL_Renderer* mInternalRender { nullptr };
     std::map<std::string, std::shared_ptr<Font>> mFonts;
+    std::map<std::string, std::shared_ptr<DynFont>> mDynFonts;
     std::map<std::string, std::shared_ptr<Sprite>> mSprites;
     std::map<std::string, std::shared_ptr<TileMap>> mTileMaps;
 

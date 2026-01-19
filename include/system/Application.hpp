@@ -1,5 +1,6 @@
 #ifndef __MB_APPLICATION_H__
 #define __MB_APPLICATION_H__
+#include <SDL3/SDL_surface.h>
 #include <audio/Audio.hpp>
 #include <graphics/Graphics.hpp>
 #include <memory>
@@ -12,6 +13,7 @@ namespace mb {
 	class Application {
 	private:
 		std::string mApplicationName {"MouseyBoxApp"};
+		SDL_Surface* mWinIcon { nullptr };
 
 		uint64_t mPrevTime { 0 };
 		uint64_t mCurTime { 0 };
@@ -29,7 +31,7 @@ namespace mb {
 		static bool SDLReady();
 
 		virtual void Update(float);
-		virtual bool Initialize(bool commandline=false, uint32_t w = 1280, uint32_t h = 720);
+		virtual bool Initialize(bool commandline=false, uint32_t w = 1280, uint32_t h = 720, std::string icoPath="");
 		void Run();
 		void Frame();
 

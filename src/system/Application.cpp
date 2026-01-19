@@ -1,7 +1,9 @@
 #include <SDL3/SDL_rect.h>
+#include <SDL3/SDL_surface.h>
 #include <SDL3/SDL_video.h>
 #include <system/Application.hpp>
 #include <system/Log.hpp>
+#include <graphics/stb_image.h>
 #include <iostream>
 
 #ifdef __SWITCH__
@@ -27,7 +29,7 @@ namespace mb {
     Application::Application(){}
     Application::Application(std::string name){ mApplicationName = name; }
 
-    bool Application::Initialize(bool commandline, uint32_t w, uint32_t h){
+    bool Application::Initialize(bool commandline, uint32_t w, uint32_t h, std::string icoPath){
 #ifdef __GAMECUBE__
         SYS_STDIO_Report(true);
 #endif
@@ -77,6 +79,15 @@ namespace mb {
         mWindow = std::make_unique<Graphics::Window>(mApplicationName, w, h);
         mRenderer = std::make_unique<Graphics::Renderer>();
         mAudio = std::make_unique<Audio::Mixer>();
+
+        if(icoPath != ""){
+            int w, h, chn;
+            uint8_t* img = stbi_load(icoPath.data(), &w, &h, &chn, 4);
+            if(img != nullptr){
+                mWinIcon = SDL_CreateSurfaceFrom(w, h, SDL_PixelFormat::SDL_PIXELFORMAT_RGBA32, img, w*4);
+                SDL_SetWindowIcon(mWindow->GetInternalWindow(), mWinIcon);
+            }
+        }
 
         mRenderer->Initialize(mWindow.get());
 
@@ -144,6 +155,9 @@ namespace mb {
 
     Application::~Application(){
         mb::Log::WarnFrom("MouseyBox", "Cleaning up application");
+        if(mWinIcon != nullptr){
+            SDL_DestroySurface(mWinIcon);
+        }
         mRenderer->Cleanup();
         mWindow->Cleanup();
         SDL_Quit();

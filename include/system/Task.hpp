@@ -31,6 +31,7 @@ namespace mb {
         static void Initialize(std::size_t);
         static void Update(float);
         static void Cleanup();
+        static bool ActiveTasks();
     };
 }
 

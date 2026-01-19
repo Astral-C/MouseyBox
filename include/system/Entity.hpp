@@ -34,6 +34,7 @@ namespace mb {
         uint32_t mChannel { 0xFFFFFFFF };
         Entity* mWorld { nullptr };
         Entity* mParent { nullptr };
+        Entity* mTarget { nullptr };
 
         float mX { 0 }, mY { 0 };
         float mVelX { 0 }, mVelY { 0 };
