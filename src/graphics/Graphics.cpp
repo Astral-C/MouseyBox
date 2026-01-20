@@ -1,3 +1,4 @@
+#include "graphics/DynText.hpp"
 #include <SDL3/SDL_oldnames.h>
 #include <SDL3/SDL_rect.h>
 #include <SDL3/SDL_render.h>
@@ -326,6 +327,29 @@ bool Renderer::SetText(std::shared_ptr<Text> t, std::string font, std::string te
         return true;
     } else {
         return false;
+    }
+}
+
+bool Renderer::LoadDynamicFont(std::filesystem::path path, int ptSize, std::string name){
+    std::shared_ptr<DynFont> font = std::make_shared<DynFont>(mInternalRender, path.string(), ptSize);
+
+    if(name == ""){
+        mDynFonts.insert({path.string(), font});
+    } else {
+        mDynFonts.insert({name, font});
+    }
+    return true;
+}
+
+std::shared_ptr<DynText> Renderer::CreateDynamicText(std::string font, std::string text){
+    if(mDynFonts.count(font) != 0){
+        std::shared_ptr<DynText> newText = std::make_shared<DynText>();
+        newText->SetFont(mDynFonts[font]);
+        newText->SetText(text);
+        mRenderables.push_back(newText);
+        return newText;
+    } else {
+        return nullptr;
     }
 }
 

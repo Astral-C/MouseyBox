@@ -8,7 +8,7 @@ namespace mb {
     Task* mFreeHead { nullptr };
     Task* mUsedHead { nullptr };
 
-    bool ActiveTasks(){
+    bool Task::ActiveTasks(){
         return mUsedHead != nullptr;
     }
 

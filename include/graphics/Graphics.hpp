@@ -73,12 +73,14 @@ public:
     std::shared_ptr<Circle> CreateCircle(float,float,float);
     std::shared_ptr<ParticleSystem> CreateParticleSystem(std::filesystem::path);
     std::shared_ptr<Text> CreateText(std::string, std::string);
+    std::shared_ptr<DynText> CreateDynamicText(std::string, std::string);
     std::shared_ptr<TileMapLayer> CreateTilemapLayer(nlohmann::json);
     std::shared_ptr<TileMapLayer> CreateTilemapLayer();
     std::shared_ptr<TileMap> GetTilemap(std::string);
 
     void DeleteTilemap(std::string);
     void DeleteFont(std::string);
+    void DeleteDynamicFont(std::string);
     void DeleteSprite(std::string);
 
     std::shared_ptr<Sprite> GetSprite(std::string sprite) {
@@ -95,6 +97,7 @@ public:
     void Free(std::shared_ptr<Renderable>);
 
     bool LoadFont(std::filesystem::path, int, std::string="");
+    bool LoadDynamicFont(std::filesystem::path, int, std::string="");
     bool LoadFontFromMemory(std::string, uint8_t*, std::size_t, int);
     bool LoadSprite(std::filesystem::path);
     bool LoadSprite(nlohmann::json);

@@ -47,8 +47,8 @@ add_library(mouseybox STATIC ${MOUSEY_SRC})
 
 if(EMSCRIPTEN)
     # requires that you have sdl tt3 port py in this folder! should be fixed once this gets merged in emscripten upstream
-    target_compile_options(mouseybox PRIVATE --use-port=sdl3_ttf.py)
-    target_link_options(mouseybox PRIVATE --use-port=sdl3_ttf.py)
+    target_compile_options(mouseybox PRIVATE --use-port=/home/leaf/Downloads/sdl3_ttf.py)
+    target_link_options(mouseybox PRIVATE --use-port=/home/leaf/Downloads/sdl3_ttf.py)
 
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${USE_FLAGS}")
     target_link_libraries(mouseybox)

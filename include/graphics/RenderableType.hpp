@@ -7,6 +7,7 @@ enum RenderableType {
     Polygon,
     Rect,
     Text,
+    DynamicText,
     TilemapLayer,
     ParticleSystem,
     RenderableTypeCount
