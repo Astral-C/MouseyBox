@@ -331,7 +331,7 @@ bool Renderer::SetText(std::shared_ptr<Text> t, std::string font, std::string te
 }
 
 bool Renderer::LoadDynamicFont(std::filesystem::path path, int ptSize, std::string name){
-    std::shared_ptr<DynFont> font = std::make_shared<DynFont>(mInternalRender, path.string(), ptSize);
+    std::shared_ptr<DynFont> font = std::make_shared<DynFont>(mInternalRender, path.string(), ptSize, 128);
 
     if(name == ""){
         mDynFonts.insert({path.string(), font});

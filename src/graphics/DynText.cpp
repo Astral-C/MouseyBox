@@ -73,7 +73,11 @@ DynFont::~DynFont(){
 }
 
 void DynText::SetText(std::string str){
-    mText = str;
+
+}
+
+void DynText::AddTextChunk(uint32_t effect, std::string text){
+    mText.push_back({ .mEffect = static_cast<DynTextEffect>(effect), .mText = text });
 }
 
 void DynText::Draw(SDL_Renderer* r, Camera* cam) {
@@ -89,16 +93,38 @@ void DynText::Draw(SDL_Renderer* r, Camera* cam) {
             rect.x -= cam->mRect.x;
             rect.y -= cam->mRect.y;
         }
-        //SDL_SetTextureColorMod(mTexture, mColorMod.r, mColorMod.g, mColorMod.b);
 
         SDL_FRect cursor = rect;
 
-        for(char c : mText){
-            stbtt_packedchar charInfo = font->mGlyphMetrics[c - 32];
-            SDL_FRect src { static_cast<float>(charInfo.x0), static_cast<float>(charInfo.y0), static_cast<float>(charInfo.x1) - static_cast<float>(charInfo.x0), static_cast<float>(charInfo.y1) - static_cast<float>(charInfo.y0) };
-            SDL_FRect dst { cursor.x + charInfo.xoff + (rand() & 5), cursor.y + charInfo.yoff + (rand() & 5), static_cast<float>(charInfo.x1) - static_cast<float>(charInfo.x0), static_cast<float>(charInfo.y1) - static_cast<float>(charInfo.y0) };
-            SDL_RenderTexture(r, font->mGlyphAtlas, &src, &dst);
-            cursor.x += charInfo.xadvance;
+        // some parsing for text commands should be here?
+        for(auto& chunk : mText){
+            if(chunk.mEffect & COLOR && chunk.mEffect & ~RAINBOW){
+                SDL_SetTextureColorMod(font->mGlyphAtlas, mPalette[chunk.mEffectArg0].r, mPalette[chunk.mEffectArg0].g, mPalette[chunk.mEffectArg0].b);
+            } else {
+                SDL_SetTextureColorMod(font->mGlyphAtlas, 0xFF, 0xFF, 0xFF);
+            }
+
+            for (int i = 0; i < chunk.mText.size(); i++){
+                char c = chunk.mText[i];
+                stbtt_packedchar charInfo = font->mGlyphMetrics[c - 32];
+                SDL_FRect src { static_cast<float>(charInfo.x0), static_cast<float>(charInfo.y0), static_cast<float>(charInfo.x1) - static_cast<float>(charInfo.x0), static_cast<float>(charInfo.y1) - static_cast<float>(charInfo.y0) };
+                SDL_FRect dst { cursor.x + charInfo.xoff, cursor.y + charInfo.yoff, static_cast<float>(charInfo.x1) - static_cast<float>(charInfo.x0), static_cast<float>(charInfo.y1) - static_cast<float>(charInfo.y0) };
+
+                if(chunk.mEffect & FLOAT && chunk.mEffect & ~SHAKE){
+                    dst.y += sinf(chunk.mTime + (static_cast<float>(i) / 1)) * chunk.mEffectArg0;
+                } else if(chunk.mEffect & SHAKE) {
+                    dst.x += (rand() % (chunk.mEffectArg0 * 2)) * 0.5f;
+                    dst.y += (rand() % (chunk.mEffectArg0 * 2)) * 0.5f;
+                }
+
+                if(chunk.mEffect & RAINBOW){
+                    SDL_SetTextureColorMod(font->mGlyphAtlas, mPalette[(static_cast<int>(chunk.mTime) + i) % mPalette.size()].r, mPalette[(static_cast<int>(chunk.mTime) + i) % mPalette.size()].g, mPalette[(static_cast<int>(chunk.mTime) + i) % mPalette.size()].b);
+                }
+
+                SDL_RenderTexture(r, font->mGlyphAtlas, &src, &dst);
+                cursor.x += charInfo.xadvance;
+            }
+            chunk.mTime += chunk.mEffectArg1;
         }
 
     }
