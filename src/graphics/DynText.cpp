@@ -73,7 +73,6 @@ DynFont::~DynFont(){
 }
 
 void DynText::SetText(std::string str){
-
 }
 
 void DynText::AddTextChunk(uint32_t effect, std::string text){
@@ -98,7 +97,9 @@ void DynText::Draw(SDL_Renderer* r, Camera* cam) {
 
         // some parsing for text commands should be here?
         for(auto& chunk : mText){
-            if(chunk.mEffect & COLOR && chunk.mEffect & ~RAINBOW){
+            if(chunk.mText.size() == 0) continue;
+
+            if(chunk.mEffect & COLOR && chunk.mEffect & ~RAINBOW && chunk.mEffectArg0 < mPalette.size()){
                 SDL_SetTextureColorMod(font->mGlyphAtlas, mPalette[chunk.mEffectArg0].r, mPalette[chunk.mEffectArg0].g, mPalette[chunk.mEffectArg0].b);
             } else {
                 SDL_SetTextureColorMod(font->mGlyphAtlas, 0xFF, 0xFF, 0xFF);
@@ -106,6 +107,7 @@ void DynText::Draw(SDL_Renderer* r, Camera* cam) {
 
             for (int i = 0; i < chunk.mText.size(); i++){
                 char c = chunk.mText[i];
+                if(i > 0) cursor.x += stbtt_GetCodepointKernAdvance(&font->mFontInfo, chunk.mText[i-1], c);
                 stbtt_packedchar charInfo = font->mGlyphMetrics[c - 32];
                 SDL_FRect src { static_cast<float>(charInfo.x0), static_cast<float>(charInfo.y0), static_cast<float>(charInfo.x1) - static_cast<float>(charInfo.x0), static_cast<float>(charInfo.y1) - static_cast<float>(charInfo.y0) };
                 SDL_FRect dst { cursor.x + charInfo.xoff, cursor.y + charInfo.yoff, static_cast<float>(charInfo.x1) - static_cast<float>(charInfo.x0), static_cast<float>(charInfo.y1) - static_cast<float>(charInfo.y0) };
@@ -121,10 +123,17 @@ void DynText::Draw(SDL_Renderer* r, Camera* cam) {
                     SDL_SetTextureColorMod(font->mGlyphAtlas, mPalette[(static_cast<int>(chunk.mTime) + i) % mPalette.size()].r, mPalette[(static_cast<int>(chunk.mTime) + i) % mPalette.size()].g, mPalette[(static_cast<int>(chunk.mTime) + i) % mPalette.size()].b);
                 }
 
+                if(dst.x + dst.w > rect.x + rect.w){
+                    cursor.x = rect.x;
+                    cursor.y += font->mFontSize + font->mLineGap;
+                } else {
+                    cursor.x += charInfo.xadvance;
+                }
+
                 SDL_RenderTexture(r, font->mGlyphAtlas, &src, &dst);
-                cursor.x += charInfo.xadvance;
             }
             chunk.mTime += chunk.mEffectArg1;
+            cursor.x += font->mGlyphMetrics[' '-32].xadvance; // auto add space after each chunk
         }
 
     }

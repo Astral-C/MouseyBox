@@ -32,17 +32,16 @@ struct DynFont {
 };
 
 enum DynTextEffect : uint32_t {
-    NONE,
-    COLOR,
-    FLOAT,
-    RAINBOW,
-    SHAKE,
-    CUSTOM,
-    COUNT
+    NONE = 0,
+    COLOR = 1,
+    FLOAT = 2,
+    RAINBOW = 4,
+    SHAKE = 8,
+    CUSTOM = 16
 };
 
 struct DynTextChunk {
-    uint32_t mEffectArg0 { 5 };
+    uint32_t mEffectArg0 { 0 };
     float mEffectArg1 { 0.1f };
     float mTime { 0.0f };
     DynTextEffect mEffect;
@@ -60,11 +59,12 @@ class DynText : public Renderable
     std::weak_ptr<DynFont> mFont;
     std::vector<SDL_Color> mPalette;
 
-    void SetText(std::string);
-
+    void AddTextChunk(uint32_t, std::string);
 
 public:
-    void AddTextChunk(uint32_t, std::string);
+    void ClearChunks() { mText.clear(); }
+    void AddChunk(DynTextChunk chunk) { mText.push_back(chunk); }
+    void SetText(std::string);
     //std::string GetText() { return mText; }
 
     void SetPalette(std::vector<SDL_Color> colors) { mPalette = colors; }
