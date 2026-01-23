@@ -44,9 +44,9 @@ struct DynTextChunk {
     uint32_t mEffectArg0 { 0 };
     float mEffectArg1 { 0.1f };
     float mTime { 0.0f };
-    DynTextEffect mEffect;
+    uint32_t mEffect;
     // still unsure if I want to allow custom effets, seems slow
-    //std::function<void(int,float)> mCustomEffect;
+    std::function<void(SDL_FRect&,uint32_t,float,float)> mCustomEffect;
     std::string mText;
 };
 
@@ -62,6 +62,7 @@ class DynText : public Renderable
     void AddTextChunk(uint32_t, std::string);
 
 public:
+    DynTextChunk& GetChunk(int i) { return mText[i]; }
     void ClearChunks() { mText.clear(); }
     void AddChunk(DynTextChunk chunk) { mText.push_back(chunk); }
     void SetText(std::string);

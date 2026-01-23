@@ -1,6 +1,7 @@
 #include "bStream/bstream.h"
 #include <SDL3/SDL_oldnames.h>
 #include <SDL3/SDL_pixels.h>
+#include <SDL3/SDL_rect.h>
 #include <SDL3/SDL_render.h>
 #include <SDL3_ttf/SDL_ttf.h>
 #include <system/Log.hpp>
@@ -94,16 +95,11 @@ void DynText::Draw(SDL_Renderer* r, Camera* cam) {
         }
 
         SDL_FRect cursor = rect;
+        cursor.y += font->mFontSize;
 
         // some parsing for text commands should be here?
         for(auto& chunk : mText){
             if(chunk.mText.size() == 0) continue;
-
-            if(chunk.mEffect & COLOR && chunk.mEffect & ~RAINBOW && chunk.mEffectArg0 < mPalette.size()){
-                SDL_SetTextureColorMod(font->mGlyphAtlas, mPalette[chunk.mEffectArg0].r, mPalette[chunk.mEffectArg0].g, mPalette[chunk.mEffectArg0].b);
-            } else {
-                SDL_SetTextureColorMod(font->mGlyphAtlas, 0xFF, 0xFF, 0xFF);
-            }
 
             for (int i = 0; i < chunk.mText.size(); i++){
                 char c = chunk.mText[i];
@@ -112,6 +108,10 @@ void DynText::Draw(SDL_Renderer* r, Camera* cam) {
                 SDL_FRect src { static_cast<float>(charInfo.x0), static_cast<float>(charInfo.y0), static_cast<float>(charInfo.x1) - static_cast<float>(charInfo.x0), static_cast<float>(charInfo.y1) - static_cast<float>(charInfo.y0) };
                 SDL_FRect dst { cursor.x + charInfo.xoff, cursor.y + charInfo.yoff, static_cast<float>(charInfo.x1) - static_cast<float>(charInfo.x0), static_cast<float>(charInfo.y1) - static_cast<float>(charInfo.y0) };
 
+                if(chunk.mEffect & CUSTOM && chunk.mCustomEffect){
+                    chunk.mCustomEffect(dst, chunk.mEffectArg0, chunk.mEffectArg1, chunk.mTime);
+                }
+
                 if(chunk.mEffect & FLOAT && chunk.mEffect & ~SHAKE){
                     dst.y += sinf(chunk.mTime + (static_cast<float>(i) / 1)) * chunk.mEffectArg0;
                 } else if(chunk.mEffect & SHAKE) {
@@ -119,9 +119,27 @@ void DynText::Draw(SDL_Renderer* r, Camera* cam) {
                     dst.y += (rand() % (chunk.mEffectArg0 * 2)) * 0.5f;
                 }
 
+                if(mDropShadow){
+                    SDL_FRect shadow = dst;
+                    shadow.x += mShadowOffsetX;
+                    shadow.y += mShadowOffsetY;
+                    SDL_SetTextureColorMod(font->mGlyphAtlas, 0x00, 0x00, 0x00);
+                    SDL_SetTextureAlphaMod(font->mGlyphAtlas, mShadowOpacity);
+                    SDL_RenderTexture(r, font->mGlyphAtlas, &src, &shadow);
+                }
+
+                if(chunk.mEffect & COLOR && chunk.mEffect & ~RAINBOW && chunk.mEffectArg0 < mPalette.size()){
+                    SDL_SetTextureColorMod(font->mGlyphAtlas, mPalette[chunk.mEffectArg0].r, mPalette[chunk.mEffectArg0].g, mPalette[chunk.mEffectArg0].b);
+                } else {
+                    SDL_SetTextureColorMod(font->mGlyphAtlas, mPalette[0].r, mPalette[0].g, mPalette[0].b);
+                }
+
+                SDL_SetTextureAlphaMod(font->mGlyphAtlas, 0xFF);
+
                 if(chunk.mEffect & RAINBOW){
                     SDL_SetTextureColorMod(font->mGlyphAtlas, mPalette[(static_cast<int>(chunk.mTime) + i) % mPalette.size()].r, mPalette[(static_cast<int>(chunk.mTime) + i) % mPalette.size()].g, mPalette[(static_cast<int>(chunk.mTime) + i) % mPalette.size()].b);
                 }
+
 
                 if(dst.x + dst.w > rect.x + rect.w){
                     cursor.x = rect.x;
@@ -129,6 +147,7 @@ void DynText::Draw(SDL_Renderer* r, Camera* cam) {
                 } else {
                     cursor.x += charInfo.xadvance;
                 }
+
 
                 SDL_RenderTexture(r, font->mGlyphAtlas, &src, &dst);
             }

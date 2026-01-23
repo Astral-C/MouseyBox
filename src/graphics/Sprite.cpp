@@ -1,3 +1,4 @@
+#include <SDL3/SDL_rect.h>
 #include <system/json.hpp>
 #include <system/Log.hpp>
 #include <graphics/Sprite.hpp>
@@ -22,7 +23,7 @@ Sprite::Sprite(SDL_Renderer* r, std::string path){
 #endif
 
     unsigned char* imgData = stbi_load(path.c_str(), &mWidth, &mHeight, &comp, 4);
-    
+
 #ifdef __GAMECUBE__
     SDL_Surface* surface = SDL_CreateSurfaceFrom(mWidth, mHeight, SDL_GetPixelFormatForMasks(32, 0xFF000000, 0x00FF0000, 0x0000FF00, 0x000000FF), imgData, mWidth*4);
 #else
@@ -47,7 +48,7 @@ Sprite::Sprite(SDL_Renderer* r, nlohmann::json& config){
 #endif
 
     unsigned char* imgData = stbi_load(config["imgPath"].get<std::string>().c_str(), &mWidth, &mHeight, &comp, 4);
-    
+
 #ifdef __GAMECUBE__
     SDL_Surface* surface = SDL_CreateSurfaceFrom(mWidth, mHeight, SDL_GetPixelFormatForMasks(32, 0xFF000000, 0x00FF0000, 0x0000FF00, 0x000000FF), imgData, mWidth*4);
 #else
@@ -146,9 +147,9 @@ void SpriteInstance::Draw(SDL_Renderer* r, Camera* cam) {
 
         if(!mStatic){
             draw.x = mDrawRect.x - cam->mRect.x + mOffsetX;
-            draw.y = mDrawRect.y - cam->mRect.y + mOffsetY; 
+            draw.y = mDrawRect.y - cam->mRect.y + mOffsetY;
         }
-        
+
         draw.w *= mScale;
         draw.h *= mScale;
 
@@ -158,10 +159,20 @@ void SpriteInstance::Draw(SDL_Renderer* r, Camera* cam) {
         draw.w = std::round(draw.w);
         draw.h = std::round(draw.h);
 
+        if(mDropShadow){
+            SDL_SetTextureAlphaMod(sprite->GetTexture(), mShadowOpacity);
+            SDL_SetTextureColorMod(sprite->GetTexture(), 0x00, 0x00, 0x00);
+            SDL_FRect shadow = draw;
+            shadow.x += mShadowOffsetX;
+            shadow.y += mShadowOffsetY;
+            SDL_RenderTextureRotated(r, sprite->GetTexture(), curSrcRect, &shadow, mAngle, &mAnchor, mFlip);
+        }
+
         SDL_SetTextureAlphaMod(sprite->GetTexture(), mColorMod.a);
         SDL_SetTextureColorMod(sprite->GetTexture(), mColorMod.r, mColorMod.g, mColorMod.b);
-        
+
         SDL_RenderTextureRotated(r, sprite->GetTexture(), curSrcRect, &draw, mAngle, &mAnchor, mFlip);
+
         if(mDebug){
             uint8_t rd, g, b, a;
             SDL_GetRenderDrawColor(r, &rd, &g, &b, &a);
@@ -191,7 +202,7 @@ SpriteAnimation::SpriteAnimation(nlohmann::json config){
     mSpeed = config["speed"].get<float>() * 2.0f;
 #else
     mSpeed = config["speed"];
-#endif    
+#endif
     mLoop = config["loop"];
     for(auto frame : config["frames"]){
         mFrames.push_back({frame[0],frame[1],frame[2],frame[3]});

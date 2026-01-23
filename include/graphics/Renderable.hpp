@@ -19,6 +19,10 @@ protected:
     SDL_Color mColorMod { 255, 255, 255, 255 };
     SDL_Texture* mTexture { nullptr };
     bool mStatic { false };
+    bool mDropShadow { false };
+    uint8_t mShadowOpacity { 0x7F };
+    float mShadowOffsetX { 5.0f };
+    float mShadowOffsetY { 5.0f };
 
 public:
     virtual void Draw(SDL_Renderer*, Camera*) = 0;
@@ -31,6 +35,8 @@ public:
     void SetScale(float scale){ mScale = scale; }
     float GetScale(){ return mScale; }
     void SetPriority(int priority){ mPriority = priority; }
+
+    void ToggleDropShadow() { mDropShadow = !mDropShadow; }
 
     void ToggleVisible() { mVisible = !mVisible; }
     bool IsVisible() { return mVisible; }
