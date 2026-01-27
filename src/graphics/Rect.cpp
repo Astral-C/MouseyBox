@@ -10,10 +10,9 @@ Rect::Rect(){
 void Rect::Draw(SDL_Renderer* r, Camera* cam) {
     float scalex, scaley;
     uint8_t tr, tg, tb, ta;
-    
+
     SDL_SetRenderDrawBlendMode(r, SDL_BLENDMODE_BLEND);
     SDL_GetRenderDrawColor(r, &tr, &tg, &tb, &ta);
-    SDL_SetRenderDrawColor(r, mColorMod.r, mColorMod.g, mColorMod.b, mColorMod.a);
     SDL_GetRenderScale(r, &scalex, &scaley);
     SDL_SetRenderScale(r, (float)mThickness, (float)mThickness);
 
@@ -24,6 +23,12 @@ void Rect::Draw(SDL_Renderer* r, Camera* cam) {
     }
 
     if(mDrawFilled){
+        if(mDropShadow){
+            SDL_FRect shadow = { rect.x + mShadowOffsetX, rect.y + mShadowOffsetY, rect.w, rect.h };
+            SDL_SetRenderDrawColor(r, 0x00, 0x00, 0x00, mShadowOpacity);
+            SDL_RenderFillRect(r, &shadow);
+        }
+        SDL_SetRenderDrawColor(r, mColorMod.r, mColorMod.g, mColorMod.b, mColorMod.a);
         SDL_RenderFillRect(r, &rect);
     } else {
         // not a fan of this.

@@ -43,6 +43,8 @@ public:
 
     bool GetStatic() { return mStatic; }
     void SetStatic(bool value) { mStatic = value; }
+    void SetDropShadowOffset(float x, float y) { mShadowOffsetX = x; mShadowOffsetY = y; }
+    void SetDropShadowOpacity(uint8_t o) { mShadowOpacity = o; }
 
     SDL_FRect* GetRect() { return &mDrawRect; }
     SDL_Color* GetColor() { return &mColorMod; }
