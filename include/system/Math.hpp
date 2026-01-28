@@ -68,7 +68,7 @@ namespace mb::Math {
         }
     };
 
-    template <typename T, typename = typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+    template <typename T>
     class Matrix2x2 {
         T rows[2][2];
     public:

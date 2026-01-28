@@ -3,6 +3,7 @@
 #include <SDL3/SDL_pixels.h>
 #include <SDL3/SDL_rect.h>
 #include <SDL3/SDL_render.h>
+#include <SDL3/SDL_surface.h>
 #include <SDL3_ttf/SDL_ttf.h>
 #include <system/Log.hpp>
 #define STB_RECT_PACK_IMPLEMENTATION
@@ -40,6 +41,7 @@ DynFont::DynFont(SDL_Renderer* r, std::string fontPath, uint32_t fontSize, uint3
 
 
     mGlyphAtlas = SDL_CreateTexture(r, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STATIC, fontSize * charCount, fontSize);
+    SDL_SetTextureScaleMode(mGlyphAtlas, SDL_SCALEMODE_NEAREST);
 
     uint32_t* atlasTexture = new uint32_t[atlasRes];
     const SDL_PixelFormatDetails* format = SDL_GetPixelFormatDetails(SDL_PIXELFORMAT_RGBA32);
@@ -80,6 +82,39 @@ void DynText::AddTextChunk(uint32_t effect, std::string text){
     mText.push_back({ .mEffect = static_cast<DynTextEffect>(effect), .mText = text });
 }
 
+void DynText::RecalculateDimensions(int wrap){
+    std::shared_ptr<DynFont> font;
+
+    if(!(font = mFont.lock())){
+        return;
+    }
+
+    mDrawRect.h = font->mFontSize;
+
+    mWrap = wrap;
+
+    float w = 0.0f;
+    int wrapWatch = 0;
+    float curWidth = 0.0f;
+    for(auto& chunk : mText){
+        for (int i = 0; i < chunk.mText.size(); i++){
+            wrapWatch++;
+            stbtt_packedchar charInfo = font->mGlyphMetrics[chunk.mText[i] - 32];
+            curWidth += charInfo.xadvance;
+            if(i > 0) curWidth += stbtt_GetCodepointKernAdvance(&font->mFontInfo, chunk.mText[i-1], chunk.mText[i]);
+            if(wrap > 0 && wrapWatch >= wrap){
+                if(curWidth > w) w = curWidth;
+                mDrawRect.h += font->mFontSize + font->mLineGap;
+
+                curWidth = 0.0f;
+                wrapWatch = 0;
+            }
+        }
+    }
+    if(curWidth > w) w = curWidth;
+    mDrawRect.w = w;
+}
+
 void DynText::Draw(SDL_Renderer* r, Camera* cam) {
     std::shared_ptr<DynFont> font;
 
@@ -96,6 +131,8 @@ void DynText::Draw(SDL_Renderer* r, Camera* cam) {
 
         SDL_FRect cursor = rect;
         cursor.y += font->mFontSize;
+
+        int wrapWatch = 0;
 
         // some parsing for text commands should be here?
         for(auto& chunk : mText){
@@ -141,9 +178,12 @@ void DynText::Draw(SDL_Renderer* r, Camera* cam) {
                 }
 
 
-                if(dst.x + dst.w > rect.x + rect.w){
+                // handle text wrapping
+                wrapWatch++;
+                if(dst.x + dst.w >= rect.x + rect.w || (mWrap > 0 && wrapWatch >= mWrap)){
                     cursor.x = rect.x;
                     cursor.y += font->mFontSize + font->mLineGap;
+                    wrapWatch = 0;
                 } else {
                     cursor.x += charInfo.xadvance;
                 }
@@ -154,7 +194,6 @@ void DynText::Draw(SDL_Renderer* r, Camera* cam) {
             chunk.mTime += chunk.mEffectArg1;
             cursor.x += font->mGlyphMetrics[' '-32].xadvance; // auto add space after each chunk
         }
-
     }
 }
 

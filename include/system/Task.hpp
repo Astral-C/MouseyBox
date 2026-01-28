@@ -4,6 +4,8 @@
 #include <random>
 #include <functional>
 #include <system/Math.hpp>
+#include <type_traits>
+#include <vector>
 
 namespace mb {
     class Task {
@@ -15,6 +17,8 @@ namespace mb {
         float mCurrent { 0.0f };
         float mDuration { 1.0f };
         uint32_t mTaskId { 0 };
+
+        void* mUserData { nullptr };
 
         std::function<void(Task*,float)> mFunc;
         Task* mNext { nullptr };

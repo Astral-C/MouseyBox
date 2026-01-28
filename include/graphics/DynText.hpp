@@ -58,15 +58,18 @@ class DynText : public Renderable
     std::vector<DynTextChunk> mText;
     std::weak_ptr<DynFont> mFont;
     std::vector<SDL_Color> mPalette;
+    int mWrap { 0 };
 
     void AddTextChunk(uint32_t, std::string);
 
 public:
     DynTextChunk& GetChunk(int i) { return mText[i]; }
-    void ClearChunks() { mText.clear(); }
-    void AddChunk(DynTextChunk chunk) { mText.push_back(chunk); }
+    void ClearChunks() { mText.clear(); mDrawRect.w = 0.0f; }
+    void AddChunk(DynTextChunk chunk) { mText.push_back(chunk); RecalculateDimensions(); }
     void SetText(std::string);
     //std::string GetText() { return mText; }
+
+    void RecalculateDimensions(int wrap=0);
 
     void SetPalette(std::vector<SDL_Color> colors) { mPalette = colors; }
 
