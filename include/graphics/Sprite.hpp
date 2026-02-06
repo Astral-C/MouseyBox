@@ -124,6 +124,7 @@ class SpriteInstance : public Renderable {
 public:
     bool mDebug { false };
     int mOffsetX { 0 }, mOffsetY { 0 };
+    float mScaleY { 1.0f }, mScaleX { 1.0f };
     float mAngle { 0.0f };
     SDL_FPoint mAnchor { 0.5f, 0.5f };
     SDL_FlipMode mFlip { SDL_FLIP_NONE };

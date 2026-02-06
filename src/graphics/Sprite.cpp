@@ -153,6 +153,9 @@ void SpriteInstance::Draw(SDL_Renderer* r, Camera* cam) {
         draw.w *= mScale;
         draw.h *= mScale;
 
+        draw.w *= mScaleX;
+        draw.h *= mScaleY;
+
         // draw rect _MUST_ always be whole number! This prevents sheet bleeding.
         draw.x = std::round(draw.x);
         draw.y = std::round(draw.y);

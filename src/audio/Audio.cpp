@@ -22,14 +22,14 @@ namespace mb::Audio {
             mb::Log::ErrorFrom("MouseyBoxAudio", "Error Pushing Audio to Device: {}", SDL_GetError());
         }
     }
-    
+
     void Mixer::Play(std::string name){
         if(mLoaded.contains(name)){
             mLoaded[name]->Reset();
             mPlaying.push_back(mLoaded[name]);
         }
     }
-    
+
     void Mixer::Pause(std::string name){
         std::vector<std::shared_ptr<Playable>>::iterator toPause = mPlaying.end();
         for(auto it = mPlaying.begin(); it != mPlaying.end(); it++){
@@ -44,7 +44,7 @@ namespace mb::Audio {
             mPlaying.erase(toPause);
         }
     }
-    
+
     Mixer::Mixer(){
         mb::Log::InfoFrom("MouseyBoxAudio", "Creating Mixer");
         mTargetSpec = {
@@ -52,7 +52,7 @@ namespace mb::Audio {
             .channels = 2,
             .freq = 44100
         };
-        
+
         mStream = SDL_OpenAudioDeviceStream(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &mTargetSpec, Update, this);
         if(mStream == nullptr){
             mb::Log::DebugFrom("MouseyBoxAudio", "Mixer Setup Failed");
@@ -73,7 +73,7 @@ namespace mb::Audio {
         SDL_ResumeAudioStreamDevice(mStream);
         SDL_FlushAudioStream(mStream);
     }
-    
+
     Mixer::~Mixer(){
         mb::Log::InfoFrom("MouseyBoxAudio", "Shutting down mixer");
         if(mFrameData != nullptr) delete[] mFrameData;

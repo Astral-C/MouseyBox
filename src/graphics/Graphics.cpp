@@ -1,5 +1,6 @@
 #include "graphics/DynText.hpp"
 #include <SDL3/SDL_oldnames.h>
+#include <SDL3/SDL_properties.h>
 #include <SDL3/SDL_rect.h>
 #include <SDL3/SDL_render.h>
 #include <SDL3/SDL_video.h>
