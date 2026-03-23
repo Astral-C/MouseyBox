@@ -3,6 +3,7 @@
 #include <SDL3/SDL_properties.h>
 #include <SDL3/SDL_rect.h>
 #include <SDL3/SDL_render.h>
+#include <SDL3/SDL_stdinc.h>
 #include <SDL3/SDL_video.h>
 #include <system/Log.hpp>
 #include <graphics/Graphics.hpp>
@@ -24,6 +25,9 @@ namespace Graphics {
 Window::Window(std::string name, uint32_t w, uint32_t h){
     mb::Log::InfoFrom("MouseyBox", "Creating Window");
     mWindowTitle = name;
+
+    SDL_SetHint(SDL_HINT_APP_ID, "mouseybox");
+
 #ifdef __SWITCH__
     mWindow = SDL_CreateWindow(mWindowTitle.data(), 1280, 720, 0);
 #elif __GAMECUBE__
