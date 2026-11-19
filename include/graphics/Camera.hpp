@@ -11,6 +11,7 @@ class Camera {
     SDL_Rect mViewportRect {0, 0, 0, 0};
     uint32_t mMagnitude { 0 };
     uint32_t mShakeTimer { 0 };
+    
     std::mt19937_64 mRandomGenerator { };
     std::uniform_int_distribution<int> mRandomDistribution {-100, 100};
 #ifndef DISABLE_ENTITY
@@ -21,7 +22,7 @@ public:
     float mOffsetX { 0.0f }, mOffsetY { 0.0f };
     SDL_FRect mRect {0.0f, 0.0f, 0.0f, 0.0f};
 
-    void Init(SDL_Renderer*);
+    void Init();
 #ifndef DISABLE_ENTITY
     void GetFocusedPosition(float* x, float* y);
     void SetFocused(Entity* e){ mFocus = e; }
@@ -30,7 +31,7 @@ public:
     void StartShake(int magnitude, int time);
 
     void SetBounds(SDL_FRect r) { mBounds = r; }
-    void Update(SDL_Renderer*);
+    void Update();
 
     Camera();
     ~Camera();

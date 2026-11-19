@@ -6,7 +6,7 @@
 #include <memory>
 #include <vector>
 #include <system/json.hpp>
-#include <graphics/Renderable.hpp>
+#include <graphics/Pipeline.hpp>
 #include <system/Math.hpp>
 #include <random>
 

@@ -3,13 +3,10 @@
 
 enum RenderableType {
     None,
-    Sprite,
-    Polygon,
-    Rect,
     Text,
-    DynamicText,
-    TilemapLayer,
-    ParticleSystem,
+    Rect,
+    Circle,
+    Sprite,
     RenderableTypeCount
 };
 

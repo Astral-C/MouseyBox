@@ -31,9 +31,7 @@ void Camera::StartShake(int magnitude, int time){
     mRandomDistribution = std::uniform_int_distribution<int>(-magnitude, magnitude);
 }
 
-void Camera::Update(SDL_Renderer* r){
-    SDL_GetRenderViewport(r, &mViewportRect);
-
+void Camera::Update(){
     if(mShakeTimer > 1){
         mOffsetX = mRandomDistribution(mRandomGenerator);
         mOffsetY = mRandomDistribution(mRandomGenerator);
@@ -44,12 +42,12 @@ void Camera::Update(SDL_Renderer* r){
         mShakeTimer = 0;
     }
 
-#ifndef DISABLE_ENTITY
-    if(mFocus != nullptr){
-        mRect.x = (mFocus->mX + (mFocus->GetRect().w / 2)) - (mViewportRect.w / 2)  + mOffsetX;
-        mRect.y = (mFocus->mY + (mFocus->GetRect().h / 2)) - (mViewportRect.h / 2)  + mOffsetY;
-    }
-#endif
+//#ifndef DISABLE_ENTITY
+//    if(mFocus != nullptr){
+//        mRect.x = (mFocus->mX + (mFocus->GetRect().w / 2)) - (mViewportRect.w / 2)  + mOffsetX;
+//        mRect.y = (mFocus->mY + (mFocus->GetRect().h / 2)) - (mViewportRect.h / 2)  + mOffsetY;
+//    }
+//#endif
 
     if(mBounds.w != 0 && mBounds.h != 0){
         if(mRect.x < mBounds.x){
